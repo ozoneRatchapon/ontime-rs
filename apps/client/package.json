@@ -1,0 +1,80 @@
+{
+  "name": "ontime-ui",
+  "version": "4.11.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@base-ui/react": "1.6.0",
+    "@codemirror/commands": "^6.0.0",
+    "@codemirror/lang-css": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@fontsource/open-sans": "^5.2.7",
+    "@mantine/hooks": "^8.3.7",
+    "@sentry/react": "^10.59.0",
+    "@table-nav/react": "^0.0.7",
+    "@tanstack/react-query": "^5.101.0",
+    "@tanstack/react-query-devtools": "^5.101.0",
+    "@tanstack/react-table": "^8.21.3",
+    "@uiw/codemirror-theme-vscode": "^4.25.10",
+    "autosize": "^6.0.1",
+    "axios": "^1.18.0",
+    "csv-stringify": "^6.6.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.7",
+    "react-colorful": "^5.7.0",
+    "react-dom": "^19.2.7",
+    "react-fast-compare": "^3.2.2",
+    "react-hook-form": "^7.80.0",
+    "react-icons": "5.6.0",
+    "react-router": "^8.0.1",
+    "react-virtuoso": "^4.18.7",
+    "zustand": "^5.0.14"
+  },
+  "scripts": {
+    "addversion": "node -p \"'export const ONTIME_VERSION = ' + JSON.stringify(require('../../package.json').version) + ';'\" > src/ONTIME_VERSION.js",
+    "postinstall": "pnpm addversion",
+    "dev": "cross-env BROWSER=none vite",
+    "dev:electron": "pnpm dev",
+    "lint": "oxlint --quiet --type-aware",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "build": "vite build",
+    "test": "vitest",
+    "test:pipeline": "vitest run",
+    "analyse": "npx vite-bundle-visualizer"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all",
+      "safari >= 14.1"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@sentry/vite-plugin": "5.1.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-legacy": "^8.0.1",
+    "@vitejs/plugin-react": "5.2.0",
+    "babel-plugin-react-compiler": "1.0.0",
+    "happy-dom": "^20.9.0",
+    "ontime-types": "workspace:*",
+    "ontime-utils": "workspace:*",
+    "sass": "^1.57.1",
+    "typescript": "catalog:",
+    "vite": "8.0.1",
+    "vite-plugin-compression2": "2.5.1",
+    "vite-plugin-svgr": "4.5.0",
+    "vitest": "catalog:"
+  }
+}

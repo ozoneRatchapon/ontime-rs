@@ -1,0 +1,386 @@
+import { OffsetMode, OntimeEvent, OntimeGroup, TimerPhase, TimerType } from 'ontime-types';
+import { dayInMs, isPlaybackActive, millisToString } from 'ontime-utils';
+import { useMemo } from 'react';
+import {
+  TbCalendarClock,
+  TbCalendarPin,
+  TbCalendarStar,
+  TbFlagPin,
+  TbFlagStar,
+  TbFolderPin,
+  TbFolderStar,
+} from 'react-icons/tb';
+
+import Tooltip from '../../../common/components/tooltip/Tooltip';
+import { useEntry } from '../../../common/hooks-query/useRundown';
+import { useAutoTickingClock } from '../../../common/hooks/useAutoTickingClock';
+import {
+  useCurrentGroupId,
+  useFlagTimerOverView,
+  useGroupTimerOverView,
+  useNextFlag,
+  useOffsetOverview,
+  useProgressOverview,
+  useRundownExpectedEnd,
+  useStartTimesOverview,
+  useTimer,
+} from '../../../common/hooks/useSocket';
+import { getOffsetState, getOffsetText } from '../../../common/utils/offset';
+import { cx, enDash, timerPlaceholder } from '../../../common/utils/styleUtils';
+import { formatDuration, formatTime } from '../../../common/utils/time';
+import SuperscriptPeriod from '../../../views/common/superscript-time/SuperscriptPeriod';
+import { calculateEndAndDaySpan, formatDueTime } from '../overview.utils';
+import { OverUnder, TimeColumn, WrappedInTimeColumn } from './TimeLayout';
+
+import style from './TimeElements.module.scss';
+
+interface OverviewTimeElementsProps {
+  shouldFormat?: boolean;
+}
+
+const timeFormatOptions = { format12: 'hh:mm:ss a', format24: 'HH:mm:ss' };
+
+function formatTimeValue(time: number | null, shouldFormat: boolean | undefined): string {
+  if (time === null) return timerPlaceholder;
+  if (shouldFormat) return formatTime(time, timeFormatOptions);
+  return millisToString(time, { fallback: timerPlaceholder });
+}
+
+export function StartTimesRuntime({ shouldFormat }: OverviewTimeElementsProps) {
+  const { plannedEnd, plannedStart, actualStart } = useStartTimesOverview();
+
+  const plannedStartText = formatTimeValue(plannedStart, shouldFormat);
+  const actualStartText = formatTimeValue(actualStart, shouldFormat);
+
+  const [maybePlannedEnd, maybePlannedDaySpan] = useMemo(() => calculateEndAndDaySpan(plannedEnd), [plannedEnd]);
+  const plannedEndText = formatTimeValue(maybePlannedEnd, shouldFormat);
+
+  const multipleDays = maybePlannedDaySpan > 0;
+  const plannedEndTooltip = multipleDays
+    ? `Planned end time (rundown spans over ${maybePlannedDaySpan + 1} days)`
+    : 'Planned end time';
+
+  return (
+    <div className={style.column}>
+      <div className={style.row}>
+        <span className={style.label}>Start</span>
+        <Tooltip
+          text='Planned start time'
+          render={
+            <div className={style.labelledElement}>
+              <TbCalendarPin className={style.icon} />
+              <SuperscriptPeriod
+                className={cx([style.time, plannedStart === null && style.muted])}
+                time={plannedStartText}
+              />
+            </div>
+          }
+        />
+        <Tooltip
+          text='Actual start time'
+          render={
+            <div className={style.labelledElement} data-testid='actual-start-time'>
+              <TbCalendarClock className={style.icon} />
+              <SuperscriptPeriod
+                className={cx([style.time, actualStart === null && style.muted])}
+                time={actualStartText}
+              />
+            </div>
+          }
+        />
+      </div>
+
+      <div className={style.row}>
+        <span className={style.label}>End</span>
+        <Tooltip
+          text={plannedEndTooltip}
+          render={
+            <div className={style.labelledElement}>
+              <TbCalendarPin className={style.icon} />
+              <SuperscriptPeriod
+                className={cx([style.time, plannedEnd === null && style.muted])}
+                time={plannedEndText}
+              />
+              {multipleDays && (
+                <span className={cx([style.time, style.daySpan])} data-day-offset={maybePlannedDaySpan} />
+              )}
+            </div>
+          }
+        />
+        <RundownExpectedEnd shouldFormat={shouldFormat} />
+      </div>
+    </div>
+  );
+}
+
+export function StartTimesPlanning({ shouldFormat }: OverviewTimeElementsProps) {
+  const { plannedEnd, plannedStart } = useStartTimesOverview();
+
+  const plannedStartText = formatTimeValue(plannedStart, shouldFormat);
+
+  const [maybePlannedEnd, maybePlannedDaySpan] = useMemo(() => calculateEndAndDaySpan(plannedEnd), [plannedEnd]);
+  const plannedEndText = formatTimeValue(maybePlannedEnd, shouldFormat);
+
+  const multipleDays = maybePlannedDaySpan > 0;
+  const plannedEndTooltip = multipleDays
+    ? `Planned end time (rundown spans over ${maybePlannedDaySpan + 1} days)`
+    : 'Planned end time';
+
+  return (
+    <div className={style.column}>
+      <div className={style.row2}>
+        <span className={style.label}>Start</span>
+        <Tooltip
+          text='Planned start time'
+          render={
+            <div className={style.labelledElement}>
+              <TbCalendarPin className={style.icon} />
+              <SuperscriptPeriod
+                className={cx([style.time, plannedStart === null && style.muted])}
+                time={plannedStartText}
+              />
+            </div>
+          }
+        />
+      </div>
+
+      <div className={style.row2}>
+        <span className={style.label}>End</span>
+        <Tooltip
+          text={plannedEndTooltip}
+          render={
+            <div className={style.labelledElement}>
+              <TbCalendarPin className={style.icon} />
+              <SuperscriptPeriod
+                className={cx([style.time, plannedEnd === null && style.muted])}
+                time={plannedEndText}
+              />
+              {multipleDays && (
+                <span className={cx([style.time, style.daySpan])} data-day-offset={maybePlannedDaySpan} />
+              )}
+            </div>
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Shows the expected end for the rundown
+ * Extracted to improve performance as this is a ticking value
+ */
+function RundownExpectedEnd({ shouldFormat }: OverviewTimeElementsProps) {
+  const expectedEnd = useRundownExpectedEnd();
+
+  const [maybeExpectedEnd, maybeExpectedDaySpan] = useMemo(() => calculateEndAndDaySpan(expectedEnd), [expectedEnd]);
+  const maybeExpectedEndText = formatTimeValue(maybeExpectedEnd, shouldFormat);
+
+  const multipleDays = maybeExpectedEnd !== null && maybeExpectedDaySpan > 0;
+  const tooltip = multipleDays
+    ? `Expected end time (rundown spans over ${maybeExpectedDaySpan + 1} days)`
+    : 'Expected end time';
+
+  return (
+    <Tooltip
+      text={tooltip}
+      render={
+        <div className={style.labelledElement}>
+          <TbCalendarStar className={style.icon} />
+          <SuperscriptPeriod
+            className={cx([style.time, maybeExpectedEnd === null && style.muted])}
+            time={maybeExpectedEndText}
+          />
+          {multipleDays && <span className={cx([style.time, style.daySpan])} data-day-offset={maybeExpectedDaySpan} />}
+        </div>
+      }
+    />
+  );
+}
+
+export function MetadataTimes() {
+  return (
+    <div className={style.column}>
+      <GroupTimes />
+      <FlagTimes />
+    </div>
+  );
+}
+
+function GroupTimes() {
+  const { clock, mode, groupExpectedEnd, actualGroupStart, currentDay, playback, phase } = useGroupTimerOverView();
+  const currentGroupId = useCurrentGroupId();
+  const group = useEntry(currentGroupId) as OntimeGroup | null;
+
+  const hasRunningTimer = phase !== TimerPhase.Pending && isPlaybackActive(playback);
+
+  // the group end time does not encode any day offsets so it is calculated with group start time and duration
+  const plannedGroupEnd = (() => {
+    if (!hasRunningTimer) return null;
+    if (!group || group.timeStart === null) return null;
+    const normalizedClock = clock + currentDay * dayInMs;
+
+    if (mode === OffsetMode.Absolute) {
+      return group.timeStart + group.duration - normalizedClock;
+    }
+    if (actualGroupStart === null) return null;
+    return actualGroupStart + group.duration - normalizedClock;
+  })();
+
+  const plannedTimeUntilGroupEnd = formatDueTime(plannedGroupEnd, 3, TimerType.CountDown);
+
+  const expectedGroupEnd = hasRunningTimer && groupExpectedEnd !== null ? groupExpectedEnd - clock : null;
+  const expectedTimeUntilGroupEnd = formatDueTime(expectedGroupEnd, 3, TimerType.CountDown);
+
+  return (
+    <div className={style.metadataRow}>
+      <span className={group?.title ? style.labelTitle : style.label}>{`${group?.title || 'Group'} `}</span>
+      <div className={style.labelledElement}>
+        <Tooltip text='Time to planned group end' render={<TbFolderPin className={style.icon} />} />
+        <span
+          className={cx([
+            style.time,
+            (!group || !hasRunningTimer) && style.muted,
+            plannedTimeUntilGroupEnd === 'due' && style.dueTime,
+          ])}
+        >
+          {plannedTimeUntilGroupEnd}
+        </span>
+      </div>
+      <div className={style.labelledElement}>
+        <Tooltip text='Time to expected group end' render={<TbFolderStar className={style.icon} />} />
+        <span
+          className={cx([
+            style.time,
+            expectedGroupEnd === null && style.muted,
+            expectedTimeUntilGroupEnd === 'due' && style.dueTime,
+          ])}
+        >
+          {expectedTimeUntilGroupEnd}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function FlagTimes() {
+  const { clock, mode, actualStart, plannedStart, playback, currentDay, phase } = useFlagTimerOverView();
+  const { id, expectedStart } = useNextFlag();
+  const entry = useEntry(id) as OntimeEvent | null;
+
+  const hasRunningTimer = phase !== TimerPhase.Pending && isPlaybackActive(playback);
+
+  const plannedFlagStart = (() => {
+    if (!hasRunningTimer) return null;
+    if (!entry) return null;
+    const normalizedTimeStart = entry.timeStart + entry.dayOffset * dayInMs;
+    const normalizedClock = clock + currentDay * dayInMs;
+    if (mode === OffsetMode.Absolute) {
+      return normalizedTimeStart - normalizedClock;
+    }
+    if (actualStart === null || plannedStart === null) return null;
+    return normalizedTimeStart + actualStart - plannedStart - normalizedClock;
+  })();
+
+  const plannedTimeUntilDisplay = formatDueTime(plannedFlagStart, 3, TimerType.CountDown);
+
+  const expectedTimeUntil = hasRunningTimer && expectedStart !== null ? expectedStart - clock : null;
+  const expectedTimeUntilDisplay = formatDueTime(expectedTimeUntil, 3, TimerType.CountDown);
+
+  const title = entry?.title ?? null;
+
+  return (
+    <div className={style.metadataRow}>
+      <span className={title ? style.labelTitle : style.label}>{`${title || 'Flag'} `}</span>
+      <div className={style.labelledElement}>
+        <Tooltip text='Time to next flag planned start' render={<TbFlagPin className={style.icon} />} />
+        <span
+          data-testid='flag-plannedStart'
+          className={cx([
+            style.time,
+            (!entry || !hasRunningTimer) && style.muted,
+            plannedTimeUntilDisplay === 'due' && style.dueTime,
+          ])}
+        >
+          {plannedTimeUntilDisplay}
+        </span>
+      </div>
+      <div className={style.labelledElement}>
+        <Tooltip text='Time to next flag expected start' render={<TbFlagStar className={style.icon} />} />
+        <span
+          data-testid='flag-expectedStart'
+          className={cx([
+            style.time,
+            expectedTimeUntil === null && style.muted,
+            expectedTimeUntilDisplay === 'due' && style.dueTime,
+          ])}
+        >
+          {expectedTimeUntilDisplay}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function ProgressOverview() {
+  const { numEvents, selectedEventIndex } = useProgressOverview();
+
+  const current = selectedEventIndex !== null ? selectedEventIndex + 1 : enDash;
+  const progressText = numEvents ? `${current} of ${numEvents || enDash}` : enDash;
+
+  return <TimeColumn label='Progress' value={progressText} state={selectedEventIndex === null ? 'muted' : 'active'} />;
+}
+
+export function OffsetOverview() {
+  const { offset, playback } = useOffsetOverview();
+
+  const isPlaying = isPlaybackActive(playback);
+  const offsetState = getOffsetState(isPlaying ? offset : null);
+  const offsetText = getOffsetText(isPlaying ? offset : null);
+
+  return <OverUnder state={offsetState} value={offsetText} testId='offset' />;
+}
+
+export function ClockOverview({ shouldFormat, className }: OverviewTimeElementsProps & { className?: string }) {
+  const clock = useAutoTickingClock();
+  const formattedClock = shouldFormat ? formatTime(clock) : millisToString(clock);
+
+  return (
+    <WrappedInTimeColumn
+      label='Time now'
+      className={className}
+      render={(clockClasses) => <SuperscriptPeriod className={clockClasses} time={formattedClock} />}
+    />
+  );
+}
+
+export function TimerOverview({ className }: { className?: string }) {
+  const timer = useTimer();
+
+  const isWaiting = timer.phase === TimerPhase.Pending;
+  const title = isWaiting ? 'Count to start' : 'Running timer';
+  const display = millisToString(isWaiting ? timer.secondaryTimer : timer.current, { fallback: timerPlaceholder });
+
+  function getTimerState(): 'waiting' | 'muted' | 'active' {
+    if (isWaiting) return 'waiting';
+    if (timer.current === null) return 'muted';
+    return 'active';
+  }
+
+  return <TimeColumn label={title} value={display} state={getTimerState()} className={className} />;
+}
+
+export function PlanningStats() {
+  const { numEvents } = useProgressOverview();
+  const { plannedEnd, plannedStart } = useStartTimesOverview();
+
+  const hasTimes = plannedStart !== null && plannedEnd !== null;
+  const formattedDuration = hasTimes ? formatDuration(plannedEnd - plannedStart) : timerPlaceholder;
+
+  return (
+    <>
+      <TimeColumn label='Total duration' value={formattedDuration} />
+      <TimeColumn label='Events' value={String(numEvents)} />
+    </>
+  );
+}

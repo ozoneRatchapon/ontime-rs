@@ -1,0 +1,142 @@
+name: Ontime build
+
+on:
+  push:
+    tags: ['*']
+  workflow_dispatch:
+
+jobs:
+  build_macos:
+    runs-on: macOS-26
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Get pnpm store directory
+        run: echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Electron - Build app
+        env:
+          APPLE_ID: ${{ secrets.APPLEID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
+          APPLE_TEAM_ID: ${{ secrets.TEAMID }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+        run: pnpm dist-mac --env-mode=loose
+        timeout-minutes: 60
+
+      - name: Upload macOS build artifacts
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: ontime-macos-build
+          path: |
+            ./apps/electron/dist/ontime-macOS-x64.dmg
+            ./apps/electron/dist/ontime-macOS-arm64.dmg
+          retention-days: 1
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            ./apps/electron/dist/ontime-macOS-x64.dmg
+            ./apps/electron/dist/ontime-macOS-arm64.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Electron - Build app
+        run: pnpm dist-win
+
+      - name: Upload Windows build artifacts
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: ontime-windows-build
+          path: |
+            ./apps/electron/dist/ontime-win64.exe
+            ./apps/electron/dist/win-unpacked/
+          retention-days: 1
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: './apps/electron/dist/ontime-win64.exe'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build_ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Electron - Build app
+        run: pnpm dist-linux
+
+      - name: Upload Linux build artifacts
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: ontime-linux-build
+          path: |
+            ./apps/electron/dist/ontime-linux-x86_64.AppImage
+            ./apps/electron/dist/ontime-linux-arm64.AppImage
+            ./apps/electron/dist/ontime-linux-armv7l.AppImage
+          retention-days: 1
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            ./apps/electron/dist/ontime-linux-x86_64.AppImage
+            ./apps/electron/dist/ontime-linux-arm64.AppImage
+            ./apps/electron/dist/ontime-linux-armv7l.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

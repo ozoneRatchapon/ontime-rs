@@ -1,0 +1,1087 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  EntryId,
+  MaybeString,
+  OntimeDelay,
+  OntimeEntry,
+  OntimeEvent,
+  OntimeGroup,
+  OntimeMilestone,
+  PatchWithId,
+  ProjectRundownsList,
+  Rundown,
+  SupportedEntry,
+  TimeField,
+  TimeStrategy,
+  isOntimeEvent,
+  isOntimeGroup,
+  isOntimeMilestone,
+} from 'ontime-types';
+import {
+  MILLIS_PER_SECOND,
+  addToRundown,
+  createDelay,
+  createEvent,
+  createGroup,
+  createMilestone,
+  dayInMs,
+  generateId,
+  getInsertAfterId,
+  parseUserTime,
+  resolveInsertParent,
+  swapEventData,
+} from 'ontime-utils';
+import { useCallback, useMemo } from 'react';
+
+import { moveDown, moveUp, orderEntries } from '../../features/rundown/rundown.utils';
+import { CURRENT_RUNDOWN_QUERY_KEY, PROJECT_RUNDOWNS, getRundownQueryKey } from '../api/constants';
+import {
+  ReorderEntry,
+  deleteEntries,
+  patchReorderEntry,
+  postAddEntry,
+  postCloneEntry,
+  patchRenumberCues,
+  putBatchEditEvents,
+  putEditEntry,
+  requestApplyDelay,
+  requestDeleteAll,
+  requestEventSwap,
+  requestGroupEntries,
+  requestUngroup,
+} from '../api/rundown';
+import { logAxiosError } from '../api/utils';
+import { useEditorSettings } from '../stores/editorSettings';
+
+export type EventOptions = Partial<{
+  // options of any new entries (event / delay / group)
+  after: MaybeString;
+  before: MaybeString;
+  // options of entries of type OntimeEvent
+  linkPrevious: boolean;
+  /** the timing reference for the new entry, usually the same as after */
+  lastEventId: MaybeString;
+}>;
+
+type ClientInsertOptions = {
+  after?: EntryId;
+  before?: EntryId;
+};
+
+/**
+ * Gather utilities for actions on entries in the loaded rundown.
+ */
+export const useEntryActions = () => useEntryActionsForRundown(undefined);
+
+/**
+ * Gather utilities for actions on entries in an explicitly selected rundown.
+ */
+export const useScopedEntryActions = (rundownId: string | null) => useEntryActionsForRundown(rundownId ?? '');
+
+function useEntryActionsForRundown(scopedRundownId: string | undefined) {
+  const queryClient = useQueryClient();
+  const {
+    linkPrevious,
+    defaultTimeStrategy,
+    defaultDuration,
+    defaultWarnTime,
+    defaultDangerTime,
+    defaultTimerType,
+    defaultEndAction,
+    inheritGroupColour,
+  } = useEditorSettings();
+
+  const resolveCurrentRundownQueryKey = useCallback(() => {
+    if (scopedRundownId !== undefined) {
+      return getRundownQueryKey(scopedRundownId);
+    }
+    const loadedRundownId = queryClient.getQueryData<ProjectRundownsList>(PROJECT_RUNDOWNS)?.loaded;
+    return loadedRundownId ? getRundownQueryKey(loadedRundownId) : CURRENT_RUNDOWN_QUERY_KEY;
+  }, [queryClient, scopedRundownId]);
+
+  /**
+   * Returns the currently loaded rundown
+   */
+  const getCurrentRundownData = useCallback(() => {
+    return queryClient.getQueryData<Rundown>(resolveCurrentRundownQueryKey());
+  }, [queryClient, resolveCurrentRundownQueryKey]);
+
+  /**
+   * Looks for an entry with a given ID in the currently loaded rundown
+   */
+  const getEntryById = useCallback(
+    (eventId: EntryId): OntimeEntry | undefined => {
+      const cachedRundown = getCurrentRundownData();
+      if (!cachedRundown?.entries) {
+        return;
+      }
+      return cachedRundown.entries[eventId];
+    },
+    [getCurrentRundownData],
+  );
+
+  /**
+   * Calls mutation to add new entry
+   * @private
+   */
+  const { mutateAsync: addEntryMutation } = useMutation({
+    mutationFn: ([rundownId, entry]: [string, PatchWithId & ClientInsertOptions]) => postAddEntry(rundownId, entry),
+    onMutate: async ([_rundownId, entry]) => {
+      const queryKey = resolveCurrentRundownQueryKey();
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData<Rundown>(queryKey);
+
+      if (previousData) {
+        const optimisticEntry = createOptimisticEntry(entry);
+        const parentId = resolveInsertParent(previousData, entry);
+        const maybeParent = parentId ? previousData.entries[parentId] : null;
+        const parent = maybeParent && isOntimeGroup(maybeParent) ? maybeParent : null;
+        const afterId = getInsertAfterId(previousData, parent, entry.after, entry.before);
+
+        // create a mutable copy — addToRundown mutates in place using immutable array operations
+        const newRundown: Rundown = {
+          ...previousData,
+          entries: { ...previousData.entries },
+          revision: -1,
+        };
+
+        // copy the parent group so we don't mutate the original
+        if (parent && parentId) {
+          newRundown.entries[parentId] = { ...parent, entries: [...parent.entries] };
+        }
+
+        addToRundown(
+          newRundown,
+          optimisticEntry,
+          parent ? (newRundown.entries[parent.id] as OntimeGroup) : null,
+          afterId,
+          entry.before ?? null,
+        );
+
+        queryClient.setQueryData<Rundown>(queryKey, newRundown);
+      }
+
+      return { previousData, queryKey };
+    },
+    onSuccess: (response, _variables, context) => {
+      if (!response.data || !context?.queryKey) return;
+
+      const serverEntry = response.data;
+      const currentData = queryClient.getQueryData<Rundown>(context.queryKey);
+
+      if (currentData) {
+        queryClient.setQueryData<Rundown>(context.queryKey, {
+          ...currentData,
+          entries: { ...currentData.entries, [serverEntry.id]: serverEntry },
+        });
+      }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousData && context?.queryKey) {
+        queryClient.setQueryData<Rundown>(context.queryKey, context.previousData);
+      }
+    },
+    onSettled: (_data, _error, _variables, context) => {
+      queryClient.invalidateQueries({ queryKey: context?.queryKey ?? resolveCurrentRundownQueryKey() });
+    },
+  });
+
+  /**
+   * Adds an entry to rundown
+   */
+  const addEntry = useCallback(
+    async (entry: Partial<OntimeEntry>, options?: EventOptions) => {
+      const rundownData = getCurrentRundownData();
+      const rundownId = rundownData?.id;
+
+      if (!rundownId) {
+        throw new Error('Rundown not initialised');
+      }
+
+      const newEntry: PatchWithId & ClientInsertOptions = { ...entry, id: generateId() };
+
+      // handle adding options that concern all event types
+      if (options?.after) {
+        newEntry.after = options.after;
+      }
+      if (options?.before) {
+        newEntry.before = options.before;
+      }
+
+      // ************* CHECK OPTIONS specific to events
+      if (isOntimeEvent(newEntry)) {
+        // last event id is the timing reference of the previous OntimeEvent in rundown
+        if (options?.lastEventId) {
+          const previousEvent = rundownData.entries[options?.lastEventId];
+          if (isOntimeEvent(previousEvent)) {
+            newEntry.timeStart = previousEvent.timeEnd;
+          }
+        }
+
+        // Override event with options from editor settings
+        newEntry.linkStart = options?.linkPrevious ?? linkPrevious;
+
+        if (newEntry.duration === undefined && newEntry.timeEnd === undefined) {
+          newEntry.duration = parseUserTime(defaultDuration);
+        }
+
+        if (newEntry.timeDanger === undefined) {
+          newEntry.timeDanger = parseUserTime(defaultDangerTime);
+        }
+
+        if (newEntry.timeWarning === undefined) {
+          newEntry.timeWarning = parseUserTime(defaultWarnTime);
+        }
+
+        if (newEntry.timerType === undefined) {
+          newEntry.timerType = defaultTimerType;
+        }
+
+        if (newEntry.endAction === undefined) {
+          newEntry.endAction = defaultEndAction;
+        }
+
+        if (newEntry.timeStrategy === undefined) {
+          newEntry.timeStrategy = defaultTimeStrategy;
+        }
+      }
+
+      if (inheritGroupColour && (isOntimeEvent(newEntry) || isOntimeMilestone(newEntry)) && !newEntry.colour) {
+        const parentId = resolveInsertParent(rundownData, newEntry);
+        const maybeParent = parentId ? rundownData.entries[parentId] : null;
+        if (maybeParent && isOntimeGroup(maybeParent)) {
+          newEntry.colour = maybeParent.colour;
+        }
+      }
+
+      try {
+        await addEntryMutation([rundownId, newEntry]);
+      } catch (error) {
+        logAxiosError('Failed adding event', error);
+      }
+    },
+    [
+      getCurrentRundownData,
+      linkPrevious,
+      defaultDuration,
+      defaultDangerTime,
+      defaultWarnTime,
+      defaultTimerType,
+      defaultEndAction,
+      defaultTimeStrategy,
+      inheritGroupColour,
+      addEntryMutation,
+    ],
+  );
+
+  /**
+   * Calls mutation to clone a selection
+   * @private
+   */
+  const { mutateAsync: cloneEntryMutation } = useMutation({
+    mutationFn: ([rundownId, entryId, options]: Parameters<typeof postCloneEntry>) =>
+      postCloneEntry(rundownId, entryId, options),
+    onMutate: () => queryClient.cancelQueries({ queryKey: resolveCurrentRundownQueryKey() }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: resolveCurrentRundownQueryKey() }),
+  });
+
+  /**
+   * Clone an entry
+   */
+  const clone = useCallback(
+    async (entryId: EntryId, options?: ClientInsertOptions) => {
+      try {
+        const rundownId = getCurrentRundownData()?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        await cloneEntryMutation([rundownId, entryId, options]);
+      } catch (error) {
+        logAxiosError('Error cloning entry', error);
+      }
+    },
+    [cloneEntryMutation, getCurrentRundownData],
+  );
+
+  /**
+   * Calls mutation to update existing entry
+   * @private
+   */
+  const { mutateAsync: updateEntryMutation } = useMutation({
+    mutationFn: ([rundownId, newEvent]: Parameters<typeof putEditEntry>) => putEditEntry(rundownId, newEvent),
+    // we optimistically update here
+    onMutate: async ([_rundownId, newEvent]) => {
+      const queryKey = resolveCurrentRundownQueryKey();
+      // cancel ongoing queries
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData<Rundown>(queryKey);
+      const eventId = newEvent.id;
+
+      if (previousData && eventId) {
+        // optimistically update object
+        const newRundown = { ...previousData.entries };
+        // @ts-expect-error -- we expect the events to be of same type
+        newRundown[eventId] = { ...newRundown[eventId], ...newEvent };
+        queryClient.setQueryData<Rundown>(queryKey, {
+          id: previousData.id,
+          title: previousData.title,
+          order: previousData.order,
+          flatOrder: previousData.flatOrder,
+          entries: newRundown,
+          revision: -1,
+        });
+      }
+
+      // Return a context with the previous and new events
+      return { previousData, newEvent, queryKey };
+    },
+    // Mutation fails, rollback undoes optimist update
+    onError: (_error, _newEvent, context) => {
+      if (context?.previousData && context?.queryKey) {
+        queryClient.setQueryData<Rundown>(context.queryKey, context.previousData);
+      }
+    },
+    // Mutation finished, failed or successful
+    // Fetch anyway, just to be sure
+    onSettled: async (_data, _error, _variables, context) => {
+      await queryClient.invalidateQueries({ queryKey: context?.queryKey ?? resolveCurrentRundownQueryKey() });
+    },
+  });
+
+  /**
+   * Updates existing entry
+   */
+  const updateEntry = useCallback(
+    async (entry: Partial<OntimeEntry>) => {
+      try {
+        const rundownId = getCurrentRundownData()?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        await updateEntryMutation([rundownId, entry]);
+      } catch (error) {
+        logAxiosError('Error updating event', error);
+      }
+    },
+    [getCurrentRundownData, updateEntryMutation],
+  );
+
+  /**
+   * Updates time of existing event
+   * @param eventId {EntryId} - id of the event
+   * @param field {TimeField} - field to update
+   * @param value {string} - new value string to be parsed
+   * @param lockOnUpdate {boolean} - whether we will apply the lock / release on update
+   */
+  const updateTimer = useCallback(
+    async (eventId: EntryId, field: TimeField, value: string, lockOnUpdate?: boolean) => {
+      const rundownId = getCurrentRundownData()?.id;
+      if (!rundownId) {
+        throw new Error('Rundown not initialised');
+      }
+
+      // an empty value with no lock has no domain validity
+      if (!lockOnUpdate && value === '') {
+        return;
+      }
+
+      const newEvent: Partial<OntimeEvent> = {
+        id: eventId,
+      };
+
+      // check if we should lock the field
+      if (lockOnUpdate) {
+        if (field === 'timeEnd') {
+          // an empty value indicates that we should unlock the field
+          newEvent.timeStrategy = value === '' ? TimeStrategy.LockDuration : TimeStrategy.LockEnd;
+          newEvent.timeEnd = value === '' ? undefined : calculateNewValue();
+        } else if (field === 'duration') {
+          // an empty value indicates that we should unlock the field
+          newEvent.timeStrategy = value === '' ? TimeStrategy.LockEnd : TimeStrategy.LockDuration;
+          newEvent.duration = value === '' ? undefined : calculateNewValue();
+        } else if (field === 'timeStart') {
+          // an empty values means we should link to the previous
+          newEvent.linkStart = value === '';
+          newEvent.timeStart = value === '' ? undefined : calculateNewValue();
+        }
+      } else {
+        newEvent[field] = calculateNewValue();
+      }
+
+      try {
+        await updateEntryMutation([rundownId, newEvent]);
+      } catch (error) {
+        logAxiosError('Error updating event', error);
+      }
+
+      /**
+       * Utility function to calculate the new time value
+       */
+      function calculateNewValue(): number {
+        let newValMillis = 0;
+
+        // check for previous keyword
+        if (value === 'p' || value === 'prev' || value === 'previous') {
+          newValMillis = getPreviousEnd();
+
+          // check for adding time keyword
+        } else if (value.startsWith('+') || value.startsWith('p+') || value.startsWith('p +')) {
+          // TODO: is this logic solid?
+          const remainingString = value.substring(1);
+          newValMillis = getPreviousEnd() + parseUserTime(remainingString);
+        } else {
+          newValMillis = parseUserTime(value);
+        }
+        // dont allow timer values over 23:59:59
+        return Math.min(newValMillis, dayInMs - MILLIS_PER_SECOND);
+      }
+
+      /**
+       * Utility function to get the previous event end time
+       */
+      function getPreviousEnd(): number {
+        const cachedRundown = queryClient.getQueryData<Rundown>(resolveCurrentRundownQueryKey());
+
+        if (!cachedRundown?.order || !cachedRundown?.entries) {
+          return 0;
+        }
+
+        const index = cachedRundown.order.indexOf(eventId);
+        if (index === 0) {
+          return 0;
+        }
+        let previousEnd = 0;
+        for (let i = index - 1; i >= 0; i--) {
+          const event = cachedRundown.entries[cachedRundown.order[i]];
+          if (isOntimeEvent(event)) {
+            previousEnd = event.timeEnd;
+            break;
+          }
+        }
+        return previousEnd;
+      }
+    },
+    [getCurrentRundownData, updateEntryMutation, queryClient],
+  );
+
+  /**
+   * Calls mutation to edit multiple events
+   * @private
+   */
+  const { mutateAsync: batchUpdateEventsMutation } = useMutation({
+    mutationFn: ([rundownId, data]: Parameters<typeof putBatchEditEvents>) => putBatchEditEvents(rundownId, data),
+    onMutate: async ([_rundownId, data]) => {
+      const queryKey = resolveCurrentRundownQueryKey();
+      // cancel ongoing queries
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot the previous value
+      const previousRundown = queryClient.getQueryData<Rundown>(queryKey);
+
+      if (previousRundown) {
+        const eventIds = new Set(data.ids);
+        const newRundown = { ...previousRundown.entries };
+
+        eventIds.forEach((eventId) => {
+          if (Object.hasOwn(newRundown, eventId)) {
+            const event = newRundown[eventId];
+            if (isOntimeEvent(event)) {
+              newRundown[eventId] = {
+                ...event,
+                ...data,
+              };
+            }
+          }
+        });
+
+        queryClient.setQueryData<Rundown>(queryKey, {
+          id: previousRundown.id,
+          title: previousRundown.title,
+          order: previousRundown.order,
+          flatOrder: previousRundown.flatOrder,
+          entries: newRundown,
+          revision: -1,
+        });
+      }
+
+      // Return a context with the previous rundown
+      return { previousRundown, queryKey };
+    },
+    onSuccess: (response, _variables, context) => {
+      if (!response.data || !context?.queryKey) return;
+
+      const { id, title, order, flatOrder, entries, revision } = response.data;
+      queryClient.setQueryData<Rundown>(context.queryKey, {
+        id,
+        title,
+        order,
+        flatOrder,
+        entries,
+        revision,
+      });
+    },
+    onError: (_error, _newEvent, context) => {
+      if (context?.queryKey) {
+        queryClient.setQueryData<Rundown>(context.queryKey, context?.previousRundown);
+      }
+    },
+  });
+
+  const batchUpdateEvents = useCallback(
+    async (data: Partial<OntimeEvent>, eventIds: EntryId[]) => {
+      try {
+        const rundownId = getCurrentRundownData()?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        await batchUpdateEventsMutation([rundownId, { data, ids: eventIds }]);
+      } catch (error) {
+        logAxiosError('Error updating events', error);
+      }
+    },
+    [batchUpdateEventsMutation, getCurrentRundownData],
+  );
+
+  const { mutateAsync: renumberCuesMutation } = useMutation({
+    mutationFn: ([rundownId, body]: Parameters<typeof patchRenumberCues>) => patchRenumberCues(rundownId, body),
+    onMutate: async () => {
+      const queryKey = resolveCurrentRundownQueryKey();
+      await queryClient.cancelQueries({ queryKey });
+      const previousRundown = queryClient.getQueryData<Rundown>(queryKey);
+      return { previousRundown, queryKey };
+    },
+    onSuccess: (response, _variables, context) => {
+      if (!response.data || !context?.queryKey) return;
+      const updatedRundown = response.data;
+      queryClient.setQueryData<Rundown>(context.queryKey, updatedRundown);
+    },
+    onError: (_error, _vars, context) => {
+      if (context?.previousRundown) queryClient.setQueryData<Rundown>(context.queryKey, context.previousRundown);
+    },
+  });
+
+  const renumberCues = useCallback(
+    async (eventIds: EntryId[], prefix: string, start: string, increment: string) => {
+      const rundown = getCurrentRundownData();
+      const rundownId = rundown?.id;
+      if (!rundownId) throw new Error('Rundown not initialized');
+      try {
+        await renumberCuesMutation([rundownId, { ids: eventIds, prefix, start, increment }]);
+      } catch (error) {
+        logAxiosError('Error renumbering cues', error);
+        throw error;
+      }
+    },
+    [getCurrentRundownData, renumberCuesMutation],
+  );
+
+  /**
+   * Calls mutation to delete an entry
+   * @private
+   */
+  const { mutateAsync: deleteEntryMutation } = useMutation({
+    mutationFn: ([rundownId, entryIds]: Parameters<typeof deleteEntries>) => deleteEntries(rundownId, entryIds),
+    // we optimistically update here
+    onMutate: async ([_rundownId, entryIds]) => {
+      const queryKey = resolveCurrentRundownQueryKey();
+      // cancel ongoing queries
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData<Rundown>(queryKey);
+
+      if (previousData) {
+        // optimistically update object
+        const { entries, order, flatOrder } = optimisticDeleteEntries(entryIds, previousData);
+
+        queryClient.setQueryData<Rundown>(queryKey, {
+          id: previousData.id,
+          title: previousData.title,
+          order,
+          flatOrder,
+          entries,
+          revision: -1,
+        });
+      }
+
+      // Return a context with the previous and new events
+      return { previousData, queryKey };
+    },
+
+    // Mutation fails, rollback undoes optimist update
+    onError: (_error, _entryIds, context) => {
+      if (context?.queryKey) {
+        queryClient.setQueryData<Rundown>(context.queryKey, context?.previousData);
+      }
+    },
+    // Mutation finished, failed or successful
+    // Fetch anyway, just to be sure
+    onSettled: (_data, _error, _variables, context) => {
+      queryClient.invalidateQueries({ queryKey: context?.queryKey ?? resolveCurrentRundownQueryKey() });
+    },
+  });
+
+  /**
+   * Deletes an event entry from the rundown
+   */
+  const deleteEntry = useCallback(
+    async (entryIds: EntryId[]) => {
+      try {
+        const rundownId = getCurrentRundownData()?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        await deleteEntryMutation([rundownId, entryIds]);
+      } catch (error) {
+        logAxiosError('Error deleting event', error);
+      }
+    },
+    [deleteEntryMutation, getCurrentRundownData],
+  );
+
+  /**
+   * Calls mutation to delete all events
+   * @private
+   */
+  const { mutateAsync: deleteAllEntriesMutation } = useMutation({
+    mutationFn: ([rundownId]: Parameters<typeof requestDeleteAll>) => requestDeleteAll(rundownId),
+    // we optimistically update here
+    onMutate: async () => {
+      const queryKey = resolveCurrentRundownQueryKey();
+      // cancel ongoing queries
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData<Rundown>(queryKey);
+
+      // optimistically update object
+      queryClient.setQueryData<Rundown>(queryKey, {
+        id: previousData?.id ?? 'default',
+        title: previousData?.title ?? '',
+        order: [],
+        flatOrder: [],
+        entries: {},
+        revision: -1,
+      });
+
+      // Return a context with the previous and new events
+      return { previousData, queryKey };
+    },
+
+    // Mutation fails, rollback optimist update
+    onError: (_error, _, context) => {
+      if (context?.queryKey) {
+        queryClient.setQueryData<Rundown>(context.queryKey, context?.previousData);
+      }
+    },
+    // Mutation finished, failed or successful
+    // Fetch anyway, just to be sure
+    onSettled: (_data, _error, _variables, context) => {
+      queryClient.invalidateQueries({ queryKey: context?.queryKey ?? resolveCurrentRundownQueryKey() });
+    },
+  });
+
+  /**
+   * Deletes all entries in the rundown
+   */
+  const deleteAllEntries = useCallback(async () => {
+    try {
+      const rundownId = getCurrentRundownData()?.id;
+      if (!rundownId) {
+        throw new Error('Rundown not initialised');
+      }
+
+      await deleteAllEntriesMutation([rundownId]);
+    } catch (error) {
+      logAxiosError('Error deleting events', error);
+    }
+  }, [deleteAllEntriesMutation, getCurrentRundownData]);
+
+  /**
+   * Calls mutation to apply a delay
+   * @private
+   */
+  const { mutateAsync: applyDelayMutation } = useMutation({
+    mutationFn: ([rundownId, delayId]: Parameters<typeof requestApplyDelay>) => requestApplyDelay(rundownId, delayId),
+    onMutate: () => queryClient.cancelQueries({ queryKey: resolveCurrentRundownQueryKey() }),
+    onSuccess: (response) => {
+      if (!response.data) return;
+
+      const { id, title, order, flatOrder, entries, revision } = response.data;
+      queryClient.setQueryData<Rundown>(resolveCurrentRundownQueryKey(), {
+        id,
+        title,
+        order,
+        flatOrder,
+        entries,
+        revision,
+      });
+    },
+    // Mutation finished, failed or successful
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: resolveCurrentRundownQueryKey() });
+    },
+  });
+
+  /**
+   * Applies a given delay
+   */
+  const applyDelay = useCallback(
+    async (delayEventId: EntryId) => {
+      try {
+        const rundownId = getCurrentRundownData()?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        await applyDelayMutation([rundownId, delayEventId]);
+      } catch (error) {
+        logAxiosError('Error applying delay', error);
+      }
+    },
+    [applyDelayMutation, getCurrentRundownData],
+  );
+
+  /**
+   * Calls mutation to dissolve a group
+   * @private
+   */
+  const { mutateAsync: ungroupMutation } = useMutation({
+    mutationFn: ([rundownId, groupId]: Parameters<typeof requestUngroup>) => requestUngroup(rundownId, groupId),
+    onMutate: () => queryClient.cancelQueries({ queryKey: resolveCurrentRundownQueryKey() }),
+    onSuccess: (response) => {
+      if (!response.data) return;
+
+      const { id, title, order, flatOrder, entries, revision } = response.data;
+      queryClient.setQueryData<Rundown>(resolveCurrentRundownQueryKey(), {
+        id,
+        title,
+        order,
+        flatOrder,
+        entries,
+        revision,
+      });
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: resolveCurrentRundownQueryKey() }),
+  });
+
+  /**
+   * Deletes a group and moves its events to the top level
+   */
+  const ungroup = useCallback(
+    async (groupId: EntryId) => {
+      try {
+        const rundownId = getCurrentRundownData()?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        await ungroupMutation([rundownId, groupId]);
+      } catch (error) {
+        logAxiosError('Error dissolving group', error);
+      }
+    },
+    [getCurrentRundownData, ungroupMutation],
+  );
+
+  /**
+   * Calls mutation to create a group with a selection
+   * @private
+   */
+  const { mutateAsync: groupEntriesMutation } = useMutation({
+    mutationFn: ([rundownId, entryIds]: Parameters<typeof requestGroupEntries>) =>
+      requestGroupEntries(rundownId, entryIds),
+    onMutate: () => queryClient.cancelQueries({ queryKey: resolveCurrentRundownQueryKey() }),
+    onSuccess: (response) => {
+      if (!response.data) return;
+
+      const { id, title, order, flatOrder, entries, revision } = response.data;
+      queryClient.setQueryData<Rundown>(resolveCurrentRundownQueryKey(), {
+        id,
+        title,
+        order,
+        flatOrder,
+        entries,
+        revision,
+      });
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: resolveCurrentRundownQueryKey() }),
+  });
+
+  /**
+   * Create a group with a selection
+   */
+  const groupEntries = useCallback(
+    async (entryIds: EntryId[]) => {
+      if (entryIds.length === 0) return;
+
+      try {
+        const rundownData = getCurrentRundownData();
+        const rundownId = rundownData?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        if (entryIds.length === 1) {
+          await groupEntriesMutation([rundownId, entryIds]);
+        } else {
+          // the user selection may be out of order
+          const orderedIds = orderEntries(entryIds, rundownData.flatOrder);
+          await groupEntriesMutation([rundownId, orderedIds]);
+        }
+      } catch (error) {
+        logAxiosError('Error grouping entries', error);
+      }
+    },
+    [getCurrentRundownData, groupEntriesMutation],
+  );
+
+  /**
+   * Calls mutation to reorder an entry
+   * @private
+   */
+  const { mutateAsync: reorderEntryMutation } = useMutation({
+    mutationFn: ([rundownId, data]: Parameters<typeof patchReorderEntry>) => patchReorderEntry(rundownId, data),
+    onMutate: () => queryClient.cancelQueries({ queryKey: resolveCurrentRundownQueryKey() }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: resolveCurrentRundownQueryKey() });
+    },
+  });
+
+  /**
+   * Reorders a given entry one step up or down in the timeline
+   */
+  const move = useCallback(
+    async (entryId: EntryId, direction: 'up' | 'down') => {
+      try {
+        const rundownData = getCurrentRundownData();
+        const rundownId = rundownData?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        const { destinationId, order } =
+          direction === 'up'
+            ? moveUp(entryId, rundownData.flatOrder, rundownData.entries)
+            : moveDown(entryId, rundownData.flatOrder, rundownData.entries);
+
+        if (!destinationId) {
+          return; // noop
+        }
+
+        const reorderObject: ReorderEntry = {
+          entryId,
+          destinationId,
+          order,
+        };
+        await reorderEntryMutation([rundownId, reorderObject]);
+        // the rundown needs to know whether we moved into a group
+        return rundownData.entries[destinationId]?.type === SupportedEntry.Group ? destinationId : undefined;
+      } catch (error) {
+        logAxiosError('Error re-ordering event', error);
+      }
+      return undefined;
+    },
+    [getCurrentRundownData, reorderEntryMutation],
+  );
+  /**
+   * Reorders a given entry
+   */
+  const reorderEntry = useCallback(
+    async (entryId: EntryId, destinationId: EntryId, order: 'before' | 'after' | 'insert') => {
+      try {
+        const rundownId = getCurrentRundownData()?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        await reorderEntryMutation([
+          rundownId,
+          {
+            entryId,
+            destinationId,
+            order,
+          },
+        ]);
+      } catch (error) {
+        logAxiosError('Error re-ordering event', error);
+        throw error; // rethrow to handle in the component
+      }
+    },
+    [getCurrentRundownData, reorderEntryMutation],
+  );
+
+  /**
+   * Calls mutation to swap events
+   * @private
+   */
+  const { mutateAsync: swapEventsMutation } = useMutation({
+    mutationFn: ([rundownId, from, to]: Parameters<typeof requestEventSwap>) => requestEventSwap(rundownId, from, to),
+    // we optimistically update here
+    onMutate: async ([_rundownId, from, to]) => {
+      const queryKey = resolveCurrentRundownQueryKey();
+      // cancel ongoing queries
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData<Rundown>(queryKey);
+      if (previousData) {
+        // optimistically update object
+        const newRundown = { ...previousData.entries };
+        const eventA = previousData.entries[from];
+        const eventB = previousData.entries[to];
+
+        if (!isOntimeEvent(eventA) || !isOntimeEvent(eventB)) {
+          return;
+        }
+
+        const [newA, newB] = swapEventData(eventA, eventB);
+        newRundown[from] = newA;
+        newRundown[to] = newB;
+
+        queryClient.setQueryData<Rundown>(queryKey, {
+          id: previousData.id,
+          title: previousData.title,
+          order: previousData.order,
+          flatOrder: previousData.flatOrder,
+          entries: newRundown,
+          revision: -1,
+        });
+      }
+
+      // Return a context with the previous events
+      return { previousData, queryKey };
+    },
+
+    // Mutation fails, rollback undoes optimist update
+    onError: (_error, _eventId, context) => {
+      if (context?.queryKey) {
+        queryClient.setQueryData<Rundown>(context.queryKey, context?.previousData);
+      }
+    },
+    // Mutation finished, failed or successful
+    // Fetch anyway, just to be sure
+    onSettled: (_data, _error, _variables, context) => {
+      queryClient.invalidateQueries({ queryKey: context?.queryKey ?? resolveCurrentRundownQueryKey() });
+    },
+  });
+
+  /**
+   * Swaps the schedule of two events
+   */
+  const swapEvents = useCallback(
+    async (from: EntryId, to: EntryId) => {
+      try {
+        const rundownId = getCurrentRundownData()?.id;
+        if (!rundownId) {
+          throw new Error('Rundown not initialised');
+        }
+
+        await swapEventsMutation([rundownId, from, to]);
+      } catch (error) {
+        logAxiosError('Error re-ordering event', error);
+      }
+    },
+    [getCurrentRundownData, swapEventsMutation],
+  );
+
+  return useMemo(
+    () => ({
+      addEntry,
+      applyDelay,
+      batchUpdateEvents,
+      clone,
+      deleteEntry,
+      deleteAllEntries,
+      ungroup,
+      getEntryById,
+      groupEntries,
+      move,
+      reorderEntry,
+      renumberCues,
+      swapEvents,
+      updateEntry,
+      updateTimer,
+    }),
+    [
+      addEntry,
+      applyDelay,
+      batchUpdateEvents,
+      clone,
+      deleteEntry,
+      deleteAllEntries,
+      ungroup,
+      getEntryById,
+      groupEntries,
+      move,
+      reorderEntry,
+      renumberCues,
+      swapEvents,
+      updateEntry,
+      updateTimer,
+    ],
+  );
+}
+
+/**
+ * Utility to optimistically delete entries from client cache
+ */
+function optimisticDeleteEntries(entryIds: EntryId[], rundown: Rundown) {
+  const entries = { ...rundown.entries };
+  let order = [...rundown.order];
+  let flatOrder = [...rundown.flatOrder];
+
+  for (let i = 0; i < entryIds.length; i++) {
+    const entry = entries[entryIds[i]];
+    deleteEntry(entry);
+  }
+
+  function deleteEntry(entry: OntimeEntry) {
+    if (isOntimeGroup(entry) || !entry.parent) {
+      order = order.filter((id) => id !== entry.id);
+    } else {
+      const parent = entries[entry.parent];
+      if (parent && isOntimeGroup(parent)) {
+        parent.entries = parent.entries.filter((parentEntry) => parentEntry !== entry.id);
+      }
+    }
+
+    delete entries[entry.id];
+    flatOrder = flatOrder.filter((id) => id !== entry.id);
+  }
+
+  return { entries, order, flatOrder };
+}
+
+/**
+ * Utility to create an optimistic entry for immediate cache insertion
+ */
+function createOptimisticEntry(payload: PatchWithId & ClientInsertOptions): OntimeEntry {
+  const { after: _after, before: _before, ...entryData } = payload;
+  const id = entryData.id;
+  let parent: EntryId | null = null;
+  if ('parent' in entryData && entryData.parent) {
+    parent = entryData.parent;
+  }
+
+  switch (entryData.type) {
+    case SupportedEntry.Event: {
+      return createEvent({ ...entryData, id, parent }) as OntimeEvent;
+    }
+    case SupportedEntry.Delay:
+      return createDelay({ id, duration: (entryData as Partial<OntimeDelay>).duration ?? 0, parent });
+    case SupportedEntry.Group:
+      return createGroup({ ...(entryData as Partial<OntimeGroup>), id });
+    case SupportedEntry.Milestone:
+      return createMilestone({ ...(entryData as Partial<OntimeMilestone>), id, parent });
+    default:
+      throw new Error('Unknown entry type');
+  }
+}

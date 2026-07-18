@@ -1,0 +1,127 @@
+@use '../blockMixins' as *;
+
+.group {
+  @include block-styling;
+
+  margin-block: 0.5rem;
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  grid-template-areas: 'binder header';
+  align-items: center;
+
+  &.hasCursor {
+    outline: 1px solid $block-cursor-color;
+  }
+
+  &.copyTarget {
+    outline: 2px dashed $block-cursor-color;
+  }
+
+  &.expanded {
+    margin-block: 0.5rem 0;
+    border-radius: $block-border-radius $block-border-radius 0 0;
+    border-bottom: 0.25rem solid color-mix(in srgb, transparent 90%, var(--user-bg, transparent) 10%);
+  }
+
+  .binder {
+    grid-area: binder;
+    height: 100%;
+    background-color: var(--user-bg, $gray-1050);
+    color: $section-white;
+    font-size: 1rem;
+    display: grid;
+    place-content: center;
+    position: relative;
+    cursor: pointer;
+
+    &:focus {
+      outline: 1px solid $blue-500;
+      outline-offset: -1px;
+    }
+  }
+
+  .header {
+    grid-area: header;
+    padding-inline: 0.5rem;
+    background-color: $block-bg2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .titleRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .metaRow {
+    display: flex;
+    gap: $block-clearance; // same as RundownEvent.eventTimers
+    margin-bottom: 0.25rem;
+    padding-left: 0.25rem;
+    white-space: nowrap;
+  }
+
+  .metaEntry {
+    width: 8rem; // timeInput + button
+
+    &:first-of-type {
+      width: 4.5rem; // binder + buttons
+    }
+  }
+
+  .metaLabel {
+    color: $muted-gray;
+    font-size: calc(1rem - 3px);
+  }
+}
+
+.strike {
+  text-decoration: wavy underline;
+  margin-right: 0.25rem;
+  color: $ui-white;
+}
+
+.duration {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.lockIcon {
+  opacity: 0.6;
+}
+
+.over {
+  color: $playback-over;
+  .strike {
+    text-decoration-color: $playback-over;
+  }
+  .offsetLabel {
+    background-color: $playback-over;
+  }
+}
+.under {
+  color: $playback-under;
+  .strike {
+    text-decoration-color: $playback-under;
+  }
+  .offsetLabel {
+    background-color: $playback-under;
+  }
+}
+
+.drag {
+  @include drag-style;
+  position: absolute;
+  margin-top: 0.25rem;
+
+  &.isDragging {
+    cursor: grabbing;
+  }
+
+  &.notAllowed {
+    cursor: not-allowed;
+  }
+}

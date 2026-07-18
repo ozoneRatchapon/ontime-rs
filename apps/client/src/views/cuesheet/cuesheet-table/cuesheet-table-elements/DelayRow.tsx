@@ -1,0 +1,45 @@
+import { CSSProperties, memo } from 'react';
+
+import { millisToDelayString } from '../../../../common/utils/dateConfig';
+import { usePersistedCuesheetOptions } from '../../cuesheet.options';
+
+import style from './DelayRow.module.scss';
+
+interface DelayRowProps {
+  duration: number;
+  injectedStyles?: CSSProperties;
+  hasCursor?: boolean;
+}
+
+function DelayRow({ duration, injectedStyles, hasCursor, ...virtuosoProps }: DelayRowProps) {
+  const hideDelays = usePersistedCuesheetOptions((state) => state.hideDelays);
+
+  if (hideDelays || duration === 0) {
+    return (
+      <tr
+        className={`${style.delayRow} ${style.delayRowHidden}`}
+        data-testid='cuesheet-delay-hidden'
+        style={injectedStyles}
+        {...virtuosoProps}
+      >
+        <td />
+      </tr>
+    );
+  }
+
+  const delayTime = millisToDelayString(duration, 'expanded');
+
+  return (
+    <tr
+      className={style.delayRow}
+      data-testid='cuesheet-delay'
+      style={injectedStyles}
+      data-cursor={hasCursor}
+      {...virtuosoProps}
+    >
+      <td tabIndex={0}>{delayTime}</td>
+    </tr>
+  );
+}
+
+export default memo(DelayRow);

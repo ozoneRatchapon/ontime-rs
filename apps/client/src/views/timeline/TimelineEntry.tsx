@@ -1,0 +1,176 @@
+import { Day } from 'ontime-types';
+import { CSSProperties, RefObject } from 'react';
+
+import { useAnimatedProgress } from '../../common/hooks/useAnimatedProgress';
+import { useExpectedStartData, useTimer } from '../../common/hooks/useSocket';
+import { alpha, cx } from '../../common/utils/styleUtils';
+import { formatDuration, formatTime, getExpectedTimesFromExtendedEvent } from '../../common/utils/time';
+import { useTranslation } from '../../translation/TranslationProvider';
+import { getStatusLabel } from './timeline.utils';
+
+import style from './Timeline.module.scss';
+
+export type ProgressStatus = 'done' | 'live' | 'future';
+
+interface TimelineEntryProps {
+  colour: string;
+  delay: number;
+  duration: number;
+  hasLink: boolean;
+  left: number;
+  status: ProgressStatus;
+  start: number;
+  dayOffset: Day;
+  totalGap: number;
+  isLinkedToLoaded: boolean;
+  title: string;
+  width: number;
+  cue: string;
+  groupColour?: string;
+  ref?: RefObject<HTMLDivElement | null>;
+}
+
+const formatOptions = {
+  format12: 'h:mm a',
+  format24: 'HH:mm',
+};
+
+export function TimelineEntry({
+  colour,
+  delay,
+  duration,
+  hasLink,
+  left,
+  status,
+  start,
+  dayOffset,
+  totalGap,
+  isLinkedToLoaded,
+  title,
+  width,
+  cue,
+  groupColour,
+  ref,
+}: TimelineEntryProps) {
+  const formattedStartTime = formatTime(start, formatOptions);
+  const formattedDuration = formatDuration(duration);
+  const delayedStart = start + delay;
+  const hasDelay = delay > 0;
+
+  const lighterColour = alpha(colour, 0.7);
+  const showTitle = width > 20;
+  const smallArea = width < 40;
+
+  return (
+    <div
+      ref={ref}
+      className={cx([style.column, smallArea && style.smallArea])}
+      style={
+        {
+          '--color': colour,
+          '--lighter': lighterColour ?? '',
+          '--group-colour': groupColour ?? 'transparent',
+          left: `${left}px`,
+          width: `${width}px`,
+        } as CSSProperties
+      }
+      data-testid={cue}
+    >
+      {status === 'live' ? <ActiveBlock /> : <div data-status={status} className={style.timelineBlock} />}
+      <div className={style.groupBand} />
+      <div
+        className={cx([style.content, width < 20 && style.hide, !hasLink && style.separeLeft])}
+        data-status={status}
+        style={
+          {
+            '--color': colour,
+          } as CSSProperties
+        }
+      >
+        <div className={style.maybeInline}>
+          <div className={cx([hasDelay && style.cross])}>{formattedStartTime}</div>
+          {hasDelay && <div className={style.delay}>{formatTime(delayedStart, formatOptions)}</div>}
+          {smallArea && (
+            <TimelineEntryStatus
+              delay={delay}
+              start={start}
+              dayOffset={dayOffset}
+              totalGap={totalGap}
+              isLinkedToLoaded={isLinkedToLoaded}
+              status={status}
+            />
+          )}
+          {smallArea && <div className={style.title}>{title}</div>}
+        </div>
+        {showTitle && (
+          <>
+            {!smallArea && (
+              <TimelineEntryStatus
+                delay={delay}
+                start={start}
+                dayOffset={dayOffset}
+                totalGap={totalGap}
+                isLinkedToLoaded={isLinkedToLoaded}
+                status={status}
+              />
+            )}
+            {!smallArea && <div className={style.title}>{title}</div>}
+          </>
+        )}
+      </div>
+      <div className={style.timeOverview} data-status={status}>
+        {status !== 'done' && <div className={style.duration}>{formattedDuration}</div>}
+      </div>
+    </div>
+  );
+}
+
+interface TimelineEntryStatusProps {
+  delay: number;
+  start: number;
+  dayOffset: Day;
+  totalGap: number;
+  isLinkedToLoaded: boolean;
+  status: ProgressStatus;
+}
+
+// extract component to isolate re-renders provoked by the clock changes
+function TimelineEntryStatus({
+  delay,
+  start,
+  dayOffset,
+  totalGap,
+  isLinkedToLoaded,
+  status,
+}: TimelineEntryStatusProps) {
+  const state = useExpectedStartData();
+
+  const { getLocalizedString } = useTranslation();
+
+  const { timeToStart } = getExpectedTimesFromExtendedEvent(
+    { timeStart: start, delay, dayOffset, totalGap, isLinkedToLoaded, countToEnd: false, duration: 0 },
+    state,
+  );
+
+  let statusText = getStatusLabel(timeToStart, status);
+  if (statusText === 'live') {
+    statusText = getLocalizedString('timeline.live');
+  } else if (statusText === 'pending') {
+    statusText = getLocalizedString('timeline.due');
+  } else if (statusText === 'done') {
+    statusText = getLocalizedString('timeline.done');
+  }
+
+  const isDue = status === 'future' && timeToStart <= 0;
+
+  return <div className={cx([style.status, isDue && style.due])}>{statusText}</div>;
+}
+
+/** Generates a block level progress bar */
+function ActiveBlock() {
+  const { current, duration } = useTimer();
+  const progress = useAnimatedProgress(current, duration);
+  return (
+    <div data-status='live' className={style.timelineBlock} style={{ '--progress': `${progress}%` } as CSSProperties} />
+  );
+}

@@ -1,0 +1,85 @@
+import express from 'express';
+import type { Request, Response, Router } from 'express';
+import type {
+  ErrorResponse,
+  SpreadsheetPreviewResponse,
+  SpreadsheetWorksheetMetadata,
+  SpreadsheetWorksheetOptions,
+} from 'ontime-types';
+import { getErrorMessage } from 'ontime-utils';
+
+import { getDataProvider } from '../../classes/data-provider/DataProvider.js';
+import { getProjectCustomFields } from '../rundown/rundown.dao.js';
+import { EXCEL_MIME } from './excel.constants.js';
+import { uploadExcel } from './excel.middleware.js';
+import { generateExcelFile, generateRundownPreview, getWorksheetMetadata, readExcelFile } from './excel.service.js';
+import {
+  validateFileExists,
+  validateImportMapOptions,
+  validateRundownExport,
+  validateWorksheetMetadataRequest,
+} from './excel.validation.js';
+
+export const router: Router = express.Router();
+
+router.post(
+  '/upload',
+  uploadExcel,
+  validateFileExists,
+  async (req: Request, res: Response<SpreadsheetWorksheetOptions | ErrorResponse>) => {
+    try {
+      // file has been validated by middleware
+      const filePath = (req.file as Express.Multer.File).path;
+      const worksheetOptions = await readExcelFile(filePath);
+      res.status(200).send(worksheetOptions);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      res.status(500).send({ message });
+    }
+  },
+);
+
+router.post(
+  '/preview',
+  validateImportMapOptions,
+  (req: Request, res: Response<SpreadsheetPreviewResponse | ErrorResponse>) => {
+    try {
+      const { options } = req.body;
+      const data = generateRundownPreview(options);
+      res.status(200).send(data);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      res.status(500).send({ message });
+    }
+  },
+);
+
+router.post(
+  '/metadata',
+  validateWorksheetMetadataRequest,
+  (req: Request, res: Response<SpreadsheetWorksheetMetadata | ErrorResponse>) => {
+    try {
+      const { worksheet } = req.body;
+      const data = getWorksheetMetadata(worksheet);
+      res.status(200).send(data);
+    } catch (error) {
+      const message = getErrorMessage(error);
+      res.status(500).send({ message });
+    }
+  },
+);
+
+router.get('/:rundownId/export', validateRundownExport, (req: Request, res: Response) => {
+  try {
+    const rundown = getDataProvider().getRundown(req.params.rundownId);
+    const customFields = getProjectCustomFields();
+    const buffer = generateExcelFile(rundown, customFields);
+
+    res.setHeader('Content-Disposition', 'attachment;');
+    res.setHeader('Content-Type', EXCEL_MIME);
+    res.setHeader('Content-Length', buffer.length.toString());
+    res.status(200).send(buffer);
+  } catch (_error) {
+    res.status(500).send({ message: 'Failed to generate Excel file' });
+  }
+});

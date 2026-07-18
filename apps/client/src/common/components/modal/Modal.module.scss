@@ -1,0 +1,77 @@
+.modal {
+  position: fixed;
+  top: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+
+  padding-inline: 1rem;
+  min-width: min(880px, 90vw);
+  min-height: min(200px, 10vh);
+  max-width: min(1200px, 90vw);
+
+  background-color: $gray-1250;
+  color: $ui-white;
+  border-radius: $component-border-radius-md;
+  box-shadow: $box-shadow-l1;
+  border: 1px solid $gray-1100;
+  outline: none;
+}
+
+.wide {
+  top: 4vh;
+  min-width: min(1280px, 96vw);
+  max-width: min(1600px, 96vw);
+  height: 88vh;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: $backdrop-color;
+  transition: opacity 300ms cubic-bezier(0.45, 1.005, 0, 1.005);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+  }
+}
+
+.title {
+  padding-block: 1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titleText {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.wide .body {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+
+.footer {
+  padding-block: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 1rem;
+}

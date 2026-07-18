@@ -1,0 +1,228 @@
+import { OntimeView, OntimeViewPresettable, URLPreset } from 'ontime-types';
+import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+
+import { maybeAxiosError, unwrapError } from '../../../../../common/api/utils';
+import Button from '../../../../../common/components/buttons/Button';
+import Input from '../../../../../common/components/input/input/Input';
+import Textarea from '../../../../../common/components/input/textarea/Textarea';
+import Select, { SelectOption } from '../../../../../common/components/select/Select';
+import { useUpdateUrlPreset } from '../../../../../common/hooks-query/useUrlPresets';
+import { preventEscape } from '../../../../../common/utils/keyEvent';
+import { isUrlSafe } from '../../../../../common/utils/regex';
+import { enDash } from '../../../../../common/utils/styleUtils';
+import { generateUrlPresetOptions } from '../../../../../common/utils/urlPresets';
+import CuesheetLinkOptions, { CuesheetPermissionValues } from '../../../../sharing/composite/CuesheetLinkOptions';
+import * as Panel from '../../../panel-utils/PanelUtils';
+
+import style from './URLPresetForm.module.scss';
+
+const targetOptions: SelectOption<OntimeViewPresettable>[] = [
+  { value: OntimeView.Cuesheet, label: 'Cuesheet' },
+  { value: OntimeView.Operator, label: 'Operator' },
+  { value: OntimeView.Timer, label: 'Timer' },
+  { value: OntimeView.Backstage, label: 'Backstage' },
+  { value: OntimeView.Timeline, label: 'Timeline' },
+  { value: OntimeView.StudioClock, label: 'Studio Clock' },
+  { value: OntimeView.Countdown, label: 'Countdown' },
+  { value: OntimeView.ProjectInfo, label: 'Project Info' },
+];
+
+const defaultValues: URLPreset = {
+  alias: '',
+  target: OntimeView.Timer,
+  search: '',
+  enabled: true,
+  displayInNav: false,
+};
+
+interface URLPresetFormProps {
+  urlPreset?: URLPreset;
+  onClose: () => void;
+}
+
+export default function URLPresetForm({ urlPreset, onClose }: URLPresetFormProps) {
+  const { addPreset, updatePreset, isMutating } = useUpdateUrlPreset();
+
+  const {
+    handleSubmit,
+    register,
+    setFocus,
+    setError,
+    clearErrors,
+    setValue,
+    getValues,
+    watch,
+    formState: { errors, isSubmitting, isValid, isDirty },
+  } = useForm<URLPreset>({
+    defaultValues: urlPreset ?? defaultValues,
+    mode: 'onChange',
+    resetOptions: {
+      keepDirtyValues: true,
+    },
+  });
+  const urlRef = useRef<HTMLInputElement>(null);
+
+  // Cuesheet read/write permissions live outside react-hook-form
+  const initialPermissions = useRef<CuesheetPermissionValues>({
+    read: urlPreset?.options?.read ?? 'full',
+    write: urlPreset?.options?.write ?? 'full',
+  });
+  const [cuesheetPermissions, setCuesheetPermissions] = useState<CuesheetPermissionValues>(initialPermissions.current);
+
+  // update initial permissions on mount
+  useEffect(() => {
+    initialPermissions.current = {
+      read: urlPreset?.options?.read ?? 'full',
+      write: urlPreset?.options?.write ?? 'full',
+    };
+    setCuesheetPermissions(initialPermissions.current);
+    // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps -- run on mount
+  }, []);
+
+  const isEditingCuesheet = urlPreset && urlPreset.target === OntimeView.Cuesheet;
+  const isCuesheet = watch('target') === OntimeView.Cuesheet;
+  const permissionsDirty =
+    isCuesheet &&
+    (cuesheetPermissions.read !== initialPermissions.current.read ||
+      cuesheetPermissions.write !== initialPermissions.current.write);
+  const noReadAccess = isCuesheet && cuesheetPermissions.read === '-';
+
+  const setupSubmit = async (data: URLPreset) => {
+    try {
+      // Preserve / apply cuesheet permissions, which are not part of the form fields
+      const payload: URLPreset =
+        data.target === OntimeView.Cuesheet
+          ? { ...data, target: OntimeView.Cuesheet, options: cuesheetPermissions }
+          : data;
+      if (urlPreset) {
+        await updatePreset(urlPreset.alias, payload);
+      } else {
+        await addPreset(payload);
+      }
+      onClose();
+    } catch (error) {
+      setError('root', { message: maybeAxiosError(error) });
+    }
+  };
+
+  // focus on alias when the form opens
+  useEffect(() => {
+    setFocus('alias');
+  }, [setFocus]);
+
+  const generateOptions = () => {
+    clearErrors();
+
+    try {
+      const preset = generateUrlPresetOptions(getValues('alias'), urlRef.current?.value.trim() ?? '');
+      setValue('target', preset.target, { shouldDirty: true, shouldValidate: true });
+      setValue('search', preset.search, { shouldDirty: true, shouldValidate: true });
+    } catch (error) {
+      setError('root', { message: unwrapError(error) });
+      return;
+    }
+  };
+
+  const validateParams = (value: string) => {
+    try {
+      new URLSearchParams(value);
+      return true;
+    } catch (error) {
+      return unwrapError(error) || 'Invalid URL parameters';
+    }
+  };
+
+  return (
+    <Panel.Indent
+      as='form'
+      onSubmit={handleSubmit(setupSubmit)}
+      onKeyDown={(event) => preventEscape(event, onClose)}
+      className={style.column}
+    >
+      <input hidden name='enabled' value='true' />
+
+      <div>1. Enter URL and let Ontime generate the preset options</div>
+      <Panel.InlineElements>
+        <div>
+          <Panel.Description>Alias</Panel.Description>
+          <Input
+            {...register('alias', {
+              required: 'Alias is required',
+              pattern: {
+                value: isUrlSafe,
+                message: 'Field can only contain URL safe characters (a-z, 0-9, _ and -)',
+              },
+            })}
+          />
+        </div>
+        <div className={style.expand}>
+          <Panel.Description>Generate options (paste URL to generate options)</Panel.Description>
+          <Panel.InlineElements>
+            <Input placeholder='Paste URL' fluid ref={urlRef} disabled={isEditingCuesheet} />
+            <Button onClick={generateOptions} disabled={isEditingCuesheet}>
+              Generate
+            </Button>
+          </Panel.InlineElements>
+        </div>
+      </Panel.InlineElements>
+      {errors.alias?.message && <Panel.Error>{errors.alias.message}</Panel.Error>}
+      {!isEditingCuesheet && (
+        <>
+          <div>
+            {enDash} or {enDash}
+          </div>
+          <div>2. Choose a view and its parameters</div>
+          <div>
+            <Panel.Description>Target</Panel.Description>
+            <Select
+              options={targetOptions}
+              {...register('target', { required: 'Target is required' })}
+              value={watch('target')}
+              onValueChange={(value: OntimeViewPresettable | null) => {
+                if (value === null) return;
+                setValue('target', value, { shouldDirty: true });
+              }}
+            />
+          </div>
+          <div>
+            <Panel.Description>Parameters</Panel.Description>
+            <Textarea
+              fluid
+              rows={3}
+              {...register('search', {
+                validate: validateParams,
+              })}
+            />
+            <Panel.Error>{errors.search?.message}</Panel.Error>
+          </div>
+        </>
+      )}
+
+      {isCuesheet && (
+        <div>
+          <Panel.Description>Permissions</Panel.Description>
+          <CuesheetLinkOptions
+            initialRead={initialPermissions.current.read}
+            initialWrite={initialPermissions.current.write}
+            onChange={setCuesheetPermissions}
+          />
+        </div>
+      )}
+      <div>
+        <Panel.Error>{errors.root?.message}</Panel.Error>
+        <Panel.InlineElements align='end'>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            variant='primary'
+            type='submit'
+            disabled={!isValid || (!isDirty && !permissionsDirty) || noReadAccess}
+            loading={isSubmitting || isMutating}
+          >
+            Save
+          </Button>
+        </Panel.InlineElements>
+      </div>
+    </Panel.Indent>
+  );
+}

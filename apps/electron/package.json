@@ -1,0 +1,138 @@
+{
+  "name": "ontime-electron",
+  "version": "4.11.0",
+  "author": "Carlos Valente",
+  "description": "Time keeping for live events",
+  "repository": "https://github.com/cpvalente/ontime",
+  "keywords": [
+    "ontime",
+    "timer",
+    "stage timer",
+    "rundown"
+  ],
+  "license": "AGPL-3.0-only",
+  "main": "src/main.js",
+  "devDependencies": {
+    "electron": "38.2.1",
+    "electron-builder": "26.9.1",
+    "wait-on": "^7.2.0"
+  },
+  "scripts": {
+    "dev:electron": "wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .",
+    "lint": "oxlint --quiet --type-aware",
+    "dist-win": "electron-builder --publish=never --x64 --win",
+    "dist-mac": "electron-builder --publish=never --mac",
+    "dist-linux": "electron-builder --publish=never --linux"
+  },
+  "build": {
+    "productName": "ontime",
+    "appId": "no.lightdev.ontime",
+    "asar": true,
+    "dmg": {
+      "artifactName": "ontime-macOS-${arch}.dmg"
+    },
+    "mac": {
+      "notarize": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "./entitlements.plist",
+      "entitlementsInherit": "./entitlements.plist",
+      "target": {
+        "target": "dmg",
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      },
+      "category": "public.app-category.productivity",
+      "icon": "ontime.icon"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "artifactName": "ontime-win64.exe",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": true,
+      "runAfterFinish": false,
+      "installerIcon": "icon.ico",
+      "installerSidebar": "ontime-install.bmp",
+      "uninstallerSidebar": "ontime-install.bmp"
+    },
+    "linux": {
+      "target": {
+        "target": "AppImage",
+        "arch": [
+          "x64",
+          "arm64",
+          "armv7l"
+        ]
+      },
+      "artifactName": "ontime-linux-${arch}.AppImage"
+    },
+    "files": [
+      "**/*",
+      "src/assets/",
+      "!**/{yarn.lock,yarn-error.log}",
+      "!**/{pnpm-lock.yaml}",
+      "!**/{test,tests,__test__,__tests__}",
+      "!**/{mock,mocks,__mock__,__mocks__}",
+      "!*{.spec.js,*.test.js,*.spec.ts,.test.ts}"
+    ],
+    "directories": {
+      "buildResources": "./src/assets/"
+    },
+    "extraResources": [
+      {
+        "from": "../client/build",
+        "to": "extraResources/client/",
+        "filter": [
+          "**/*",
+          "!**/{yarn.lock,yarn-error.log}",
+          "!**/{pnpm-lock.yaml}",
+          "!**/{test,tests,__test__,__tests__}",
+          "!**/{mock,mocks,__mock__,__mocks__}",
+          "!*{.spec.js,*.test.js,*.spec.ts,.test.ts}"
+        ]
+      },
+      {
+        "from": "../server/dist/",
+        "to": "extraResources/server/",
+        "filter": [
+          "**/*",
+          "!**/{yarn.lock,yarn-error.log}",
+          "!**/{pnpm-lock.yaml}",
+          "!**/{test,tests,__test__,__tests__}",
+          "!**/{mock,mocks,__mock__,__mocks__}",
+          "!*{.spec.js,*.test.js,*.spec.ts,.test.ts}"
+        ]
+      },
+      {
+        "from": "../server/src/external/",
+        "to": "extraResources/external/",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../server/src/user/",
+        "to": "extraResources/user/",
+        "filter": [
+          "**/*",
+          "*{.ts}"
+        ]
+      },
+      {
+        "from": "../server/src/html/",
+        "to": "extraResources/html/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}

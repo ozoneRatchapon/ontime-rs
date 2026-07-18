@@ -1,0 +1,96 @@
+.entryEditor {
+  color: $label-gray;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.shortcutSection {
+  flex: 1;
+  width: min(100%, 48rem);
+  margin-top: clamp(1.5rem, 8vh, 5rem);
+  margin-inline: auto;
+}
+
+.shortcuts {
+  display: grid;
+  gap: 0.875rem;
+  margin-top: 0.875rem;
+}
+
+.shortcutGroup {
+  h3 {
+    margin: 0 0 0.375rem;
+    color: $ui-white;
+    font-size: calc(1rem - 3px);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+}
+
+.shortcutList {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.shortcutRow {
+  min-height: 1.625rem;
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: 0.75rem;
+  font-size: calc(1rem - 3px);
+}
+
+.shortcutLabel {
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.shortcutKeys {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem 0.5rem;
+  min-width: 0;
+}
+
+.keyCombo {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.25rem 0;
+}
+
+.separator {
+  color: $gray-500;
+  font-size: calc(1rem - 5px);
+}
+
+.prompt {
+  color: $ui-white;
+}
+
+@media (max-width: 680px) {
+  .entryEditor {
+    padding: 0.75rem 1rem;
+  }
+
+  .shortcutSection {
+    margin-top: 1rem;
+  }
+
+  .shortcutRow {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .shortcutKeys {
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,429 @@
+import type { OntimeDelay, OntimeEntry, OntimeEvent, OntimeGroup, Rundown } from 'ontime-types';
+import { SupportedEntry } from 'ontime-types';
+
+import {
+  addToRundown,
+  getFirstGroupNormal,
+  getInsertAfterId,
+  getLastEvent,
+  getLastGroupNormal,
+  getLastNormal,
+  getNextEvent,
+  getNextGroupNormal,
+  getNextNormal,
+  getPreviousGroupNormal,
+  getPreviousNormal,
+  resolveInsertParent,
+  swapEventData,
+} from './rundownUtils';
+import { demoDb } from './rundownUtils.mock';
+
+describe('getNextEvent()', () => {
+  it('returns the next event of type event', () => {
+    const testRundown = [
+      { id: '1', type: SupportedEntry.Event } as OntimeEvent,
+      { id: '2', type: SupportedEntry.Event } as OntimeEvent,
+      { id: '3', type: SupportedEntry.Event } as OntimeEvent,
+    ];
+
+    const { nextEvent, nextIndex } = getNextEvent(testRundown, '1');
+    expect(nextEvent?.id).toBe('2');
+    expect(nextIndex).toBe(1);
+  });
+
+  it('ignores other event types', () => {
+    const testRundown = [
+      { id: '1', type: SupportedEntry.Event } as OntimeEvent,
+      { id: '2', type: SupportedEntry.Delay } as OntimeDelay,
+      { id: '3', type: SupportedEntry.Group } as OntimeGroup,
+      { id: '4', type: SupportedEntry.Event } as OntimeEvent,
+    ];
+
+    const { nextEvent, nextIndex } = getNextEvent(testRundown, '1');
+    expect(nextEvent?.id).toBe('4');
+    expect(nextIndex).toBe(3);
+  });
+
+  it('returns null if none found', () => {
+    const testRundown = [
+      { id: '1', type: SupportedEntry.Event } as OntimeEvent,
+      { id: '2', type: SupportedEntry.Delay } as OntimeDelay,
+      { id: '3', type: SupportedEntry.Group } as OntimeGroup,
+    ];
+
+    const { nextEvent, nextIndex } = getNextEvent(testRundown, '1');
+    expect(nextEvent).toBe(null);
+    expect(nextIndex).toBe(null);
+  });
+});
+
+describe('swapEventData', () => {
+  it('swaps some data between two events', () => {
+    const eventA = {
+      id: '1',
+      cue: 'A',
+      timeStart: 1,
+      timeEnd: 1,
+      duration: 1,
+      delay: 1,
+      revision: 3,
+      parent: null,
+    } as OntimeEvent;
+    const eventB = {
+      id: '2',
+      cue: 'B',
+      timeStart: 2,
+      timeEnd: 2,
+      duration: 2,
+      delay: 2,
+      revision: 7,
+      parent: 'testing',
+    } as OntimeEvent;
+
+    const [newA, newB] = swapEventData(eventA, eventB);
+
+    expect(newA).toMatchObject({
+      id: '1',
+      cue: 'B',
+      timeStart: 1,
+      timeEnd: 1,
+      duration: 1,
+      delay: 1,
+      revision: 3,
+      parent: null,
+    });
+    expect(newB).toMatchObject({
+      id: '2',
+      cue: 'A',
+      timeStart: 2,
+      timeEnd: 2,
+      duration: 2,
+      delay: 2,
+      revision: 7,
+      parent: 'testing',
+    });
+  });
+});
+
+describe('getNextNormal / getPreviousNormal (flat order)', () => {
+  const demoRundown = demoDb.rundowns.default;
+
+  it('steps forward using flat order', () => {
+    const { entry, index } = getNextNormal(demoRundown.entries, demoRundown.flatOrder, '7eaf99');
+    expect(entry?.id).toBe('9bf60f');
+    expect(index).toBe(2);
+  });
+
+  it('steps backward using flat order', () => {
+    const { entry, index } = getPreviousNormal(demoRundown.entries, demoRundown.flatOrder, '9bf60f');
+    expect(entry?.id).toBe('7eaf99');
+    expect(index).toBe(1);
+  });
+
+  it('uses start/end boundaries for null cursor', () => {
+    const next = getNextNormal(demoRundown.entries, demoRundown.flatOrder, null);
+    const previous = getPreviousNormal(demoRundown.entries, demoRundown.flatOrder, null);
+    expect(next.entry?.id).toBe('e2163f');
+    expect(next.index).toBe(0);
+    expect(previous.entry?.id).toBe('07df89');
+    expect(previous.index).toBe(demoRundown.flatOrder.length - 1);
+  });
+});
+
+describe('getNextGroupNormal / getPreviousGroupNormal (flat order)', () => {
+  const demoRundown = demoDb.rundowns.default;
+
+  it('finds the next group from inside a group', () => {
+    const { entry, index } = getNextGroupNormal(demoRundown.entries, demoRundown.flatOrder, '9bf60f');
+    expect(entry?.id).toBe('f60403');
+    expect(index).toBe(7);
+  });
+
+  it('finds the previous group from inside a group', () => {
+    const { entry, index } = getPreviousGroupNormal(demoRundown.entries, demoRundown.flatOrder, '9bf60f');
+    expect(entry?.id).toBe('7eaf99');
+    expect(index).toBe(1);
+  });
+
+  it('uses start/end boundaries for null cursor', () => {
+    const next = getNextGroupNormal(demoRundown.entries, demoRundown.flatOrder, null);
+    const previous = getPreviousGroupNormal(demoRundown.entries, demoRundown.flatOrder, null);
+    expect(next.entry?.id).toBe('7eaf99');
+    expect(next.index).toBe(1);
+    expect(previous.entry?.id).toBe('6b0edb');
+    expect(previous.index).toBe(9);
+  });
+});
+
+describe('getFirstGroupNormal / getLastGroupNormal (flat order)', () => {
+  const demoRundown = demoDb.rundowns.default;
+
+  it('finds the first group in flat order', () => {
+    const { entry, index } = getFirstGroupNormal(demoRundown.entries, demoRundown.flatOrder);
+    expect(entry?.id).toBe('7eaf99');
+    expect(index).toBe(1);
+  });
+
+  it('finds the last group in flat order', () => {
+    const { entry, index } = getLastGroupNormal(demoRundown.entries, demoRundown.flatOrder);
+    expect(entry?.id).toBe('6b0edb');
+    expect(index).toBe(9);
+  });
+});
+
+describe('getLastEvent', () => {
+  it('returns the last event of type event', () => {
+    const testRundown: OntimeEntry[] = [
+      { id: '1', type: SupportedEntry.Event } as OntimeEvent,
+      { id: '2', type: SupportedEntry.Delay } as OntimeDelay,
+      { id: '3', type: SupportedEntry.Event } as OntimeEvent,
+      { id: '4', type: SupportedEntry.Group } as OntimeGroup,
+    ];
+
+    const { lastEvent } = getLastEvent(testRundown);
+    expect(lastEvent?.id).toBe('3');
+  });
+
+  it('handles rundowns with a single event', () => {
+    const testRundown: OntimeEntry[] = [{ id: '1', type: SupportedEntry.Event } as OntimeEvent];
+    const { lastEvent } = getLastEvent(testRundown);
+    expect(lastEvent?.id).toBe('1');
+  });
+
+  describe('getLastNormal', () => {
+    it('returns the last entry', () => {
+      const entries = {
+        4: { id: '4', type: SupportedEntry.Group } as OntimeGroup,
+        1: { id: '1', type: SupportedEntry.Event } as OntimeEvent,
+        3: { id: '3', type: SupportedEntry.Event } as OntimeEvent,
+        2: { id: '2', type: SupportedEntry.Delay } as OntimeDelay,
+      };
+
+      const order = ['1', '2', '3', '4'];
+
+      const lastEntry = getLastNormal(entries, order);
+      expect(lastEntry?.id).toBe('4');
+    });
+
+    it('handles rundowns with a single event', () => {
+      const entries = {
+        1: { id: '1', type: SupportedEntry.Event } as OntimeEvent,
+      };
+
+      const lastEvent = getLastNormal(entries, ['1']);
+      expect(lastEvent?.id).toBe('1');
+    });
+
+    it('handles empty order', () => {
+      const testRundown = {
+        1: { id: '1', type: SupportedEntry.Event } as OntimeEvent,
+        2: { id: '2', type: SupportedEntry.Event } as OntimeEvent,
+      };
+
+      const lastEntry = getLastNormal(testRundown, []);
+      expect(lastEntry).toBe(null);
+    });
+
+    it('handles empty rundown', () => {
+      const lastEntry = getLastNormal({}, ['1', '2', '3', '4']);
+      expect(lastEntry).toBe(null);
+    });
+  });
+});
+
+describe('getInsertAfterId()', () => {
+  const rundown = {
+    id: 'test',
+    title: 'test',
+    entries: {
+      '1': { id: '1', type: SupportedEntry.Event, parent: null } as OntimeEvent,
+      '2': { id: '2', type: SupportedEntry.Event, parent: null } as OntimeEvent,
+      group: { id: 'group', type: SupportedEntry.Group, entries: ['31', '32'] } as unknown as OntimeGroup,
+      '31': { id: '31', type: SupportedEntry.Event, parent: 'group' } as OntimeEvent,
+      '32': { id: '32', type: SupportedEntry.Event, parent: 'group' } as OntimeEvent,
+      '4': { id: '4', type: SupportedEntry.Event, parent: null } as OntimeEvent,
+    },
+    order: ['1', '2', 'group', '4'],
+    flatOrder: ['1', '2', 'group', '31', '32', '4'],
+    revision: 1,
+  } as Rundown;
+
+  it('returns the provided after id', () => {
+    expect(getInsertAfterId(rundown, null, 'b')).toBe('b');
+  });
+
+  it('returns null if no anchors are provided', () => {
+    expect(getInsertAfterId(rundown, null)).toBeNull();
+  });
+
+  it('returns null if after is true', () => {
+    expect(getInsertAfterId(rundown, null, true)).toBeNull();
+  });
+
+  it('returns the before id if provided', () => {
+    expect(getInsertAfterId(rundown, null, undefined, '2')).toBe('2');
+    expect(getInsertAfterId(rundown, null, undefined, '4')).toBe('4');
+    expect(getInsertAfterId(rundown, null, undefined, 'group')).toBe('group');
+  });
+
+  it('returns the first top-level id if before is true', () => {
+    expect(getInsertAfterId(rundown, null, undefined, true)).toBe('1');
+  });
+
+  it('returns the first group entry if before is true inside a group', () => {
+    expect(getInsertAfterId(rundown, rundown.entries.group as OntimeGroup, undefined, true)).toBe('31');
+  });
+});
+
+describe('resolveInsertParent()', () => {
+  const rundown = {
+    id: 'test',
+    title: 'test',
+    entries: {
+      top: { id: 'top', type: SupportedEntry.Event, parent: null } as OntimeEvent,
+      group: { id: 'group', type: SupportedEntry.Group, entries: ['31', '32'] } as unknown as OntimeGroup,
+      '31': { id: '31', type: SupportedEntry.Event, parent: 'group' } as OntimeEvent,
+      '32': { id: '32', type: SupportedEntry.Event, parent: 'group' } as OntimeEvent,
+    },
+    order: ['top', 'group'],
+    flatOrder: ['top', 'group', '31', '32'],
+    revision: 1,
+  } as Rundown;
+
+  it('returns explicit parent id', () => {
+    expect(resolveInsertParent(rundown, { parent: 'group' })).toBe('group');
+  });
+
+  it('returns non-existent explicit parent id as-is', () => {
+    expect(resolveInsertParent(rundown, { parent: 'missing' })).toBe('missing');
+  });
+
+  it('infers parent id from sibling when parent is omitted', () => {
+    expect(resolveInsertParent(rundown, { after: '31' })).toBe('group');
+    expect(resolveInsertParent(rundown, { before: '32' })).toBe('group');
+  });
+
+  it('returns null when no grouped sibling reference exists', () => {
+    expect(resolveInsertParent(rundown, { after: 'top' })).toBeNull();
+  });
+
+  it('returns null when no references are provided', () => {
+    expect(resolveInsertParent(rundown, {})).toBeNull();
+  });
+});
+
+describe('addToRundown()', () => {
+  const makeTestRundown = (): Rundown =>
+    ({
+      id: 'test',
+      title: 'test',
+      entries: {
+        '1': { id: '1', type: SupportedEntry.Event, parent: null } as OntimeEvent,
+        '2': { id: '2', type: SupportedEntry.Event, parent: null } as OntimeEvent,
+        group: { id: 'group', type: SupportedEntry.Group, entries: ['31', '32'] } as unknown as OntimeGroup,
+        '31': { id: '31', type: SupportedEntry.Event, parent: 'group' } as OntimeEvent,
+        '32': { id: '32', type: SupportedEntry.Event, parent: 'group' } as OntimeEvent,
+      },
+      order: ['1', '2', 'group'],
+      flatOrder: ['1', '2', 'group', '31', '32'],
+      revision: 1,
+    }) as Rundown;
+
+  it('adds an entry to an empty rundown', () => {
+    const rundown = { id: 'test', title: '', entries: {}, order: [], flatOrder: [], revision: 0 } as Rundown;
+    const newEntry = { id: 'new', type: SupportedEntry.Event } as OntimeEvent;
+
+    addToRundown(rundown, newEntry, null, null, null);
+
+    expect(rundown.order).toEqual(['new']);
+    expect(rundown.flatOrder).toEqual(['new']);
+    expect(rundown.entries['new']).toBe(newEntry);
+  });
+
+  // case 2c: insert at the end of the rundown
+  it('adds at the end of order and flatOrder when afterId is null', () => {
+    const rundown = makeTestRundown();
+    const newEntry = { id: 'new', type: SupportedEntry.Event } as OntimeEvent;
+
+    addToRundown(rundown, newEntry, null, null, null);
+
+    expect(rundown.order).toEqual(['1', '2', 'group', 'new']);
+    expect(rundown.flatOrder).toEqual(['1', '2', 'group', '31', '32', 'new']);
+  });
+
+  // case 2a: insert after a given entry at top level
+  it('inserts after the referenced entry in both order and flatOrder', () => {
+    const rundown = makeTestRundown();
+    const newEntry = { id: 'new', type: SupportedEntry.Event } as OntimeEvent;
+
+    addToRundown(rundown, newEntry, null, '1', null);
+
+    expect(rundown.order).toEqual(['1', 'new', '2', 'group']);
+    expect(rundown.flatOrder).toEqual(['1', 'new', '2', 'group', '31', '32']);
+  });
+
+  it('prepends to the rundown when before is true', () => {
+    const rundown = makeTestRundown();
+    const newEntry = { id: 'new', type: SupportedEntry.Event } as OntimeEvent;
+    const afterId = getInsertAfterId(rundown, null, undefined, true);
+
+    addToRundown(rundown, newEntry, null, afterId, afterId);
+
+    expect(rundown.order).toEqual(['new', '1', '2', 'group']);
+    expect(rundown.flatOrder).toEqual(['new', '1', '2', 'group', '31', '32']);
+  });
+
+  it('inserts after a top-level group and its children in flatOrder', () => {
+    const rundown = makeTestRundown();
+    const newEntry = { id: 'new', type: SupportedEntry.Event } as OntimeEvent;
+
+    addToRundown(rundown, newEntry, null, 'group', null);
+
+    expect(rundown.order).toEqual(['1', '2', 'group', 'new']);
+    expect(rundown.flatOrder).toEqual(['1', '2', 'group', '31', '32', 'new']);
+  });
+
+  // case 1c: insert at the end of a group
+  it('inserts at the end of a group and sets parent', () => {
+    const rundown = makeTestRundown();
+    const parent = rundown.entries['group'] as OntimeGroup;
+    const newEntry = { id: 'new', type: SupportedEntry.Event, parent: null } as OntimeEvent;
+
+    addToRundown(rundown, newEntry, parent, null, null);
+
+    expect(parent.entries).toEqual(['31', '32', 'new']);
+    expect(newEntry.parent).toBe('group');
+    expect(rundown.flatOrder).toEqual(['1', '2', 'group', '31', '32', 'new']);
+    // top-level order must not change when inserting into a group
+    expect(rundown.order).toEqual(['1', '2', 'group']);
+  });
+
+  it('prepends to a group when before is true', () => {
+    const rundown = makeTestRundown();
+    const parent = rundown.entries['group'] as OntimeGroup;
+    const newEntry = { id: 'new', type: SupportedEntry.Event, parent: null } as OntimeEvent;
+    const afterId = getInsertAfterId(rundown, parent, undefined, true);
+
+    addToRundown(rundown, newEntry, parent, afterId, afterId);
+
+    expect(parent.entries).toEqual(['new', '31', '32']);
+    expect(newEntry.parent).toBe('group');
+    expect(rundown.flatOrder).toEqual(['1', '2', 'group', 'new', '31', '32']);
+    // top-level order must not change when inserting into a group
+    expect(rundown.order).toEqual(['1', '2', 'group']);
+  });
+
+  // case 1a: insert after a given entry within a group
+  it('inserts after the referenced entry within the group and in flatOrder', () => {
+    const rundown = makeTestRundown();
+    const parent = rundown.entries['group'] as OntimeGroup;
+    const newEntry = { id: 'new', type: SupportedEntry.Event, parent: null } as OntimeEvent;
+
+    addToRundown(rundown, newEntry, parent, '31', null);
+
+    expect(parent.entries).toEqual(['31', 'new', '32']);
+    expect(newEntry.parent).toBe('group');
+    expect(rundown.flatOrder).toEqual(['1', '2', 'group', '31', 'new', '32']);
+    expect(rundown.order).toEqual(['1', '2', 'group']);
+  });
+});

@@ -1,0 +1,142 @@
+import { Table, flexRender } from '@tanstack/react-table';
+import { EntryId, OntimeEntry, RGBColour, SupportedEntry } from 'ontime-types';
+import { colourToHex, cssOrHexToColour } from 'ontime-utils';
+import { CSSProperties, memo, useMemo } from 'react';
+import { IoEllipsisHorizontal } from 'react-icons/io5';
+
+import IconButton from '../../../../common/components/buttons/IconButton';
+import type { ExtendedEntry } from '../../../../common/utils/rundownMetadata';
+import { cx, getAccessibleColour } from '../../../../common/utils/styleUtils';
+import { AppMode } from '../../../../ontimeConfig';
+import { useCuesheetTableMenu } from '../cuesheet-table-menu/useCuesheetTableMenu';
+
+import style from './EventRow.module.scss';
+
+interface EventRowProps {
+  rowId: string;
+  id: EntryId;
+  eventIndex: number;
+  colour: string;
+  isFirstAfterGroup: boolean;
+  isLoaded: boolean;
+  isPast: boolean;
+  groupColour: string | undefined;
+  flag: boolean;
+  skip: boolean;
+  parent: EntryId | null;
+  rowIndex: number;
+  table: Table<ExtendedEntry<OntimeEntry>>;
+  injectedStyles?: CSSProperties;
+  hasCursor?: boolean;
+}
+
+export default memo(EventRow);
+function EventRow({
+  rowId,
+  id,
+  eventIndex,
+  colour,
+  isFirstAfterGroup,
+  isLoaded,
+  isPast,
+  groupColour,
+  flag,
+  skip,
+  parent,
+  rowIndex,
+  table,
+  injectedStyles,
+  hasCursor,
+  ...virtuosoProps
+}: EventRowProps) {
+  const { cuesheetMode, hideIndexColumn } = table.options.meta?.options ?? {
+    cuesheetMode: AppMode.Edit,
+    hideIndexColumn: false,
+  };
+
+  const openMenu = useCuesheetTableMenu((store) => store.openMenu);
+
+  const { rowBgColour, backgroundColor, mutedText } = useMemo(() => {
+    const accessible = getAccessibleColour(colour);
+    const tmpColour = cssOrHexToColour(accessible.color) as RGBColour;
+
+    let rowBgColour: string | undefined;
+    if (isLoaded) {
+      rowBgColour = '#087A27'; // $active-green
+    } else if (colour) {
+      const accessibleBg = cssOrHexToColour(accessible.backgroundColor);
+      if (accessibleBg !== null) {
+        rowBgColour = colourToHex({ ...accessibleBg, alpha: accessibleBg.alpha * 0.25 });
+      }
+    }
+
+    return {
+      rowBgColour,
+      backgroundColor: accessible.backgroundColor,
+      mutedText: colourToHex({ ...tmpColour, alpha: tmpColour.alpha * 0.8 }),
+    };
+  }, [colour, isLoaded]);
+
+  return (
+    <tr
+      id={rowId}
+      className={cx([
+        style.eventRow,
+        skip && style.skip,
+        isFirstAfterGroup && style.firstAfterGroup,
+        parent && style.hasParent,
+      ])}
+      style={{
+        ...injectedStyles,
+        opacity: `${isPast ? '0.2' : '1'}`,
+        '--user-bg': groupColour ?? 'transparent',
+      }}
+      data-cursor={hasCursor}
+      data-testid='cuesheet-event'
+      data-entry-id={id}
+      {...virtuosoProps}
+    >
+      {cuesheetMode === AppMode.Edit && (
+        <td className={style.actionColumn} tabIndex={-1} role='cell'>
+          <IconButton
+            aria-label='Options'
+            variant='ghosted-white'
+            size='small'
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const yPos = 8 + rect.y + rect.height / 2;
+              openMenu({ x: rect.x, y: yPos }, id, SupportedEntry.Event, rowIndex, parent, flag);
+            }}
+          >
+            <IoEllipsisHorizontal />
+          </IconButton>
+        </td>
+      )}
+      {!hideIndexColumn && (
+        <td className={style.indexColumn} style={{ backgroundColor, color: mutedText }} tabIndex={-1} role='cell'>
+          {eventIndex}
+        </td>
+      )}
+      {table
+        .getRow(rowId)
+        .getVisibleCells()
+        .map((cell) => {
+          return (
+            <td
+              key={cell.id}
+              style={{
+                width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
+                backgroundColor: rowBgColour,
+              }}
+              tabIndex={-1}
+              role='cell'
+              data-testid={`cuesheet-cell-${cell.column.id}`}
+              data-column-id={cell.column.id}
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </td>
+          );
+        })}
+    </tr>
+  );
+}

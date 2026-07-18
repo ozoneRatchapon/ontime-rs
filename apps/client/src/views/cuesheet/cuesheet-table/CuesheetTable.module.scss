@@ -1,0 +1,95 @@
+@use './cuesheetRows' as rows;
+
+$table-font-size: 1rem;
+$table-header-font-size: calc(1rem - 2px);
+
+@include rows.cuesheet-row-columns($table-header-font-size);
+
+.cuesheet {
+  font-size: $table-font-size;
+  font-weight: 400;
+  color: $ui-white;
+  padding-bottom: 70vh; // allow focus to reach last elements
+
+  :is([data-target='small-device']) & {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  thead {
+    tr {
+      &::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 100%;
+      }
+    }
+  }
+
+  tr {
+    display: flex;
+  }
+
+  th {
+    background-color: $gray-1300;
+    padding-left: 0.25rem;
+    font-weight: 400;
+
+    &:hover {
+      .resizer {
+        width: 0.5rem;
+      }
+    }
+  }
+
+  th,
+  td {
+    margin: 1px;
+    font-size: inherit;
+    text-align: left;
+    position: relative;
+    padding: 0.25rem;
+  }
+
+  th:focus,
+  td:focus {
+    outline: 2px solid $ui-white;
+  }
+}
+
+.tableHeader {
+  line-height: 2rem;
+  position: sticky;
+  top: 0px;
+  z-index: $zindex-floating;
+  background-color: $ui-black;
+  font-size: $table-header-font-size;
+
+  .actionColumn {
+    background-color: $gray-1250;
+    width: 2rem; // button + padding + margin
+  }
+  .indexColumn {
+    width: 3.5em;
+  }
+}
+
+.resizer {
+  cursor: col-resize;
+  opacity: $opacity-disabled;
+  display: inline-block;
+  width: 0;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  background-color: $action-blue;
+
+  user-select: none;
+  touch-action: none;
+
+  &:hover {
+    opacity: 1;
+  }
+}

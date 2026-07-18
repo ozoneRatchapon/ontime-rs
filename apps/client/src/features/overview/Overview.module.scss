@@ -1,0 +1,50 @@
+.overview {
+  grid-area: overview;
+  font-size: $inner-section-text-size;
+  display: flex;
+  overflow: hidden;
+}
+
+.isOffline {
+  .info {
+    opacity: $opacity-disabled;
+  }
+  &::after {
+    content: 'Disconnected';
+    position: absolute;
+    padding-inline: 0.5rem;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    background-color: $red-700;
+    border-radius: 2px;
+    font-size: calc(1rem - 2px);
+    z-index: $zindex-sudo;
+  }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info {
+  padding-left: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: max-content;
+  height: 100%;
+}
+
+.infoScroll {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.inline {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}

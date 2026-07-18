@@ -1,0 +1,72 @@
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  TouchSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { ColumnDef } from '@tanstack/react-table';
+import { PropsWithChildren } from 'react';
+
+import type { ExtendedEntry } from '../../../common/utils/rundownMetadata';
+import { useColumnOrder } from '../cuesheet-table/useColumnManager';
+
+interface CuesheetDndProps {
+  columns: ColumnDef<ExtendedEntry>[];
+  tableRoot?: 'editor' | 'cuesheet';
+}
+
+export default function CuesheetDnd({
+  columns,
+  tableRoot = 'cuesheet',
+  children,
+}: PropsWithChildren<CuesheetDndProps>) {
+  const { columnOrder, saveColumnOrder } = useColumnOrder(columns, tableRoot);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 100,
+        tolerance: 50,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 100,
+        tolerance: 50,
+      },
+    }),
+  );
+
+  const handleOnDragEnd = (event: DragEndEvent) => {
+    const { delta, active, over } = event;
+
+    // cancel if delta y is greater than 200
+    if (delta.y > 200) return;
+    // cancel if we do not have an over id
+    if (over?.id == null) return;
+
+    // get index of from
+    const fromIndex = columnOrder.indexOf(active.id as string);
+
+    // get index of to
+    const toIndex = columnOrder.indexOf(over.id as string);
+
+    if (toIndex === -1) {
+      return;
+    }
+
+    const reorderedCols = [...columnOrder];
+    const reorderedItem = reorderedCols.splice(fromIndex, 1);
+    reorderedCols.splice(toIndex, 0, reorderedItem[0]);
+    saveColumnOrder(reorderedCols);
+  };
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleOnDragEnd}>
+      {children}
+    </DndContext>
+  );
+}

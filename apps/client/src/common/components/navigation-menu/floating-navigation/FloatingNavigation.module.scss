@@ -1,0 +1,40 @@
+.fadeable {
+  opacity: 1;
+
+  transition-property: opacity;
+  transition-duration: 0.3s;
+
+  &.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  padding-top: 0.75rem;
+  padding-left: 0.5em;
+
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: $zindex-nav;
+}
+
+.buttonWithIndicator {
+  position: relative;
+  display: inline-flex;
+}
+
+.indicator {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.15rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background-color: $active-indicator;
+  pointer-events: none;
+}

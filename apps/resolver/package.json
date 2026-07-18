@@ -1,0 +1,29 @@
+{
+  "name": "@getontime/resolver",
+  "version": "4.11.0",
+  "type": "module",
+  "repository": "https://github.com/cpvalente/ontime",
+  "types": "./dist/main.d.ts",
+  "main": "./dist/main.js",
+  "description": "shared typings for ontime",
+  "scripts": {
+    "lint": "oxlint --quiet --type-aware",
+    "typecheck": "tsc --noEmit",
+    "build": "tsdown"
+  },
+  "keywords": [
+    "ontime",
+    "resolver",
+    "parser"
+  ],
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "devDependencies": {
+    "ontime-types": "workspace:^4.2.1",
+    "tsdown": "^0.22.4",
+    "typescript": "catalog:"
+  },
+  "files": [
+    "dist"
+  ]
+}

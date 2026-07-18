@@ -1,0 +1,38 @@
+import express, { Router } from 'express';
+
+import { router as assetsRouter } from './assets/assets.router.js';
+import { router as automationsRouter } from './automation/automation.router.js';
+import { router as customFieldsRouter } from './custom-fields/customFields.router.js';
+import { router as customViewsRouter } from './custom-views/customViews.router.js';
+import { router as dbRouter } from './db/db.router.js';
+import { router as excelRouter } from './excel/excel.router.js';
+import { router as projectRouter } from './project-data/projectData.router.js';
+import { router as reportRouter } from './report/report.router.js';
+import { router as rundownsRouter } from './rundown/rundown.router.js';
+import { router as sessionRouter } from './session/session.router.js';
+import { router as settingsRouter } from './settings/settings.router.js';
+import { router as sheetsRouter } from './sheets/sheets.router.js';
+import { router as urlPresetsRouter } from './url-presets/urlPresets.router.js';
+import { router as viewSettingsRouter } from './view-settings/viewSettings.router.js';
+
+export const appRouter: Router = express.Router();
+
+appRouter.use('/automations', automationsRouter);
+appRouter.use('/custom-fields', customFieldsRouter);
+appRouter.use('/custom-views', customViewsRouter);
+appRouter.use('/db', dbRouter);
+appRouter.use('/project', projectRouter);
+appRouter.use('/rundowns', rundownsRouter);
+appRouter.use('/settings', settingsRouter);
+appRouter.use('/sheets', sheetsRouter);
+appRouter.use('/excel', excelRouter);
+appRouter.use('/url-presets', urlPresetsRouter);
+appRouter.use('/session', sessionRouter);
+appRouter.use('/view-settings', viewSettingsRouter);
+appRouter.use('/report', reportRouter);
+appRouter.use('/assets', assetsRouter);
+
+// we don't want to redirect to react index when using api routes
+appRouter.all('/*splat', (_req, res) => {
+  res.status(404).send('Unhandled request');
+});
