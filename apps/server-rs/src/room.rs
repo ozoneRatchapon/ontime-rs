@@ -81,6 +81,12 @@ impl DurableObject for OntimeRoom {
                 }
                 Response::from_json(&serde_json::json!({ "status": "ok", "currentIndex": self.rundown.current_event_index }))
             }
+            "/data/project" => Response::from_json(&self.rundown.project),
+            "/data/settings" => Response::from_json(&self.rundown.settings),
+            "/data/view-settings" => Response::from_json(&self.rundown.view_settings),
+            "/data/rundowns" => Response::from_json(&vec![&self.rundown]),
+            "/data/report" => Response::from_json(&serde_json::json!([])),
+            "/data/custom-fields" => Response::from_json(&serde_json::json!({})),
             _ => Response::from_json(&serde_json::json!({})),
         }
     }
