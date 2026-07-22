@@ -1,6 +1,6 @@
 use worker::*;
 
-use crate::types::{EventItem, PlaybackState, RundownState, WsAction};
+use ontime_core::types::{EventItem, PlaybackState, RundownState, WsAction};
 
 const STORAGE_KEY: &str = "ontime_rundown_state";
 
@@ -56,7 +56,57 @@ impl DurableObject for OntimeRoom {
 
                 Response::from_websocket(client_ws)
             }
-            "/api/state" | "/data/rundowns/current" => Response::from_json(&self.rundown),
+            "/api/state" => Response::from_json(&self.rundown),
+            "/data/rundowns/current" => {
+                let mut entries_map = serde_json::Map::new();
+                let mut order = Vec::new();
+
+                for event in &self.rundown.events {
+                    order.push(event.id.clone());
+                    entries_map.insert(
+                        event.id.clone(),
+                        serde_json::json!({
+                            "type": "event",
+                            "id": event.id,
+                            "cue": event.cue,
+                            "title": event.title,
+                            "duration": event.duration,
+                            "subtitle": event.subtitle,
+                            "presenter": event.presenter,
+                            "note": event.note,
+                            "flag": false,
+                            "endAction": "none",
+                            "timerType": "countDown",
+                            "countToEnd": false,
+                            "linkStart": false,
+                            "timeStrategy": "relative",
+                            "timeStart": 0,
+                            "timeEnd": event.duration,
+                            "skip": false,
+                            "colour": "",
+                            "timeWarning": 120000,
+                            "timeDanger": 60000,
+                            "custom": {},
+                            "triggers": [],
+                            "parent": null,
+                            "revision": 1,
+                            "delay": 0,
+                            "dayOffset": 0,
+                            "gap": 0
+                        }),
+                    );
+                }
+
+                let full_rundown = serde_json::json!({
+                    "id": self.rundown.id,
+                    "title": self.rundown.project.title,
+                    "order": order.clone(),
+                    "flatOrder": order,
+                    "entries": entries_map,
+                    "revision": 1
+                });
+                Response::from_json(&full_rundown)
+            }
             "/api/v1/control/start" => {
                 self.rundown.playback_state = PlaybackState::Running;
                 let now = chrono::Utc::now().timestamp_millis() as u64;
