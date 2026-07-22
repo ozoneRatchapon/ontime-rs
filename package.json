@@ -49,13 +49,14 @@
     "oxlint-tsgolint": "^0.17.4",
     "rimraf": "catalog:",
     "turbo": "2.8.20",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "^4.112.0"
   },
   "packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499",
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "22.22.3"
+      "version": "^22.0.0 || ^24.0.0"
     }
   }
 }

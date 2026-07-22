@@ -22,70 +22,43 @@ export default defineConfig({
     'import.meta.env.IS_DOCKER': process.env.NODE_ENV === 'docker',
   },
   plugins: [
-    legacy({
-      targets: ['safari >= 14.1'],
-    }),
+    // legacy({
+    //   targets: ['safari >= 14.1'],
+    // }),
     react({
       babel: {
         plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
       },
     }),
     svgrPlugin(),
-    sentryAuthToken &&
-      sentryVitePlugin({
-        org: 'get-ontime',
-        project: 'ontime',
-        include: './build',
-        authToken: sentryAuthToken,
-        release: ONTIME_VERSION,
-        deploy: {
-          env: 'production',
-        },
-        bundleSizeOptimizations: {
-          excludeDebugStatements: true,
-          excludeReplayIframe: true,
-          excludeReplayShadowDom: true,
-          excludeReplayWorker: true,
-        },
-      }),
-    compression({
-      algorithm: 'brotliCompress',
-      exclude: /\.(html)$/, // Ontime cloud: Exclude HTML files from compression so we can change the base property at runtime
-    }),
-  ],
+  ].filter(Boolean),
   server: {
     port: 3000,
     proxy: {
       '^/login*': {
         target: 'http://localhost:4001/',
         changeOrigin: true,
-        configure: logProxyRequests,
       },
       '^/data*': {
         target: 'http://localhost:4001/',
         changeOrigin: true,
-        configure: logProxyRequests,
       },
       '^/api*': {
         target: 'http://localhost:4001/',
         changeOrigin: true,
-        configure: logProxyRequests,
       },
       '^/mcp': {
         target: 'http://localhost:4001/',
         changeOrigin: true,
-        configure: logProxyRequests,
       },
       '^/ws*': {
         target: 'http://localhost:4001/',
         changeOrigin: true,
-        configure: logProxyRequests,
         ws: true,
       },
       '^/user*': {
         target: 'http://localhost:4001/',
         changeOrigin: true,
-        configure: logProxyRequests,
         ws: true,
       },
     },
@@ -97,6 +70,7 @@ export default defineConfig({
   build: {
     outDir: './build',
     sourcemap: true,
+    onLog: () => {},
   },
   resolve: {
     alias: {
@@ -113,9 +87,3 @@ export default defineConfig({
     },
   },
 });
-
-function logProxyRequests(proxy) {
-  proxy.on('proxyReq', (_proxyReq, req, _res) => {
-    console.log('Proxy:', req.method, req.url);
-  });
-}

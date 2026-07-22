@@ -60,6 +60,7 @@
     ]
   },
   "devDependencies": {
+    "@rolldown/binding-darwin-arm64": "1.2.0",
     "@sentry/vite-plugin": "5.1.1",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.1.12",
@@ -70,9 +71,10 @@
     "happy-dom": "^20.9.0",
     "ontime-types": "workspace:*",
     "ontime-utils": "workspace:*",
+    "rollup": "^4.62.2",
     "sass": "^1.57.1",
     "typescript": "catalog:",
-    "vite": "8.0.1",
+    "vite": "5.4.21",
     "vite-plugin-compression2": "2.5.1",
     "vite-plugin-svgr": "4.5.0",
     "vitest": "catalog:"

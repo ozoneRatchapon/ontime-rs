@@ -41,6 +41,17 @@ export const serverURL = resolveUrl('http', '');
 export const websocketUrl = resolveUrl('ws', 'ws');
 
 function resolveUrl(protocol: 'http' | 'ws', path: string) {
+  const customWorkerUrl = import.meta.env.VITE_WORKER_URL;
+  if (customWorkerUrl) {
+    const cleanWorkerOrigin = customWorkerUrl.replace(/\/+$/, '');
+    const cleanPath = path ? (path.startsWith('/') ? path : `/${path}`) : '';
+    if (protocol === 'ws') {
+      const wsOrigin = cleanWorkerOrigin.replace(/^http/, 'ws');
+      return `${wsOrigin}${cleanPath}`;
+    }
+    return `${cleanWorkerOrigin}${cleanPath}`;
+  }
+
   const url = new URL(window.location.origin);
 
   // generate ws url
