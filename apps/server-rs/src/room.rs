@@ -28,9 +28,18 @@ impl DurableObject for OntimeRoom {
             self.rundown = saved;
         }
 
-        let path = req.path();
+        let raw_path = req.path();
+        let path = if let Some(idx) = raw_path.find("/data/") {
+            &raw_path[idx..]
+        } else if let Some(idx) = raw_path.find("/api/") {
+            &raw_path[idx..]
+        } else if let Some(idx) = raw_path.find("/ws") {
+            &raw_path[idx..]
+        } else {
+            raw_path.as_str()
+        };
 
-        match path.as_str() {
+        match path {
             "/ws" => {
                 let pair = WebSocketPair::new()?;
                 let server_ws = pair.server;
