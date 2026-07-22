@@ -102,10 +102,19 @@ impl DurableObject for OntimeRoom {
                         }
                     }
                     let _ = self.state.storage().put(STORAGE_KEY, &self.rundown).await;
-                    Response::from_json(&vec![&self.rundown])
-                } else {
-                    Response::from_json(&vec![&self.rundown])
                 }
+                let rundowns_list = serde_json::json!({
+                    "loaded": self.rundown.id,
+                    "rundowns": [
+                        {
+                            "id": self.rundown.id,
+                            "title": self.rundown.project.title,
+                            "numEntries": self.rundown.events.len(),
+                            "revision": 1
+                        }
+                    ]
+                });
+                Response::from_json(&rundowns_list)
             }
             "/data/report" => Response::from_json(&serde_json::json!([])),
             "/data/custom-fields" => Response::from_json(&serde_json::json!({})),
