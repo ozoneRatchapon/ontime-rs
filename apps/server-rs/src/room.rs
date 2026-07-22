@@ -116,8 +116,13 @@ impl DurableObject for OntimeRoom {
                 });
                 Response::from_json(&rundowns_list)
             }
+            "/data/url-presets" => Response::from_json(&serde_json::json!([])),
+            "/data/custom-views" => Response::from_json(&serde_json::json!([])),
+            "/data/session" => Response::from_json(&serde_json::json!({ "activeConnections": 1 })),
+            "/data/session/info" => Response::from_json(&serde_json::json!({ "version": "v3.13.1", "isCloud": true })),
             "/data/report" => Response::from_json(&serde_json::json!([])),
             "/data/custom-fields" => Response::from_json(&serde_json::json!({})),
+            "/data/assets/css" => Response::ok(""),
             p if p.contains("/entry") => {
                 if req.method() == Method::Post {
                     if let Ok(json_body) = req.json::<serde_json::Value>().await {
