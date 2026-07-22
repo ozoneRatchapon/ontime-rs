@@ -1,0 +1,14 @@
+name = "ontime-server-rs"
+main = "build/worker/shim.mjs"
+compatibility_date = "2026-07-01"
+
+[build]
+command = "cargo install -q worker-build@^0.1 && worker-build --release"
+
+[[durable_objects.bindings]]
+name = "ONTIME_ROOM"
+class_name = "OntimeRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["OntimeRoom"]
