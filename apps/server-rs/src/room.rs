@@ -29,14 +29,15 @@ impl DurableObject for OntimeRoom {
         }
 
         let raw_path = req.path();
-        let path = if let Some(idx) = raw_path.find("/data/") {
-            &raw_path[idx..]
-        } else if let Some(idx) = raw_path.find("/api/") {
-            &raw_path[idx..]
-        } else if let Some(idx) = raw_path.find("/ws") {
-            &raw_path[idx..]
+        let clean_path = raw_path.split('?').next().unwrap_or(&raw_path);
+        let path = if let Some(idx) = clean_path.find("/data/") {
+            &clean_path[idx..]
+        } else if let Some(idx) = clean_path.find("/api/") {
+            &clean_path[idx..]
+        } else if let Some(idx) = clean_path.find("/ws") {
+            &clean_path[idx..]
         } else {
-            raw_path.as_str()
+            clean_path
         };
 
         match path {
