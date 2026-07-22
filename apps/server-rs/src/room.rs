@@ -199,6 +199,7 @@ impl DurableObject for OntimeRoom {
         }
 
         self.rundown.updated_at = chrono::Utc::now().timestamp_millis() as u64;
+        self.rundown.checksum = self.rundown.compute_checksum();
 
         // Save state persistently in Cloudflare DO SQLite storage
         let _ = self.state.storage().put(STORAGE_KEY, &self.rundown).await;

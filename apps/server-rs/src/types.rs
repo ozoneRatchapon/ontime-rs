@@ -102,6 +102,7 @@ impl Default for ViewSettings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RundownState {
+    pub id: String,
     pub room_id: String,
     pub project: ProjectData,
     pub settings: Settings,
@@ -112,11 +113,24 @@ pub struct RundownState {
     pub started_at_utc: Option<u64>,
     pub events: Vec<EventItem>,
     pub updated_at: u64,
+    pub checksum: String,
+}
+
+impl RundownState {
+    pub fn compute_checksum(&self) -> String {
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(self.id.as_bytes());
+        hasher.update(self.room_id.as_bytes());
+        hasher.update(self.events.len().to_string().as_bytes());
+        hasher.update(self.updated_at.to_string().as_bytes());
+        hasher.finalize().to_hex().to_string()
+    }
 }
 
 impl Default for RundownState {
     fn default() -> Self {
         Self {
+            id: Uuid::now_v7().to_string(),
             room_id: "default".to_string(),
             project: ProjectData::default(),
             settings: Settings::default(),
@@ -131,6 +145,7 @@ impl Default for RundownState {
                 EventItem::new("3", "Q&A Session", 600),
             ],
             updated_at: chrono::Utc::now().timestamp_millis() as u64,
+            checksum: "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
         }
     }
 }
