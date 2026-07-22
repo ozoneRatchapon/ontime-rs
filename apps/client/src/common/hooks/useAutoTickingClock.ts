@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useRuntimeStore } from '../stores/runtime';
+import { nowInMillis } from '../utils/time';
 
 const takeOverTimeMs = 1500;
 
 /**
- * Keeps the clock value ticking if the server drops updates
+ * Keeps the clock value ticking if the server drops updates or uses client local timezone
  */
 export function useAutoTickingClock(): number {
   const clock = useRuntimeStore((state) => state.clock);
@@ -23,6 +24,10 @@ export function useAutoTickingClock(): number {
     const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  if (!clock) {
+    return nowInMillis();
+  }
 
   // Always derive from baseline + elapsed at render time
   const elapsed = performance.now() - baselineRef.current.time;

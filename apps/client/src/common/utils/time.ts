@@ -21,7 +21,7 @@ import { ExtendedEntry } from './rundownMetadata';
 export function nowInMillis(): number {
   const now = new Date();
 
-  // extract milliseconds since midnight
+  // extract milliseconds since midnight in user's local timezone
   let elapsed = now.getHours() * MILLIS_PER_HOUR;
   elapsed += now.getMinutes() * MILLIS_PER_MINUTE;
   elapsed += now.getSeconds() * MILLIS_PER_SECOND;
