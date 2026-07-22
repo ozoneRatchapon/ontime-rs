@@ -11,4 +11,4 @@ class_name = "OntimeRoom"
 
 [[migrations]]
 tag = "v1"
-new_sqlite_classes = ["OntimeRoom"]
+new_classes = ["OntimeRoom"]

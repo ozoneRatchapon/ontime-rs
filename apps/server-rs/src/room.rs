@@ -23,11 +23,6 @@ impl DurableObject for OntimeRoom {
     }
 
     async fn fetch(&mut self, mut req: Request) -> Result<Response> {
-        // Load persistent state from Durable Object storage on first access if needed
-        if let Ok(saved) = self.state.storage().get::<RundownState>(STORAGE_KEY).await {
-            self.rundown = saved;
-        }
-
         let raw_path = req.path();
         let clean_path = raw_path.split('?').next().unwrap_or(&raw_path);
         let path = if let Some(idx) = clean_path.find("/data/") {
@@ -146,11 +141,7 @@ impl DurableObject for OntimeRoom {
             "/data/view-settings" => Response::from_json(&self.rundown.view_settings),
             "/data/rundowns" => {
                 if req.method() == Method::Post {
-                    if let Ok(json_body) = req.json::<serde_json::Value>().await {
-                        if let Some(t) = json_body.get("title").and_then(|v| v.as_str()) {
-                            self.rundown.project.title = t.to_string();
-                        }
-                    }
+                    self.rundown.project.title = "New Rundown".to_string();
                     let _ = self.state.storage().put(STORAGE_KEY, &self.rundown).await;
                 }
                 let rundowns_list = serde_json::json!({
@@ -217,7 +208,7 @@ impl DurableObject for OntimeRoom {
             let _ = self.state.storage().set_alarm(1000).await;
         }
 
-        Response::ok("alarm tick")
+        Response::ok("")
     }
 
     async fn websocket_message(&mut self, _ws: WebSocket, message: WebSocketIncomingMessage) -> Result<()> {
