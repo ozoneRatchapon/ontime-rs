@@ -22,7 +22,7 @@ impl DurableObject for OntimeRoom {
         }
     }
 
-    async fn fetch(&mut self, req: Request) -> Result<Response> {
+    async fn fetch(&mut self, mut req: Request) -> Result<Response> {
         // Load persistent state from Durable Object storage on first access if needed
         if let Ok(saved) = self.state.storage().get::<RundownState>(STORAGE_KEY).await {
             self.rundown = saved;
@@ -93,9 +93,41 @@ impl DurableObject for OntimeRoom {
             "/data/project" => Response::from_json(&self.rundown.project),
             "/data/settings" => Response::from_json(&self.rundown.settings),
             "/data/view-settings" => Response::from_json(&self.rundown.view_settings),
-            "/data/rundowns" => Response::from_json(&vec![&self.rundown]),
+            "/data/rundowns" => {
+                if req.method() == Method::Post {
+                    if let Ok(json_body) = req.json::<serde_json::Value>().await {
+                        if let Some(t) = json_body.get("title").and_then(|v| v.as_str()) {
+                            self.rundown.project.title = t.to_string();
+                        }
+                    }
+                    let _ = self.state.storage().put(STORAGE_KEY, &self.rundown).await;
+                    Response::from_json(&vec![&self.rundown])
+                } else {
+                    Response::from_json(&vec![&self.rundown])
+                }
+            }
             "/data/report" => Response::from_json(&serde_json::json!([])),
             "/data/custom-fields" => Response::from_json(&serde_json::json!({})),
+            p if p.contains("/entry") => {
+                if req.method() == Method::Post {
+                    if let Ok(json_body) = req.json::<serde_json::Value>().await {
+                        let cue = json_body.get("cue").and_then(|v| v.as_str()).unwrap_or("New Cue");
+                        let title = json_body.get("title").and_then(|v| v.as_str()).unwrap_or("New Event");
+                        let duration = json_body.get("duration").and_then(|v| v.as_u64()).unwrap_or(300);
+                        let new_event = EventItem::new(cue, title, duration);
+                        self.rundown.events.push(new_event.clone());
+                        let _ = self.state.storage().put(STORAGE_KEY, &self.rundown).await;
+                        Response::from_json(&new_event)
+                    } else {
+                        let new_event = EventItem::new("Cue", "New Event", 300);
+                        self.rundown.events.push(new_event.clone());
+                        let _ = self.state.storage().put(STORAGE_KEY, &self.rundown).await;
+                        Response::from_json(&new_event)
+                    }
+                } else {
+                    Response::from_json(&serde_json::json!({}))
+                }
+            }
             _ => Response::from_json(&serde_json::json!({})),
         }
     }
