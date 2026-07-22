@@ -61,126 +61,131 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             };
             let path_string = url.path();
             match path_string.as_bytes() {
-                b"/data/rundowns" => {
-                    let mut title = "Ontime Production Rundown".to_string();
-                    if req.method() == Method::Post {
-                        if let Ok(text) = req.text().await {
-                            if let Ok(json_body) = serde_json::from_str::<serde_json::Value>(&text) {
-                                if let Some(t) = json_body.get("title").and_then(|v| v.as_str()) {
-                                    title = t.to_string();
+                p if p.starts_with(b"/data/rundowns") => {
+                    let title = "Ontime Production Rundown".to_string();
+                    if p == b"/data/rundowns" && req.method() == Method::Post {
+                        Response::from_json(&serde_json::json!({
+                            "loaded": "default_rundown",
+                            "rundowns": [
+                                {
+                                    "id": "default_rundown",
+                                    "title": title,
+                                    "numEntries": 3,
+                                    "revision": 1
                                 }
-                            }
-                        }
+                            ]
+                        }))
+                    } else if p == b"/data/rundowns" {
+                        Response::from_json(&serde_json::json!({
+                            "loaded": "default_rundown",
+                            "rundowns": [
+                                {
+                                    "id": "default_rundown",
+                                    "title": title,
+                                    "numEntries": 3,
+                                    "revision": 1
+                                }
+                            ]
+                        }))
+                    } else {
+                        // Return full Rundown for /data/rundowns/current or /data/rundowns/:id
+                        Response::from_json(&serde_json::json!({
+                            "id": "default_rundown",
+                            "title": title,
+                            "order": ["entry_1", "entry_2", "entry_3"],
+                            "flatOrder": ["entry_1", "entry_2", "entry_3"],
+                            "entries": {
+                                "entry_1": {
+                                    "type": "event",
+                                    "id": "entry_1",
+                                    "cue": "1",
+                                    "title": "Welcome & Intro",
+                                    "duration": 300000,
+                                    "subtitle": null,
+                                    "presenter": null,
+                                    "note": null,
+                                    "flag": false,
+                                    "endAction": "none",
+                                    "timerType": "countDown",
+                                    "countToEnd": false,
+                                    "linkStart": false,
+                                    "timeStrategy": "relative",
+                                    "timeStart": 0,
+                                    "timeEnd": 300000,
+                                    "skip": false,
+                                    "colour": "",
+                                    "timeWarning": 120000,
+                                    "timeDanger": 60000,
+                                    "custom": {},
+                                    "triggers": [],
+                                    "parent": null,
+                                    "revision": 1,
+                                    "delay": 0,
+                                    "dayOffset": 0,
+                                    "gap": 0
+                                },
+                                "entry_2": {
+                                    "type": "event",
+                                    "id": "entry_2",
+                                    "cue": "2",
+                                    "title": "Keynote Presentation",
+                                    "duration": 1800000,
+                                    "subtitle": null,
+                                    "presenter": null,
+                                    "note": null,
+                                    "flag": false,
+                                    "endAction": "none",
+                                    "timerType": "countDown",
+                                    "countToEnd": false,
+                                    "linkStart": false,
+                                    "timeStrategy": "relative",
+                                    "timeStart": 0,
+                                    "timeEnd": 1800000,
+                                    "skip": false,
+                                    "colour": "",
+                                    "timeWarning": 120000,
+                                    "timeDanger": 60000,
+                                    "custom": {},
+                                    "triggers": [],
+                                    "parent": null,
+                                    "revision": 1,
+                                    "delay": 0,
+                                    "dayOffset": 0,
+                                    "gap": 0
+                                },
+                                "entry_3": {
+                                    "type": "event",
+                                    "id": "entry_3",
+                                    "cue": "3",
+                                    "title": "Q&A Session",
+                                    "duration": 600000,
+                                    "subtitle": null,
+                                    "presenter": null,
+                                    "note": null,
+                                    "flag": false,
+                                    "endAction": "none",
+                                    "timerType": "countDown",
+                                    "countToEnd": false,
+                                    "linkStart": false,
+                                    "timeStrategy": "relative",
+                                    "timeStart": 0,
+                                    "timeEnd": 600000,
+                                    "skip": false,
+                                    "colour": "",
+                                    "timeWarning": 120000,
+                                    "timeDanger": 60000,
+                                    "custom": {},
+                                    "triggers": [],
+                                    "parent": null,
+                                    "revision": 1,
+                                    "delay": 0,
+                                    "dayOffset": 0,
+                                    "gap": 0
+                                }
+                            },
+                            "revision": 1
+                        }))
                     }
-                    Response::from_json(&serde_json::json!({
-                        "loaded": "default_rundown",
-                        "rundowns": [
-                            {
-                                "id": "default_rundown",
-                                "title": title,
-                                "numEntries": 3,
-                                "revision": 1
-                            }
-                        ]
-                    }))
-                }
-                b"/data/rundowns/current" => {
-                    Response::from_json(&serde_json::json!({
-                        "id": "default_rundown",
-                        "title": "Ontime Production Rundown",
-                        "order": ["entry_1", "entry_2", "entry_3"],
-                        "flatOrder": ["entry_1", "entry_2", "entry_3"],
-                        "entries": {
-                            "entry_1": {
-                                "type": "event",
-                                "id": "entry_1",
-                                "cue": "1",
-                                "title": "Welcome & Intro",
-                                "duration": 300000,
-                                "subtitle": null,
-                                "presenter": null,
-                                "note": null,
-                                "flag": false,
-                                "endAction": "none",
-                                "timerType": "countDown",
-                                "countToEnd": false,
-                                "linkStart": false,
-                                "timeStrategy": "relative",
-                                "timeStart": 0,
-                                "timeEnd": 300000,
-                                "skip": false,
-                                "colour": "",
-                                "timeWarning": 120000,
-                                "timeDanger": 60000,
-                                "custom": {},
-                                "triggers": [],
-                                "parent": null,
-                                "revision": 1,
-                                "delay": 0,
-                                "dayOffset": 0,
-                                "gap": 0
-                            },
-                            "entry_2": {
-                                "type": "event",
-                                "id": "entry_2",
-                                "cue": "2",
-                                "title": "Keynote Presentation",
-                                "duration": 1800000,
-                                "subtitle": null,
-                                "presenter": null,
-                                "note": null,
-                                "flag": false,
-                                "endAction": "none",
-                                "timerType": "countDown",
-                                "countToEnd": false,
-                                "linkStart": false,
-                                "timeStrategy": "relative",
-                                "timeStart": 0,
-                                "timeEnd": 1800000,
-                                "skip": false,
-                                "colour": "",
-                                "timeWarning": 120000,
-                                "timeDanger": 60000,
-                                "custom": {},
-                                "triggers": [],
-                                "parent": null,
-                                "revision": 1,
-                                "delay": 0,
-                                "dayOffset": 0,
-                                "gap": 0
-                            },
-                            "entry_3": {
-                                "type": "event",
-                                "id": "entry_3",
-                                "cue": "3",
-                                "title": "Q&A Session",
-                                "duration": 600000,
-                                "subtitle": null,
-                                "presenter": null,
-                                "note": null,
-                                "flag": false,
-                                "endAction": "none",
-                                "timerType": "countDown",
-                                "countToEnd": false,
-                                "linkStart": false,
-                                "timeStrategy": "relative",
-                                "timeStart": 0,
-                                "timeEnd": 600000,
-                                "skip": false,
-                                "colour": "",
-                                "timeWarning": 120000,
-                                "timeDanger": 60000,
-                                "custom": {},
-                                "triggers": [],
-                                "parent": null,
-                                "revision": 1,
-                                "delay": 0,
-                                "dayOffset": 0,
-                                "gap": 0
-                            }
-                        },
-                        "revision": 1
-                    }))
                 }
                 b"/data/project" => Response::from_json(&serde_json::json!({
                     "title": "Ontime Production Rundown",
