@@ -41,15 +41,19 @@ export const serverURL = resolveUrl('http', '');
 export const websocketUrl = resolveUrl('ws', 'ws');
 
 function resolveUrl(protocol: 'http' | 'ws', path: string) {
+  const params = new URLSearchParams(window.location.search);
+  const roomParam = params.get('room');
+  const querySuffix = roomParam ? `?room=${encodeURIComponent(roomParam)}` : '';
+
   const customWorkerUrl = import.meta.env.VITE_WORKER_URL;
   if (customWorkerUrl) {
     const cleanWorkerOrigin = customWorkerUrl.replace(/\/+$/, '');
     const cleanPath = path ? (path.startsWith('/') ? path : `/${path}`) : '';
     if (protocol === 'ws') {
       const wsOrigin = cleanWorkerOrigin.replace(/^http/, 'ws');
-      return `${wsOrigin}${cleanPath}`;
+      return `${wsOrigin}${cleanPath}${querySuffix}`;
     }
-    return `${cleanWorkerOrigin}${cleanPath}`;
+    return `${cleanWorkerOrigin}${cleanPath}${querySuffix}`;
   }
 
   const url = new URL(window.location.origin);
