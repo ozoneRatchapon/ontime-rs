@@ -47,11 +47,40 @@ impl DurableObject for OntimeRoom {
                 Response::from_websocket(client_ws)
             }
             "/api/state" | "/data/rundowns/current" => Response::from_json(&self.rundown),
-            "/data/project" => Response::from_json(&self.rundown.project),
-            "/data/settings" => Response::from_json(&self.rundown.settings),
-            "/data/view-settings" => Response::from_json(&self.rundown.view_settings),
-            "/data/rundowns" => Response::from_json(&vec![&self.rundown]),
-            "/data/custom-fields" => Response::from_json(&serde_json::json!({})),
+            "/api/v1/control/start" => {
+                self.rundown.playback_state = PlaybackState::Running;
+                let now = chrono::Utc::now().timestamp_millis() as u64;
+                if self.rundown.started_at_utc.is_none() {
+                    self.rundown.started_at_utc = Some(now);
+                }
+                let _ = self.state.storage().set_alarm(1000).await;
+                Response::from_json(&serde_json::json!({ "status": "ok", "state": "Running" }))
+            }
+            "/api/v1/control/pause" => {
+                self.rundown.playback_state = PlaybackState::Paused;
+                Response::from_json(&serde_json::json!({ "status": "ok", "state": "Paused" }))
+            }
+            "/api/v1/control/reset" => {
+                self.rundown.playback_state = PlaybackState::Stopped;
+                self.rundown.elapsed_millis = 0;
+                self.rundown.started_at_utc = None;
+                Response::from_json(&serde_json::json!({ "status": "ok", "state": "Stopped" }))
+            }
+            "/api/v1/control/next" => {
+                if self.rundown.current_event_index + 1 < self.rundown.events.len() {
+                    self.rundown.current_event_index += 1;
+                    self.rundown.elapsed_millis = 0;
+                    self.rundown.started_at_utc = None;
+                }
+                Response::from_json(&serde_json::json!({ "status": "ok", "currentIndex": self.rundown.current_event_index }))
+            }
+            "/api/v1/control/previous" => {
+                if self.rundown.current_event_index > 0 {
+                    self.rundown.current_event_index -= 1;
+                    self.rundown.elapsed_millis = 0;
+                }
+                Response::from_json(&serde_json::json!({ "status": "ok", "currentIndex": self.rundown.current_event_index }))
+            }
             _ => Response::from_json(&serde_json::json!({})),
         }
     }
@@ -124,6 +153,29 @@ impl DurableObject for OntimeRoom {
             }
             WsAction::AddEvent { cue, title, duration } => {
                 self.rundown.events.push(EventItem::new(cue, title, duration));
+            }
+            WsAction::EditEvent { id, cue, title, duration, subtitle, presenter, note } => {
+                if let Some(evt) = self.rundown.events.iter_mut().find(|e| e.id == id) {
+                    if let Some(c) = cue { evt.cue = c; }
+                    if let Some(t) = title { evt.title = t; }
+                    if let Some(d) = duration { evt.duration = d; }
+                    if subtitle.is_some() { evt.subtitle = subtitle; }
+                    if presenter.is_some() { evt.presenter = presenter; }
+                    if note.is_some() { evt.note = note; }
+                }
+            }
+            WsAction::DeleteEvent { id } => {
+                self.rundown.events.retain(|e| e.id != id);
+                if self.rundown.current_event_index >= self.rundown.events.len() && !self.rundown.events.is_empty() {
+                    self.rundown.current_event_index = self.rundown.events.len() - 1;
+                }
+            }
+            WsAction::ReorderEvents { from_index, to_index } => {
+                let len = self.rundown.events.len();
+                if from_index < len && to_index < len {
+                    let item = self.rundown.events.remove(from_index);
+                    self.rundown.events.insert(to_index, item);
+                }
             }
             WsAction::UpdateProjectTitle { title } => {
                 self.rundown.project.title = title;

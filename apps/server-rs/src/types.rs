@@ -145,5 +145,8 @@ pub enum WsAction {
     NextEvent,
     PreviousEvent,
     AddEvent { cue: String, title: String, duration: u64 },
+    EditEvent { id: String, cue: Option<String>, title: Option<String>, duration: Option<u64>, subtitle: Option<String>, presenter: Option<String>, note: Option<String> },
+    DeleteEvent { id: String },
+    ReorderEvents { from_index: usize, to_index: usize },
     UpdateProjectTitle { title: String },
 }

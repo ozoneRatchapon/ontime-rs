@@ -41,6 +41,11 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             let stub = namespace.id_from_name("default_room")?.get_stub()?;
             stub.fetch_with_request(req).await
         })
+        .on_async("/api/v1/control/*path", |req, ctx| async move {
+            let namespace = ctx.durable_object("ONTIME_ROOM")?;
+            let stub = namespace.id_from_name("default_room")?.get_stub()?;
+            stub.fetch_with_request(req).await
+        })
         .on_async("/user/*path", |_req, _ctx| async move {
             Response::from_json(&serde_json::json!({}))
         })
