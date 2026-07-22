@@ -37,8 +37,16 @@ export const supportsFullscreen = document.fullscreenEnabled;
  * @example '/client-hash' for cloud
  */
 export const baseURI = resolveBaseURI();
-export const serverURL = resolveUrl('http', '');
+export const serverURL = getBaseServerUrl();
 export const websocketUrl = resolveUrl('ws', 'ws');
+
+function getBaseServerUrl() {
+  const customWorkerUrl = import.meta.env.VITE_WORKER_URL;
+  if (customWorkerUrl) {
+    return customWorkerUrl.replace(/\/+$/, '');
+  }
+  return window.location.origin;
+}
 
 function resolveUrl(protocol: 'http' | 'ws', path: string) {
   const params = new URLSearchParams(window.location.search);
