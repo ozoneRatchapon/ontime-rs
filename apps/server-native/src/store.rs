@@ -53,3 +53,13 @@ pub async fn save(data_dir: &Path, room: &str, project: &Project) -> std::io::Re
     tokio::fs::write(&temporary, serialised).await?;
     tokio::fs::rename(&temporary, &path).await
 }
+
+/// Whether a room has ever been written.
+///
+/// Used by the creation gate: a room with nothing on disk is one that does not
+/// exist yet, however confidently its name was typed into a URL.
+pub async fn exists(data_dir: &Path, room: &str) -> bool {
+    tokio::fs::try_exists(path_for(data_dir, room))
+        .await
+        .unwrap_or(false)
+}

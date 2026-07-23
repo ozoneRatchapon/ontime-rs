@@ -15,7 +15,9 @@ const near = (label, actual, expected, tolerance) => {
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const room = 'ops-' + (Math.floor(Date.now() / 1000) % 100000);
+// unique per run: a name derived from seconds collides whenever two runs
+// start in the same second, and the room still holds the previous run's rundown
+const room = 'ops-' + Math.random().toString(36).slice(2, 10);
 const api = (method, path, body) =>
   fetch(`${base}/r/${room}${path}`, {
     method,
@@ -37,11 +39,44 @@ const clientLists = [];
 const send = (tag, payload) => ws.send(JSON.stringify({ tag, payload }));
 const latest = () => runtime[runtime.length - 1];
 
+let socketClosed = null;
+ws.addEventListener('close', (event) => {
+  socketClosed = `code ${event.code}${event.reason ? ` (${event.reason})` : ''}`;
+});
 ws.addEventListener('message', (e) => {
   const p = JSON.parse(e.data);
   if (p.tag === 'runtime-data') runtime.push(p.payload);
   if (p.tag === 'client-list') clientLists.push(p.payload);
 });
+
+/// Waits until a packet satisfying `predicate` arrives.
+///
+/// Waiting for "the next packet" is not enough: a heartbeat can land between
+/// sending a command and it taking effect, and that packet predates the change.
+async function until(predicate, what, timeoutMs = 8000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const packet = latest();
+    if (packet && predicate(packet)) return packet;
+    await wait(20);
+  }
+  failed = true;
+  console.log(`  FAIL timed out waiting for ${what}`);
+  return latest() ?? {};
+}
+
+/// The same, for the client list, which arrives on its own packet.
+async function untilList(predicate, what, timeoutMs = 8000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const list = clientLists[clientLists.length - 1];
+    if (list && predicate(list)) return list;
+    await wait(20);
+  }
+  failed = true;
+  console.log(`  FAIL timed out waiting for ${what}`);
+  return clientLists[clientLists.length - 1] ?? {};
+}
 
 await new Promise((resolve, reject) => {
   ws.addEventListener('open', resolve);
@@ -60,20 +95,24 @@ check('aux1 counts down by default', latest().auxtimer1.direction, 'count-down')
 
 console.log('== an aux timer runs on its own, with playback stopped ==');
 send('auxtimer', { 1: { duration: 30000 } });
-await wait(300);
+await until((p) => p.auxtimer1.duration === 30000, 'the aux duration');
 check('duration set', latest().auxtimer1.duration, 30000);
 
 send('auxtimer', { 1: 'start' });
-await wait(2400);
-check('playback is still stopped', latest().timer.playback, 'stop');
-check('aux1 is running', latest().auxtimer1.playback, 'start');
-// the server must keep ticking for an aux timer even when nothing is playing
-near('aux1 counted down ~2s', latest().auxtimer1.current, 30000 - 2400, 1500);
-check('aux2 untouched', latest().auxtimer2.playback, 'stop');
+// waiting for it to have counted is the assertion: if the server did not keep
+// ticking for an aux timer while playback is stopped, this never arrives
+const counted = await until(
+  (p) => p.auxtimer1.playback === 'start' && p.auxtimer1.current <= 28000,
+  'aux1 to count down while playback is stopped',
+);
+check('playback is still stopped', counted.timer.playback, 'stop');
+check('aux1 is running', counted.auxtimer1.playback, 'start');
+near('aux1 counted down a couple of seconds', counted.auxtimer1.current, 30000 - 2500, 2000);
+check('aux2 untouched', counted.auxtimer2.playback, 'stop');
 
 console.log('== pause freezes it ==');
 send('auxtimer', { 1: 'pause' });
-await wait(400);
+await until((p) => p.auxtimer1.playback === 'pause', 'the aux pause');
 const atPause = latest().auxtimer1.current;
 check('aux1 paused', latest().auxtimer1.playback, 'pause');
 await wait(1500);
@@ -81,7 +120,7 @@ check('did not move while paused', latest().auxtimer1.current, atPause);
 
 console.log('== stop resets to the configured duration ==');
 send('auxtimer', { 1: 'stop' });
-await wait(400);
+await until((p) => p.auxtimer1.playback === 'stop', 'the aux stop');
 check('aux1 stopped', latest().auxtimer1.playback, 'stop');
 check('reset to 30s', latest().auxtimer1.current, 30000);
 
@@ -89,52 +128,55 @@ console.log('== counting up ==');
 send('auxtimer', { 2: { duration: 0 } });
 send('auxtimer', { 2: { direction: 'count-up' } });
 send('auxtimer', { 2: 'start' });
-await wait(2400);
-check('aux2 counts up', latest().auxtimer2.direction, 'count-up');
-near('aux2 counted up ~2s', latest().auxtimer2.current, 2400, 1500);
+const countedUp = await until(
+  (p) => p.auxtimer2.direction === 'count-up' && p.auxtimer2.current >= 2000,
+  'aux2 to count up',
+);
+check('aux2 counts up', countedUp.auxtimer2.direction, 'count-up');
+near('aux2 counted up a couple of seconds', countedUp.auxtimer2.current, 2500, 2000);
 send('auxtimer', { 2: 'stop' });
 
 console.log('== the message overlay ==');
 send('message', { timer: { text: 'STAND BY' } });
-await wait(300);
-check('text set', latest().message?.timer?.text, 'STAND BY');
-check('visible untouched', latest().message.timer.visible, false);
+const withText = await until((p) => p.message?.timer?.text === 'STAND BY', 'the overlay text');
+check('text set', withText.message?.timer?.text, 'STAND BY');
+check('visible untouched', withText.message.timer.visible, false);
 
 send('message', { timer: { visible: true, blink: true } });
-await wait(300);
-check('visible set', latest().message.timer.visible, true);
-check('blink set', latest().message.timer.blink, true);
+const shown = await until((p) => p.message.timer.visible && p.message.timer.blink, 'the overlay to show');
+check('visible set', shown.message.timer.visible, true);
+check('blink set', shown.message.timer.blink, true);
 // a partial patch must not reset the other fields
-check('text preserved', latest().message.timer.text, 'STAND BY');
+check('text preserved', shown.message.timer.text, 'STAND BY');
 
 send('message', { secondary: 'on air in 5' });
-await wait(300);
-check('secondary set', latest().message.secondary, 'on air in 5');
-check('timer text still there', latest().message.timer.text, 'STAND BY');
+const secondary = await until((p) => p.message.secondary === 'on air in 5', 'the secondary message');
+check('secondary set', secondary.message.secondary, 'on air in 5');
+check('timer text still there', secondary.message.timer.text, 'STAND BY');
 
 send('message', { timer: { blackout: true, secondarySource: 'aux1' } });
-await wait(300);
-check('blackout set', latest().message.timer.blackout, true);
-check('secondarySource set', latest().message.timer.secondarySource, 'aux1');
+const blacked = await until((p) => p.message.timer.blackout, 'the blackout');
+check('blackout set', blacked.message.timer.blackout, true);
+check('secondarySource set', blacked.message.timer.secondarySource, 'aux1');
 
 console.log('== the report records what actually ran ==');
 check('starts empty', await api('GET', '/data/report'), {});
 
 send('start', undefined);
-await wait(600);
+await until((p) => p.timer.playback === 'play', 'playback to start');
 let report = await api('GET', '/data/report');
 check('event A has a start', typeof report[a.id]?.startedAt, 'number');
 check('event A has no end yet', report[a.id]?.endedAt, null);
 
 send('load', 'next');
-await wait(600);
+await until((p) => p.eventNow?.title === 'OPS_B', 'the next event to load');
 report = await api('GET', '/data/report');
 check('event A now has an end', typeof report[a.id]?.endedAt, 'number');
 
 send('start', undefined);
-await wait(600);
+await until((p) => p.timer.playback === 'play', 'playback to restart');
 send('stop', undefined);
-await wait(600);
+await until((p) => p.timer.playback === 'stop', 'playback to stop');
 report = await api('GET', '/data/report');
 check('event B was recorded', typeof report[b.id]?.startedAt, 'number');
 check('event B has an end', typeof report[b.id]?.endedAt, 'number');
@@ -170,14 +212,12 @@ await new Promise((resolve) => {
   setTimeout(resolve, 5000);
 });
 ws2.send(JSON.stringify({ tag: 'client-set', payload: { name: 'Lighting' } }));
-await wait(600);
-const list3 = clientLists[clientLists.length - 1];
-check('two clients listed', Object.keys(list3).length, 2);
+const twoListed = await untilList((l) => Object.keys(l).length === 2, 'both clients to be listed');
+check('two clients listed', Object.keys(twoListed).length, 2);
 
 ws2.close();
-await wait(800);
-const list4 = clientLists[clientLists.length - 1];
-check('back to one after disconnect', Object.keys(list4).length, 1);
+const backToOne = await untilList((l) => Object.keys(l).length === 1, 'the list to drop back to one');
+check('back to one after disconnect', Object.keys(backToOne).length, 1);
 
 // --- cleanup -----------------------------------------------------------
 ws.close();

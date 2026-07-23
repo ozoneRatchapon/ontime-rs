@@ -43,6 +43,24 @@ Add its contract to `shapes.mjs`. Status codes are not enough: three endpoints o
 returned 200 with a body the client could not use, and the status-only sweep passed
 them all. `shapes.mjs` asserts field types, which is what caught them.
 
+## Timing, and what still flakes
+
+These drive a real server over a real network, so they are written to wait for a
+**condition** rather than to sleep and read. A heartbeat packet can land between
+a command and its effect, and "the next packet" is then one that predates the
+change — every suite has an `until(predicate, …)` for this reason. Sleeping and
+reading `latest()` is the single most common way to make one of these flaky.
+
+Each run uses a room named with random characters. Naming it from the clock in
+seconds meant two runs starting in the same second shared a room, and the second
+one found the first one's rundown still there — which produced scattered,
+run-order-dependent failures that looked like server bugs.
+
+Against a local server the suites are stable; that is what CI runs. Against a
+deployment across the public internet, `timer`, `roll` and `engine` still fail
+intermittently on timing tolerances. Treat a single production failure as
+inconclusive and re-run; treat a repeated one as real.
+
 ## Notes
 
 - Suites are ordered cheapest-first in `run.sh`, so an obvious break surfaces fast.

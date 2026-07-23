@@ -72,6 +72,7 @@ suites=(
   "operator.mjs:node" # aux timers, message overlay, report, client list
   "offset.mjs:node"   # ahead/behind schedule against a live rundown
   "roll.mjs:node"     # the rundown following the wall clock
+  "rooms-cost.mjs:node" # what an unwatched room costs, and who may create one
 )
 
 echo

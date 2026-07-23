@@ -62,6 +62,9 @@ pub struct OntimeProject {
     project: Project,
     /// Whether `project` has been hydrated from storage in this instance.
     loaded: bool,
+    /// True when storage held nothing, meaning this room is being used for the
+    /// first time.
+    is_new: bool,
 }
 
 #[durable_object]
@@ -73,6 +76,7 @@ impl DurableObject for OntimeProject {
             _env: env,
             project: Project::default(),
             loaded: false,
+            is_new: false,
         }
     }
 
@@ -189,6 +193,9 @@ impl DurableObject for OntimeProject {
             .flatten()
             .map(|info| info.id);
         self.broadcast_client_list(leaving.as_deref());
+        // with the last client gone there is nobody to broadcast to, so a room
+        // left running stops waking
+        self.sync_alarm().await?;
         Ok(())
     }
 }
@@ -222,13 +229,17 @@ impl OntimeProject {
             // no value yet (first run) or a document written by an older shape
             None => {
                 self.project = Project::default();
-                self.persist().await?;
+                self.is_new = true;
             }
         }
         Ok(())
     }
 
     async fn persist(&mut self) -> Result<()> {
+        // once something is stored the room exists, and the creation gate no
+        // longer applies to it
+        self.is_new = false;
+
         let raw = serde_json::to_string(&self.project)
             .map_err(|e| Error::RustError(format!("Could not serialise project: {e}")))?;
         self.state.storage().put(STORAGE_KEY, raw).await
@@ -331,7 +342,11 @@ impl OntimeProject {
     }
 
     fn next_wake(&self) -> Option<Duration> {
-        api::next_wake_in(&self.project, now_ms()).map(|ms| Duration::from_millis(ms as u64))
+        // with no sockets attached there is nobody to broadcast to, so a room
+        // whose timer was left running stops costing anything
+        let has_clients = !self.state.get_websockets().is_empty();
+        api::next_wake_in(&self.project, now_ms(), has_clients)
+            .map(|ms| Duration::from_millis(ms as u64))
     }
 
     /// The token a request is presenting, from any of the places one can travel.
@@ -390,6 +405,7 @@ impl OntimeProject {
                 .secret("SESSION_PASSWORD")
                 .ok()
                 .map(|secret| hash_password(&secret.to_string())),
+            room_is_new: self.is_new,
         };
 
         // an upgrade never reaches the shared routing, because the socket belongs
@@ -398,7 +414,14 @@ impl OntimeProject {
             if !api::is_authorised(&self.project, &api_request) {
                 return Response::error("Unauthorized", 401);
             }
-            return self.open_websocket();
+            if !api::may_create_room(&api_request) {
+                return Response::error("This room does not exist", 403);
+            }
+            let upgraded = self.open_websocket()?;
+            // there is somebody to broadcast to again, so the heartbeat that was
+            // stood down when the last client left has to come back
+            self.sync_alarm().await?;
+            return Ok(upgraded);
         }
 
         let response = api::handle(&mut self.project, &api_request);

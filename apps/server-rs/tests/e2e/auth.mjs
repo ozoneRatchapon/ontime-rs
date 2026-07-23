@@ -10,7 +10,9 @@ const check = (label, actual, expected) => {
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const room = 'secure-' + Math.floor(Date.now() / 1000) % 100000;
+// unique per run: a name derived from seconds collides whenever two runs
+// start in the same second, and the room still holds the previous run's rundown
+const room = 'secure-' + Math.random().toString(36).slice(2, 10);
 const call = (path, { token, method = 'GET', body } = {}) =>
   fetch(`${base}/r/${room}${path}`, {
     method,

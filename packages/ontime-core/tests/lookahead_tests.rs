@@ -237,6 +237,7 @@ fn switching_rundown_stops_playback() {
             body: json!({ "title": "Second" }),
             token: None,
             master_token: None,
+            room_is_new: false,
         },
     );
     let other = created.body.unwrap()["rundowns"]
@@ -264,10 +265,134 @@ fn switching_rundown_stops_playback() {
             body: json!({}),
             token: None,
             master_token: None,
+            room_is_new: false,
         },
     );
 
     // leaving it running would report `play` with nothing playing
     assert_eq!(project.runtime.playback, Playback::Stop);
     assert!(project.runtime.selected_id.is_none());
+}
+
+// --- what a room costs when nobody is watching -----------------------------
+
+#[test]
+fn an_unwatched_room_does_not_wake_on_the_heartbeat() {
+    use ontime_core::api::next_wake_in;
+    use ontime_core::project::Project;
+
+    let mut project = Project::default();
+    let rundown = project.current().cloned().unwrap();
+    project
+        .runtime
+        .apply(Command::Start, &rundown, at(10 * HOUR), 0);
+
+    let now = at(10 * HOUR);
+
+    // with someone connected, the heartbeat keeps the display current
+    assert_eq!(
+        next_wake_in(&project, now, true),
+        Some(project.heartbeat_ms)
+    );
+
+    // with nobody connected there is nothing to broadcast to, and the default
+    // event has no end action, so the room falls silent entirely
+    assert_eq!(next_wake_in(&project, now, false), None);
+}
+
+#[test]
+fn an_unwatched_room_still_wakes_to_advance_the_rundown() {
+    use ontime_core::api::next_wake_in;
+    use ontime_core::project::Project;
+    use serde_json::json as j;
+
+    let mut project = Project::default();
+    let rundown_id = project.loaded.clone();
+    let first = project.current().unwrap().flat_order[0].clone();
+    project
+        .get_mut(&rundown_id)
+        .unwrap()
+        .edit_entry(&first, &j!({ "endAction": "play-next" }))
+        .unwrap();
+
+    let rundown = project.current().cloned().unwrap();
+    project
+        .runtime
+        .apply(Command::StartId(first), &rundown, at(10 * HOUR), 0);
+
+    // an end action has to fire whether or not anyone is looking, but it is one
+    // wake per event rather than one a second
+    let unwatched = next_wake_in(&project, at(10 * HOUR), false);
+    assert!(unwatched.is_some());
+    assert!(
+        unwatched.unwrap() > project.heartbeat_ms,
+        "woke on the heartbeat rather than at the end of the event"
+    );
+}
+
+#[test]
+fn a_paused_or_aux_running_room_is_silent_without_a_watcher() {
+    use ontime_core::api::next_wake_in;
+    use ontime_core::project::Project;
+    use serde_json::json as j;
+
+    let mut project = Project::default();
+    let rundown = project.current().cloned().unwrap();
+    project
+        .runtime
+        .apply(Command::Start, &rundown, at(10 * HOUR), 0);
+    project
+        .runtime
+        .apply(Command::Pause, &rundown, at(10 * HOUR + MINUTE), 0);
+
+    assert!(next_wake_in(&project, at(10 * HOUR + MINUTE), true).is_some());
+    assert_eq!(next_wake_in(&project, at(10 * HOUR + MINUTE), false), None);
+
+    project
+        .aux_timers
+        .apply(&j!({ "1": "start" }), at(10 * HOUR));
+    assert!(next_wake_in(&project, at(10 * HOUR + MINUTE), true).is_some());
+    assert_eq!(next_wake_in(&project, at(10 * HOUR + MINUTE), false), None);
+}
+
+// --- who may bring a room into existence -----------------------------------
+
+#[test]
+fn any_room_may_be_created_when_no_master_password_is_configured() {
+    use ontime_core::api::{may_create_room, ApiRequest, HttpMethod};
+
+    let request = ApiRequest {
+        method: HttpMethod::Get,
+        path: "/data/settings".into(),
+        body: json!({}),
+        token: None,
+        master_token: None,
+        room_is_new: true,
+    };
+    // a single operator, or a LAN install, should not need ceremony
+    assert!(may_create_room(&request));
+}
+
+#[test]
+fn creating_a_room_needs_the_master_password_once_one_is_configured() {
+    use ontime_core::api::{may_create_room, ApiRequest, HttpMethod};
+    use ontime_core::project::hash_password;
+
+    let master = hash_password("the-master");
+    let request = |token: Option<&str>, room_is_new: bool| ApiRequest {
+        method: HttpMethod::Get,
+        path: "/data/settings".into(),
+        body: json!({}),
+        token: token.map(str::to_string),
+        master_token: Some(master.clone()),
+        room_is_new,
+    };
+
+    assert!(!may_create_room(&request(None, true)));
+    assert!(!may_create_room(&request(Some("wrong"), true)));
+    assert!(may_create_room(&request(Some(&master), true)));
+
+    // rooms that already exist are untouched, so turning this on cannot lock
+    // anyone out of what they already have
+    assert!(may_create_room(&request(None, false)));
 }

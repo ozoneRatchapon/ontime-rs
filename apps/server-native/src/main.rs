@@ -191,7 +191,10 @@ async fn tick_rooms(state: Arc<AppState>) {
         let mut to_save = Vec::new();
 
         for (name, room) in rooms.iter_mut() {
-            let Some(delay) = api::next_wake_in(&room.project, now) else {
+            // nobody subscribed means nobody to broadcast to, so a room left
+            // running stops costing anything
+            let has_clients = room.outbound.receiver_count() > 0;
+            let Some(delay) = api::next_wake_in(&room.project, now, has_clients) else {
                 next_wake.remove(name);
                 continue;
             };
@@ -215,7 +218,7 @@ async fn tick_rooms(state: Arc<AppState>) {
             if changed {
                 // the wake the state change implies may be sooner than the one
                 // just scheduled
-                if let Some(next) = api::next_wake_in(&room.project, now) {
+                if let Some(next) = api::next_wake_in(&room.project, now, has_clients) {
                     *due = (*due).min(now + next);
                 }
                 to_save.push((name.clone(), room.project.clone()));
@@ -230,19 +233,24 @@ async fn tick_rooms(state: Arc<AppState>) {
 }
 
 /// Loads a room from disk on first use, then keeps it in memory.
+///
+/// Also reports whether the room is new — nothing on disk and nothing in memory —
+/// so the creation gate can be applied.
 async fn with_room<T>(
     state: &AppState,
     name: &str,
     action: impl FnOnce(&mut Room) -> T,
 ) -> (T, bool) {
     let mut rooms = state.rooms.lock().await;
+    let mut is_new = false;
     if !rooms.contains_key(name) {
+        is_new = !store::exists(&state.data_dir, name).await;
         let project = store::load(&state.data_dir, name).await;
         rooms.insert(name.to_string(), Room::new(project));
     }
     let room = rooms.get_mut(name).expect("just inserted");
     let result = action(room);
-    (result, true)
+    (result, is_new)
 }
 
 fn room_from_path(path: &str) -> (String, String) {
@@ -297,6 +305,9 @@ async fn rest_handler(
     let full_path = format!("/{path}");
     let (room_name, api_path) = room_from_path(&full_path);
 
+    let room_is_new = !store::exists(&state.data_dir, &room_name).await
+        && !state.rooms.lock().await.contains_key(&room_name);
+
     let request = ApiRequest {
         method: HttpMethod::parse(method.as_str()),
         path: api_path,
@@ -306,6 +317,7 @@ async fn rest_handler(
             .unwrap_or_else(|| json!({})),
         token: token_from(&headers, &query),
         master_token: state.master_token.clone(),
+        room_is_new,
     };
 
     let (response, _) = with_room(&state, &room_name, |room| {
@@ -381,12 +393,16 @@ async fn upgrade_socket(
     headers: HeaderMap,
     upgrade: WebSocketUpgrade,
 ) -> Response {
+    let room_is_new = !store::exists(&state.data_dir, &room_name).await
+        && !state.rooms.lock().await.contains_key(&room_name);
+
     let request = ApiRequest {
         method: HttpMethod::Get,
         path: "/ws".to_string(),
         body: json!({}),
         token: token_from(&headers, &query),
         master_token: state.master_token.clone(),
+        room_is_new,
     };
 
     // an upgrade never reaches the shared routing, so it is gated here by the
@@ -397,6 +413,9 @@ async fn upgrade_socket(
     .await;
     if !authorised {
         return (StatusCode::UNAUTHORIZED, "Unauthorized").into_response();
+    }
+    if !api::may_create_room(&request) {
+        return (StatusCode::FORBIDDEN, "This room does not exist").into_response();
     }
 
     upgrade.on_upgrade(move |socket| serve_socket(state, room_name, socket))

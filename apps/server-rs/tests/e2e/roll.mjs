@@ -17,7 +17,9 @@ const near = (label, actual, expected, tolerance) => {
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const room = 'roll-' + (Math.floor(Date.now() / 1000) % 100000);
+// unique per run: a name derived from seconds collides whenever two runs
+// start in the same second, and the room still holds the previous run's rundown
+const room = 'roll-' + Math.random().toString(36).slice(2, 10);
 const api = (method, path, body) =>
   fetch(`${base}/r/${room}${path}`, {
     method,
@@ -43,14 +45,10 @@ const list = await api('POST', '/data/rundowns', { title: '__roll__' });
 const rid = list.rundowns.filter((r) => r.title === '__roll__').pop().id;
 await api('POST', `/data/rundowns/${rid}/load`);
 
-// A starts in 4s and runs 5s; B follows immediately and runs 5s
-const startA = serverClock + 4000;
-const a = await api('POST', `/data/rundowns/${rid}/entry`, {
-  title: 'ROLL_A', timeStart: startA, duration: 5000, timeEnd: startA + 5000,
-});
-const b = await api('POST', `/data/rundowns/${rid}/entry`, {
-  title: 'ROLL_B', timeStart: startA + 5000, duration: 5000, timeEnd: startA + 10000,
-});
+// created first, then positioned against a freshly read clock: setting the
+// times up front lets slow round trips eat the lead before the test begins
+const a = await api('POST', `/data/rundowns/${rid}/entry`, { title: 'ROLL_A', duration: 5000 });
+const b = await api('POST', `/data/rundowns/${rid}/entry`, { title: 'ROLL_B', duration: 5000 });
 
 const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}`);
 const runtime = [];
@@ -70,6 +68,21 @@ ws.addEventListener('message', (e) => {
   if (p.tag === 'runtime-data') runtime.push(p.payload);
 });
 
+
+/// Waits until a packet satisfying `predicate` arrives.
+///
+/// Waiting for "the next packet" is not enough: a heartbeat can land between
+/// sending a command and it taking effect, and that packet predates the change.
+async function until(predicate, what, timeoutMs = 8000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const packet = latest();
+    if (packet && predicate(packet)) return packet;
+    await wait(20);
+  }
+  throw new Error(`timed out waiting for ${what}`);
+}
+
 function assertSocketAlive(stage) {
   if (socketClosed !== null) {
     console.log(`\n  the websocket closed during "${stage}": ${socketClosed}`);
@@ -84,9 +97,20 @@ await new Promise((resolve, reject) => {
 });
 await wait(400);
 
+// now that everything is in place, put the events just ahead of the clock
+const clockNow = latest().clock;
+const startA = clockNow + 4000;
+await api('PUT', `/data/rundowns/${rid}/entry`, {
+  id: a.id, timeStart: startA, timeEnd: startA + 5000,
+});
+await api('PUT', `/data/rundowns/${rid}/entry`, {
+  id: b.id, timeStart: startA + 5000, timeEnd: startA + 10000,
+});
+await wait(300);
+
 console.log('== rolling before the show waits for it ==');
 send('roll', undefined);
-await wait(700);
+await until((p) => p.timer.playback === 'roll', 'roll to engage');
 check('playback is roll', latest().timer.playback, 'roll');
 check('the first event is armed', latest().eventNow?.title, 'ROLL_A');
 check('phase is pending', latest().timer.phase, 'pending');
@@ -106,15 +130,14 @@ check('still rolling', latest().timer.playback, 'roll');
 
 console.log('== stop leaves roll mode ==');
 send('stop', undefined);
-await wait(600);
+await until((p) => p.timer.playback === 'stop', 'the stop to apply');
 check('stopped', latest().timer.playback, 'stop');
 check('nothing loaded', latest().eventNow, null);
 
 console.log('== rolling mid-event joins it part way ==');
 // B is under way by now; rolling again should pick it up, not restart it
 send('roll', undefined);
-await wait(700);
-const joined = latest();
+const joined = await until((p) => p.timer.playback === 'roll', 'roll to re-engage');
 check('joined an event already running', joined.timer.playback, 'roll');
 check('it is not pending', joined.timer.phase !== 'pending', true);
 

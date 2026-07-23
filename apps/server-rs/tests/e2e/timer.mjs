@@ -3,7 +3,9 @@
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
 // its own room: a stray aux timer or a half-finished run in the shared default
 // room would otherwise break the "nothing is sent while stopped" assertions
-const room = 'tmr-' + (Math.floor(Date.now() / 1000) % 100000);
+// unique per run: a name derived from seconds collides whenever two runs
+// start in the same second, and the room still holds the previous run's rundown
+const room = 'tmr-' + Math.random().toString(36).slice(2, 10);
 const prefixed = `${base}/r/${room}`;
 const wsUrl = base.replace(/^http/, 'ws') + `/ws?room=${room}`;
 
@@ -54,6 +56,21 @@ const latest = () => runtime[runtime.length - 1];
  * Sends a command and resolves with the packet it caused, ignoring any heartbeat
  * that happens to arrive first. Without this the assertions race the heartbeat.
  */
+
+/// Waits until a packet satisfying `predicate` arrives.
+///
+/// Waiting for "the next packet" is not enough: a heartbeat can land between
+/// sending a command and it taking effect, and that packet predates the change.
+async function until(predicate, what, timeoutMs = 8000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const packet = latest();
+    if (packet && predicate(packet)) return packet;
+    await wait(20);
+  }
+  throw new Error(`timed out waiting for ${what}`);
+}
+
 async function sendAndAwait(tag, payload, timeoutMs = 3000) {
   assertSocketAlive(tag);
   const from = runtime.length;
@@ -122,14 +139,16 @@ check('inputs carry the start time', typeof latest()._engine?.inputs?.startedAt,
 // how the countdown advances between packets is engine-test.mjs' job
 
 console.log('== pause freezes it ==');
-const paused = await sendAndAwait('pause', undefined);
+send('pause', undefined);
+const paused = await until((p) => p.timer.playback === 'pause', 'the pause to apply');
 const atPause = paused.timer.current;
 check('playback is pause', paused.timer.playback, 'pause');
 await wait(1500);
 check('current did not move while paused', latest().timer.current, atPause);
 
 console.log('== resume ==');
-const resumed = await sendAndAwait('start', undefined);
+send('start', undefined);
+const resumed = await until((p) => p.timer.playback === 'play', 'the resume to apply');
 check('playback is play', resumed.timer.playback, 'play');
 // resuming re-anchors to a whole second so the countdown stays in step with the
 // wall clock, which can move the value by up to half a second
@@ -152,13 +171,15 @@ check('armed, not running', latest().timer.playback, 'armed');
 check('addedTime reset', latest().timer.addedTime, 0);
 
 console.log('== stop ==');
-assertSocketAlive('stop');
+// await the packet the command caused: sleeping races the round trip, and over
+// the internet the previous packet is what gets read
 send('stop', undefined);
-await wait(400);
-check('playback is stop', latest().timer.playback, 'stop');
-check('nothing loaded', latest().eventNow, null);
+const stopped = await until((p) => p.timer.playback === 'stop', 'the stop to apply');
+check('playback is stop', stopped.timer.playback, 'stop');
+check('nothing loaded', stopped.eventNow, null);
 
 console.log('== the tick stops when playback stops ==');
+await wait(500);
 const idle = runtime.length;
 await wait(3000);
 check('no ticks while stopped', runtime.length, idle);

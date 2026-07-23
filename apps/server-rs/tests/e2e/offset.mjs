@@ -18,7 +18,9 @@ const check = (label, actual, expected) => {
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const room = 'offset-' + (Math.floor(Date.now() / 1000) % 100000);
+// unique per run: a name derived from seconds collides whenever two runs
+// start in the same second, and the room still holds the previous run's rundown
+const room = 'offset-' + Math.random().toString(36).slice(2, 10);
 const api = (method, path, body) =>
   fetch(`${base}/r/${room}${path}`, {
     method,
@@ -47,13 +49,9 @@ const list = await api('POST', '/data/rundowns', { title: '__offset__' });
 const rid = list.rundowns.filter((r) => r.title === '__offset__').pop().id;
 await api('POST', `/data/rundowns/${rid}/load`);
 
-// planned to start ~1s from now so "start immediately" is on schedule
-const plannedStart = serverClock + 1000;
-const a = await api('POST', `/data/rundowns/${rid}/entry`, {
-  title: 'OFF_A', duration: 60000, timeStart: plannedStart,
-});
-await api('POST', `/data/rundowns/${rid}/entry`, {
-  title: 'OFF_B', duration: 60000, timeStart: plannedStart + 60000, linkStart: true,
+const a = await api('POST', `/data/rundowns/${rid}/entry`, { title: 'OFF_A', duration: 60000 });
+const b = await api('POST', `/data/rundowns/${rid}/entry`, {
+  title: 'OFF_B', duration: 60000, linkStart: true,
 });
 
 const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}`);
@@ -74,6 +72,20 @@ ws.addEventListener('message', (e) => {
   if (p.tag === 'runtime-data') runtime.push(p.payload);
 });
 
+/// Waits until a packet satisfying `predicate` arrives. A heartbeat can land
+/// between a command and its effect, so "the next packet" is not enough.
+async function until(predicate, what, timeoutMs = 8000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const packet = latest();
+    if (packet && predicate(packet)) return packet;
+    await wait(20);
+  }
+  failed = true;
+  console.log(`  FAIL timed out waiting for ${what}`);
+  return latest() ?? {};
+}
+
 function assertSocketAlive(stage) {
   if (socketClosed !== null) {
     console.log(`\n  the websocket closed during "${stage}": ${socketClosed}`);
@@ -88,49 +100,62 @@ await new Promise((resolve, reject) => {
 });
 await wait(400);
 
+// only now, with the round trips behind us, place the plan against the clock —
+// otherwise the setup time itself reads as the show running late
+const plannedStart = latest().clock + 1500;
+await api('PUT', `/data/rundowns/${rid}/entry`, {
+  id: a.id, timeStart: plannedStart, timeEnd: plannedStart + 60000,
+});
+await api('PUT', `/data/rundowns/${rid}/entry`, {
+  id: b.id, timeStart: plannedStart + 60000, timeEnd: plannedStart + 120000,
+});
+await wait(300);
+
 console.log('== nothing running means no offset ==');
 check('absolute is zero', latest().offset.absolute, 0);
 check('relative is zero', latest().offset.relative, 0);
 
 console.log('== starting on time ==');
 send('start', undefined);
-await wait(1500);
-near('absolute ~0', latest().offset.absolute, 0, 3000);
+const started = await until((p) => p.timer.playback === 'play', 'playback to start');
+near('absolute ~0', started.offset.absolute, 0, 3000);
 near('relative ~0', latest().offset.relative, 0, 3000);
 check('expectedRundownEnd is reported', typeof latest().offset.expectedRundownEnd, 'number');
 
 console.log('== adding time puts the run behind ==');
 send('addtime', 120000);
-await wait(600);
-near('absolute grew by the added time', latest().offset.absolute, 120000, 4000);
+const added = await until((p) => p.timer.addedTime === 120000, 'the added time');
+near('absolute grew by the added time', added.offset.absolute, 120000, 4000);
 
 console.log('== removing it again brings it back ==');
 send('addtime', -120000);
-await wait(600);
-near('absolute back to ~0', latest().offset.absolute, 0, 4000);
+const removed = await until((p) => p.timer.addedTime === 0, 'the added time to be removed');
+near('absolute back to ~0', removed.offset.absolute, 0, 4000);
 
 console.log('== pausing accrues lateness while paused ==');
 send('pause', undefined);
+await until((p) => p.timer.playback === 'pause', 'the pause to apply');
 await wait(2500);
+// a paused show keeps losing time against the schedule, so the figure grows
 near('paused time counted', latest().offset.absolute, 2500, 2500);
 
 send('start', undefined);
-await wait(600);
+await until((p) => p.timer.playback === 'play', 'the resume to apply');
 
 console.log('== starting the next event late shows as behind ==');
 // event B was planned to start at +60s; starting it now is early by design,
 // so what matters is that the figure tracks the plan rather than staying at zero
 const beforeLoad = latest().offset.absolute;
 send('start', 'next');
-await wait(800);
-check('offset changed with the new event', latest().offset.absolute !== beforeLoad, true);
-check('event B is loaded', latest().eventNow?.title, 'OFF_B');
+const onB = await until((p) => p.eventNow?.title === 'OFF_B', 'event B to load');
+check('event B is loaded', onB.eventNow?.title, 'OFF_B');
+check('offset changed with the new event', onB.offset.absolute !== beforeLoad, true);
 
 console.log('== stopping clears it ==');
 send('stop', undefined);
-await wait(600);
-check('absolute cleared', latest().offset.absolute, 0);
-check('relative cleared', latest().offset.relative, 0);
+const cleared = await until((p) => p.timer.playback === 'stop', 'the stop to apply');
+check('absolute cleared', cleared.offset.absolute, 0);
+check('relative cleared', cleared.offset.relative, 0);
 
 ws.close();
 await api('POST', '/data/rundowns/default/load');

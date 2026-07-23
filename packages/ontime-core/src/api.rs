@@ -44,6 +44,13 @@ pub struct ApiRequest {
     pub token: Option<String>,
     /// A master token that overrides a room's own, if the host has one configured.
     pub master_token: Option<String>,
+    /// True when this room has never been used before.
+    ///
+    /// Any name creates a room on first use, which is fine for one operator and
+    /// not fine for a public deployment: names can be squatted and abandoned
+    /// rooms accumulate. When a master token is configured, creating one is
+    /// gated behind it; with no master configured nothing changes.
+    pub room_is_new: bool,
 }
 
 /// Something the host must do once a request has been handled.
@@ -149,6 +156,24 @@ pub fn is_authorised(project: &Project, req: &ApiRequest) -> bool {
     }
 }
 
+/// Whether a request is allowed to bring a new room into existence.
+///
+/// Open when no master token is configured, which is how a single operator or a
+/// LAN install is expected to run. Once one is configured, a new room needs it —
+/// existing rooms are unaffected, so turning this on cannot lock anyone out of
+/// what they already have.
+pub fn may_create_room(req: &ApiRequest) -> bool {
+    if !req.room_is_new {
+        return true;
+    }
+    let Some(master) = req.master_token.as_deref() else {
+        return true;
+    };
+    req.token
+        .as_deref()
+        .is_some_and(|presented| token_matches(master, presented))
+}
+
 fn string_list(value: Option<&Value>) -> Vec<String> {
     value
         .and_then(Value::as_array)
@@ -195,6 +220,13 @@ pub fn handle(project: &mut Project, req: &ApiRequest) -> ApiResponse {
 
     if !is_claim && !is_authorised(project, req) {
         return ApiResponse::error("Unauthorized", 401);
+    }
+
+    if !may_create_room(req) {
+        return ApiResponse::error(
+            "This room does not exist. Creating one requires the master password.",
+            403,
+        );
     }
 
     let mut response = match segments.as_slice() {
@@ -766,11 +798,21 @@ fn url_presets(
 /// a request a second, and on a native server it is the difference between an
 /// idle process being quiet and being busy.
 ///
+/// `has_clients` says whether anyone is connected to hear a broadcast. With
+/// nobody there the heartbeat is pointless, and a room whose timer was left
+/// running would otherwise wake for ever at somebody's expense. The end-of-event
+/// wake is kept regardless, because that one advances the rundown and there is
+/// one of it per event rather than one a second.
+///
 /// This lives here rather than in either host because it is policy, not
 /// transport: the two answering it differently is exactly how they would drift.
-pub fn next_wake_in(project: &Project, now: i64) -> Option<i64> {
+pub fn next_wake_in(project: &Project, now: i64, has_clients: bool) -> Option<i64> {
     let runtime = &project.runtime;
-    let heartbeat = project.heartbeat_ms.max(0);
+    let heartbeat = if has_clients {
+        project.heartbeat_ms.max(0)
+    } else {
+        0
+    };
 
     if !runtime.is_running() {
         // A paused show is still losing time against the schedule and the
