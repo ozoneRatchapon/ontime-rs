@@ -1,6 +1,7 @@
 pub mod aux_timer;
 pub mod engine;
 pub mod message;
+pub mod offset;
 #[cfg(feature = "spreadsheet")]
 pub mod parser;
 pub mod project;

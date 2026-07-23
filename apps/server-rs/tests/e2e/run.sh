@@ -70,6 +70,7 @@ suites=(
   "rooms.mjs:node"    # project isolation
   "auth.mjs:node"     # per-room password
   "operator.mjs:node" # aux timers, message overlay, report, client list
+  "offset.mjs:node"   # ahead/behind schedule against a live rundown
 )
 
 echo

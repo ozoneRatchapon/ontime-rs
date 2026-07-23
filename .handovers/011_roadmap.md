@@ -120,21 +120,42 @@ Three things worth recording:
 The client list lives in the socket's attachment rather than a field, because
 hibernation evicts the object between messages — a field would not survive.
 
-## Phase 2 — timing fidelity (~2,000 TS lines)
+## Phase 2 — timing fidelity — **offset done, roll outstanding**
 
-This is what makes the thing trustworthy for a live show rather than a demo.
+`packages/ontime-core/src/offset.rs` ports `getRuntimeOffset` and
+`getExpectedStart` exactly. The figure previously shipped was a single-event
+approximation and could not be relied on.
 
-- **`stores/runtimeState`** (1,084) — the real rundown-wide offset. What ships today
-  is a single-event approximation; the "ahead/behind schedule" number cannot be
-  relied on.
-- **`runtime-service`** (952, ~40% remaining) — roll mode, `countToEnd`, skip
-  handling at boundaries, midnight edge cases.
+`absolute` now accumulates: how late the loaded event started against its planned
+slot, plus overrun, plus time spent paused, plus operator-added time. `relative`
+measures the same against the plan as shifted by when the run actually began,
+which is what you want when a show starts late by design. `countToEnd` counts only
+the overrun.
 
-Port with tests first: the existing 51 Rust tests were written against observable
-behaviour and caught every refactor regression so far. Extend the same way.
+Two things that had to be got right:
 
-**Exit:** the offset figure is correct against the same rundown run through
-`apps/server`, and roll mode works.
+- **The day the run began is fixed at start.** Every later event is measured against
+  it, so it cannot be recomputed as the rundown advances — which meant threading the
+  timezone into `Runtime::apply`, since which day it is is a wall-clock question.
+- **Paused time is measured in epoch, not time-of-day.** The original computes
+  `clock - pausedAt` and carries a comment noting it breaks across midnight; ours
+  does not have that problem.
+
+The server also now keeps ticking while paused. It previously went quiet, which
+froze the offset on screen — but a paused show is still losing time and that figure
+is exactly what the operator is watching.
+
+`expectedGroupEnd` and `expectedFlagStart` remain null: they need the
+accumulated-gap walk over the rundown, which is not ported. Null rather than a
+number that would look authoritative.
+
+23 unit tests on the arithmetic, plus `tests/e2e/offset.mjs` on the wiring.
+
+### Still outstanding in this phase
+
+**Roll mode.** The remainder of `runtime-service`: waiting for a wall-clock start,
+rolling between events automatically, and the secondary timer that counts to the
+next event. This is the largest single feature left that Workers *can* host.
 
 ## Phase 3 — the native target, and what it unlocks
 

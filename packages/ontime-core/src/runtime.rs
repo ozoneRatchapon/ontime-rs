@@ -8,6 +8,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+use crate::offset::{find_day_offset, runtime_offset, OffsetInputs};
 use crate::rundown::{Rundown, MS_PER_DAY};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -192,35 +193,43 @@ pub struct Runtime {
     pub added_time: i64,
     /// Epoch ms at which the first event of this run started.
     pub actual_start: Option<i64>,
+    /// Which day the run began on, relative to the rundown's planned start.
+    /// Fixed when the run starts, because everything after is measured from it.
+    #[serde(default)]
+    pub start_day_offset: Option<i64>,
 }
 
 impl Runtime {
     // #region commands ===========================================
 
     /// Applies a command. `now` is epoch milliseconds.
+    ///
+    /// `tz_offset` is needed because starting a run fixes which *day* it began
+    /// on, and that is a wall-clock question.
+    ///
     /// Returns `true` when the resulting state should be broadcast.
-    pub fn apply(&mut self, command: Command, rundown: &Rundown, now: i64) -> bool {
+    pub fn apply(&mut self, command: Command, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
         match command {
-            Command::Start => self.start(rundown, now),
+            Command::Start => self.start(rundown, now, tz_offset),
             Command::StartNext => {
                 self.step(rundown, 1);
-                self.start(rundown, now)
+                self.start(rundown, now, tz_offset)
             }
             Command::StartId(id) => {
                 self.load(rundown, Some(id));
-                self.start(rundown, now)
+                self.start(rundown, now, tz_offset)
             }
             Command::LoadNext => self.step(rundown, 1),
             Command::LoadPrevious => self.step(rundown, -1),
             Command::LoadId(id) => self.load(rundown, Some(id)),
             Command::Pause => self.pause(now),
             Command::Stop => self.stop(),
-            Command::Reload => self.reload(rundown, now),
+            Command::Reload => self.reload(rundown, now, tz_offset),
             Command::AddTime(amount) => self.add_time(amount),
         }
     }
 
-    fn start(&mut self, rundown: &Rundown, now: i64) -> bool {
+    fn start(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
         // resuming from a pause keeps the elapsed time
         if self.playback == Playback::Pause {
             if let Some(paused_at) = self.paused_at.take() {
@@ -247,7 +256,16 @@ impl Runtime {
         self.paused_at = None;
         self.paused_total = 0;
         self.added_time = 0;
-        self.actual_start.get_or_insert(now);
+        // the day the run began is fixed here: every later event is measured
+        // against it, so it must not be recomputed as the rundown advances
+        if self.actual_start.is_none() {
+            self.actual_start = Some(now);
+            let clock = time_of_day(now, tz_offset);
+            let event = self.selected_id.as_ref().and_then(|id| rundown.get(id));
+            let event_start = event.and_then(|e| field(e, "timeStart")).unwrap_or(0);
+            let event_day = event.and_then(|e| field(e, "dayOffset")).unwrap_or(0);
+            self.start_day_offset = Some(find_day_offset(event_start, clock) + event_day);
+        }
         true
     }
 
@@ -264,18 +282,19 @@ impl Runtime {
         if self.playback == Playback::Stop && self.selected_id.is_none() {
             return false;
         }
+        // a full reset: the next run establishes its own day and start time
         *self = Runtime::default();
         true
     }
 
-    fn reload(&mut self, rundown: &Rundown, now: i64) -> bool {
+    fn reload(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
         let Some(id) = self.selected_id.clone() else {
             return false;
         };
         let was_playing = self.playback == Playback::Play;
         self.load(rundown, Some(id));
         if was_playing {
-            self.start(rundown, now);
+            self.start(rundown, now, tz_offset);
         }
         true
     }
@@ -342,7 +361,7 @@ impl Runtime {
     /// default behaviour an operator expects.
     ///
     /// Returns `true` if the state changed.
-    pub fn on_tick(&mut self, rundown: &Rundown, now: i64) -> bool {
+    pub fn on_tick(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
         if self.playback != Playback::Play {
             return false;
         }
@@ -378,7 +397,7 @@ impl Runtime {
             }
             "play-next" => {
                 if self.step(rundown, 1) {
-                    self.start(rundown, now);
+                    self.start(rundown, now, tz_offset);
                 } else {
                     self.playback = Playback::Pause;
                     self.paused_at = Some(now);
@@ -440,7 +459,6 @@ impl Runtime {
             .and_then(|id| rundown.get(id));
 
         let inputs = self.inputs_for(event_now);
-        let duration = inputs.duration();
 
         let planned_start = events
             .first()
@@ -451,18 +469,48 @@ impl Runtime {
             .and_then(|id| rundown.get(id))
             .and_then(|e| field(e, "timeEnd"));
 
-        // Offset compares where the running event will actually finish against
-        // where the rundown says it should. Positive means behind schedule.
-        // This is a single-event approximation of the original offset service.
-        let offset = match (event_now, self.started_at, duration) {
-            (Some(event), Some(started), Some(duration)) => {
-                let planned_end = field(event, "timeEnd").unwrap_or(0);
-                let actual_end = time_of_day(started + duration + self.paused_total, tz_offset);
-                Some(wrap_signed(actual_end - planned_end))
+        // How far the run is from the plan. Positive means behind.
+        let (absolute, relative) = match (
+            event_now,
+            self.started_at,
+            self.actual_start,
+            self.start_day_offset,
+            planned_start,
+        ) {
+            (
+                Some(event),
+                Some(started),
+                Some(actual_start),
+                Some(start_day_offset),
+                Some(planned),
+            ) => {
+                // measured in epoch, so a pause spanning midnight still counts
+                // correctly — the original computes this in time-of-day and
+                // notes the midnight case as broken
+                let paused_for = match (self.playback, self.paused_at) {
+                    (Playback::Pause, Some(paused_at)) => now - paused_at,
+                    _ => 0,
+                };
+
+                let offset_inputs = OffsetInputs {
+                    started_at: time_of_day(started, tz_offset),
+                    start_day_offset,
+                    event_time_start: field(event, "timeStart").unwrap_or(0),
+                    event_day_offset: field(event, "dayOffset").unwrap_or(0),
+                    current: inputs.current(now).unwrap_or(0),
+                    added_time: self.added_time,
+                    paused_for,
+                    count_to_end: event
+                        .get("countToEnd")
+                        .and_then(Value::as_bool)
+                        .unwrap_or(false),
+                    planned_start: planned,
+                    actual_start: time_of_day(actual_start, tz_offset),
+                };
+                runtime_offset(&offset_inputs)
             }
-            _ => None,
+            _ => (0, 0),
         };
-        let offset_value = offset.unwrap_or(0);
 
         json!({
             "clock": time_of_day(now, tz_offset),
@@ -485,12 +533,14 @@ impl Runtime {
                 "currentDay": event_now.and_then(|e| field(e, "dayOffset")),
             },
             "offset": {
-                "absolute": offset_value,
-                "relative": offset_value,
+                "absolute": absolute,
+                "relative": relative,
                 "mode": "absolute",
+                // groups and flags need the accumulated-gap walk, which is not
+                // ported yet; null rather than a number that would look authoritative
                 "expectedFlagStart": Value::Null,
                 "expectedGroupEnd": Value::Null,
-                "expectedRundownEnd": planned_end.map(|end| wrap_day(end + offset_value)),
+                "expectedRundownEnd": planned_end.map(|end| wrap_day(end + absolute)),
             },
             "eventNow": event_now,
             "eventNext": event_next,
@@ -534,18 +584,6 @@ fn wrap_day(value: i64) -> i64 {
 /// Milliseconds since local midnight for an epoch timestamp.
 fn time_of_day(epoch_ms: i64, tz_offset: i64) -> i64 {
     wrap_day(epoch_ms + tz_offset)
-}
-
-/// Keeps a difference of two times-of-day within ±12h, so a small delay that
-/// straddles midnight does not read as a 23-hour overrun.
-fn wrap_signed(diff: i64) -> i64 {
-    let half = MS_PER_DAY / 2;
-    let wrapped = diff.rem_euclid(MS_PER_DAY);
-    if wrapped > half {
-        wrapped - MS_PER_DAY
-    } else {
-        wrapped
-    }
 }
 
 // #endregion helpers =============================================

@@ -181,7 +181,11 @@ impl DurableObject for OntimeProject {
         let was_playing = self.project.runtime.playback == Playback::Play;
         let previous_entry = self.project.runtime.selected_id.clone();
 
-        if self.project.runtime.apply(command, &rundown, now) {
+        if self
+            .project
+            .runtime
+            .apply(command, &rundown, now, self.project.timezone_offset)
+        {
             self.record_report(was_playing, previous_entry, now);
             self.persist().await?;
             self.broadcast_runtime(now);
@@ -201,7 +205,11 @@ impl DurableObject for OntimeProject {
         };
 
         // an end action may advance the rundown; that change has to be durable
-        if self.project.runtime.on_tick(&rundown, now) {
+        if self
+            .project
+            .runtime
+            .on_tick(&rundown, now, self.project.timezone_offset)
+        {
             self.persist().await?;
         }
 
@@ -396,10 +404,15 @@ impl OntimeProject {
     fn next_wake(&self) -> Option<Duration> {
         let runtime = &self.project.runtime;
 
-        // an aux timer runs independently of the rundown; without this a
-        // stopwatch started while playback is stopped would never update
         if !runtime.is_running() {
-            if self.project.aux_timers.any_running() && self.project.heartbeat_ms > 0 {
+            // A paused show is still losing time against the schedule, and the
+            // operator is watching that figure grow — so the tick continues.
+            // An aux timer runs independently of the rundown too: without this a
+            // stopwatch started while playback is stopped would never update.
+            let needs_tick =
+                runtime.playback == Playback::Pause || self.project.aux_timers.any_running();
+
+            if needs_tick && self.project.heartbeat_ms > 0 {
                 return Some(Duration::from_millis(self.project.heartbeat_ms as u64));
             }
             return None;

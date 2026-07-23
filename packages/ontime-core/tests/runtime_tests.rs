@@ -64,7 +64,7 @@ fn start_loads_the_first_event_when_nothing_is_selected() {
     let (rundown, ids) = fixture();
     let mut runtime = Runtime::default();
 
-    assert!(runtime.apply(Command::Start, &rundown, T0));
+    assert!(runtime.apply(Command::Start, &rundown, T0, 0));
 
     assert_eq!(runtime.playback, Playback::Play);
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
@@ -75,7 +75,7 @@ fn start_loads_the_first_event_when_nothing_is_selected() {
 fn the_timer_counts_down_from_the_event_duration() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
     let at_start = timer(&runtime, &rundown, T0);
     assert_eq!(at_start["duration"], 60_000);
@@ -91,7 +91,7 @@ fn the_timer_counts_down_from_the_event_duration() {
 fn the_timer_goes_negative_in_overtime() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
     let overrun = timer(&runtime, &rundown, T0 + 75_000);
     assert_eq!(overrun["current"], -15_000);
@@ -102,7 +102,7 @@ fn the_timer_goes_negative_in_overtime() {
 fn phase_follows_the_warning_and_danger_thresholds() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
     // thresholds in the fixture: warning 30s, danger 10s
     assert_eq!(timer(&runtime, &rundown, T0 + 10_000)["phase"], "default");
@@ -114,16 +114,16 @@ fn phase_follows_the_warning_and_danger_thresholds() {
 fn pausing_freezes_the_timer_and_resuming_continues_it() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
-    runtime.apply(Command::Pause, &rundown, T0 + 20_000);
+    runtime.apply(Command::Pause, &rundown, T0 + 20_000, 0);
     assert_eq!(runtime.playback, Playback::Pause);
 
     // time passes while paused, the timer does not move
     assert_eq!(timer(&runtime, &rundown, T0 + 20_000)["current"], 40_000);
     assert_eq!(timer(&runtime, &rundown, T0 + 50_000)["current"], 40_000);
 
-    runtime.apply(Command::Start, &rundown, T0 + 50_000);
+    runtime.apply(Command::Start, &rundown, T0 + 50_000, 0);
     assert_eq!(runtime.playback, Playback::Play);
     assert_eq!(runtime.paused_total, 30_000);
 
@@ -135,8 +135,8 @@ fn pausing_freezes_the_timer_and_resuming_continues_it() {
 fn stop_clears_everything() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
-    runtime.apply(Command::Stop, &rundown, T0 + 10_000);
+    runtime.apply(Command::Start, &rundown, T0, 0);
+    runtime.apply(Command::Stop, &rundown, T0 + 10_000, 0);
 
     assert_eq!(runtime.playback, Playback::Stop);
     assert!(runtime.selected_id.is_none());
@@ -151,9 +151,9 @@ fn stop_clears_everything() {
 fn addtime_extends_the_running_event() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
-    runtime.apply(Command::AddTime(30_000), &rundown, T0 + 10_000);
+    runtime.apply(Command::AddTime(30_000), &rundown, T0 + 10_000, 0);
 
     let extended = timer(&runtime, &rundown, T0 + 10_000);
     assert_eq!(extended["addedTime"], 30_000);
@@ -165,8 +165,8 @@ fn addtime_extends_the_running_event() {
 fn addtime_can_remove_time() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
-    runtime.apply(Command::AddTime(-30_000), &rundown, T0 + 10_000);
+    runtime.apply(Command::Start, &rundown, T0, 0);
+    runtime.apply(Command::AddTime(-30_000), &rundown, T0 + 10_000, 0);
 
     assert_eq!(timer(&runtime, &rundown, T0 + 10_000)["current"], 20_000);
 }
@@ -176,18 +176,18 @@ fn load_next_and_previous_walk_the_rundown() {
     let (rundown, ids) = fixture();
     let mut runtime = Runtime::default();
 
-    runtime.apply(Command::LoadNext, &rundown, T0);
+    runtime.apply(Command::LoadNext, &rundown, T0, 0);
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
     assert_eq!(runtime.playback, Playback::Armed);
 
-    runtime.apply(Command::LoadNext, &rundown, T0);
+    runtime.apply(Command::LoadNext, &rundown, T0, 0);
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[1].as_str()));
 
-    runtime.apply(Command::LoadPrevious, &rundown, T0);
+    runtime.apply(Command::LoadPrevious, &rundown, T0, 0);
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
 
     // does not walk off the start
-    assert!(!runtime.apply(Command::LoadPrevious, &rundown, T0));
+    assert!(!runtime.apply(Command::LoadPrevious, &rundown, T0, 0));
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
 }
 
@@ -195,10 +195,10 @@ fn load_next_and_previous_walk_the_rundown() {
 fn loading_resets_the_timer_of_the_previous_event() {
     let (rundown, ids) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
-    runtime.apply(Command::AddTime(30_000), &rundown, T0 + 10_000);
+    runtime.apply(Command::Start, &rundown, T0, 0);
+    runtime.apply(Command::AddTime(30_000), &rundown, T0 + 10_000, 0);
 
-    runtime.apply(Command::LoadId(ids[1].clone()), &rundown, T0 + 10_000);
+    runtime.apply(Command::LoadId(ids[1].clone()), &rundown, T0 + 10_000, 0);
 
     assert_eq!(runtime.added_time, 0);
     assert!(runtime.started_at.is_none());
@@ -212,8 +212,8 @@ fn loading_resets_the_timer_of_the_previous_event() {
 fn start_next_advances_and_runs() {
     let (rundown, ids) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
-    runtime.apply(Command::StartNext, &rundown, T0 + 60_000);
+    runtime.apply(Command::Start, &rundown, T0, 0);
+    runtime.apply(Command::StartNext, &rundown, T0 + 60_000, 0);
 
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[1].as_str()));
     assert_eq!(runtime.playback, Playback::Play);
@@ -226,8 +226,8 @@ fn start_next_advances_and_runs() {
 fn reload_restarts_the_current_event_and_keeps_playing() {
     let (rundown, ids) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
-    runtime.apply(Command::Reload, &rundown, T0 + 40_000);
+    runtime.apply(Command::Start, &rundown, T0, 0);
+    runtime.apply(Command::Reload, &rundown, T0 + 40_000, 0);
 
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
     assert_eq!(runtime.playback, Playback::Play);
@@ -242,8 +242,8 @@ fn skipped_events_are_not_selectable() {
         .unwrap();
 
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
-    runtime.apply(Command::StartNext, &rundown, T0 + 60_000);
+    runtime.apply(Command::Start, &rundown, T0, 0);
+    runtime.apply(Command::StartNext, &rundown, T0 + 60_000, 0);
 
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[2].as_str()));
     assert_eq!(runtime.snapshot(&rundown, T0, 0)["rundown"]["numEvents"], 2);
@@ -253,7 +253,7 @@ fn skipped_events_are_not_selectable() {
 fn the_snapshot_reports_the_current_and_next_event() {
     let (rundown, ids) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
     let snapshot = runtime.snapshot(&rundown, T0, 0);
     assert_eq!(snapshot["eventNow"]["id"], ids[0].as_str());
@@ -266,7 +266,7 @@ fn the_snapshot_reports_the_current_and_next_event() {
 fn the_snapshot_matches_the_clients_runtime_store_shape() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
     let snapshot = runtime.snapshot(&rundown, T0, 0);
 
@@ -366,7 +366,7 @@ fn the_clock_is_reported_as_time_of_day_in_the_operators_timezone() {
 fn started_at_is_reported_as_time_of_day() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
     let snapshot = runtime.snapshot(&rundown, T0, 0);
     assert_eq!(snapshot["timer"]["startedAt"], 80_000_000);
@@ -377,8 +377,8 @@ fn started_at_is_reported_as_time_of_day() {
 fn a_runtime_survives_a_serialisation_round_trip() {
     let (rundown, _) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
-    runtime.apply(Command::Pause, &rundown, T0 + 15_000);
+    runtime.apply(Command::Start, &rundown, T0, 0);
+    runtime.apply(Command::Pause, &rundown, T0 + 15_000, 0);
 
     let raw = serde_json::to_string(&runtime).unwrap();
     let restored: Runtime = serde_json::from_str(&raw).unwrap();
@@ -396,7 +396,7 @@ fn start_is_ignored_when_the_rundown_is_empty() {
     let rundown = Rundown::new("default", "Empty");
     let mut runtime = Runtime::default();
 
-    assert!(!runtime.apply(Command::Start, &rundown, T0));
+    assert!(!runtime.apply(Command::Start, &rundown, T0, 0));
     assert_eq!(runtime.playback, Playback::Stop);
 }
 
@@ -404,9 +404,9 @@ fn start_is_ignored_when_the_rundown_is_empty() {
 fn end_action_none_runs_into_overtime() {
     let (rundown, ids) = fixture();
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
-    assert!(!runtime.on_tick(&rundown, T0 + 90_000));
+    assert!(!runtime.on_tick(&rundown, T0 + 90_000, 0));
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
     assert_eq!(timer(&runtime, &rundown, T0 + 90_000)["current"], -30_000);
 }
@@ -419,10 +419,10 @@ fn end_action_load_next_arms_the_following_event() {
         .unwrap();
 
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
+    runtime.apply(Command::Start, &rundown, T0, 0);
 
-    assert!(!runtime.on_tick(&rundown, T0 + 59_000));
-    assert!(runtime.on_tick(&rundown, T0 + 60_000));
+    assert!(!runtime.on_tick(&rundown, T0 + 59_000, 0));
+    assert!(runtime.on_tick(&rundown, T0 + 60_000, 0));
 
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[1].as_str()));
     assert_eq!(runtime.playback, Playback::Armed);
@@ -436,8 +436,8 @@ fn end_action_play_next_rolls_straight_into_the_following_event() {
         .unwrap();
 
     let mut runtime = Runtime::default();
-    runtime.apply(Command::Start, &rundown, T0);
-    assert!(runtime.on_tick(&rundown, T0 + 60_000));
+    runtime.apply(Command::Start, &rundown, T0, 0);
+    assert!(runtime.on_tick(&rundown, T0 + 60_000, 0));
 
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[1].as_str()));
     assert_eq!(runtime.playback, Playback::Play);
@@ -452,8 +452,8 @@ fn end_action_on_the_last_event_holds_instead_of_looping() {
         .unwrap();
 
     let mut runtime = Runtime::default();
-    runtime.apply(Command::StartId(ids[2].clone()), &rundown, T0);
-    assert!(runtime.on_tick(&rundown, T0 + 60_000));
+    runtime.apply(Command::StartId(ids[2].clone()), &rundown, T0, 0);
+    assert!(runtime.on_tick(&rundown, T0 + 60_000, 0));
 
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[2].as_str()));
     assert_eq!(runtime.playback, Playback::Pause);
@@ -467,5 +467,5 @@ fn a_tick_does_nothing_when_playback_is_stopped() {
         .unwrap();
 
     let mut runtime = Runtime::default();
-    assert!(!runtime.on_tick(&rundown, T0 + 60_000));
+    assert!(!runtime.on_tick(&rundown, T0 + 60_000, 0));
 }
