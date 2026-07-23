@@ -1,0 +1,22 @@
+[package]
+name = "ontime-server-native"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ontime Team"]
+description = "Ontime backend as a native binary, sharing the engine with the Cloudflare Worker"
+
+[dependencies]
+# the same engine and the same routing the Worker uses; this binary only
+# supplies a transport and a place to keep the file
+ontime-core = { path = "../../packages/ontime-core" }
+
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time", "fs"] }
+tower-http = { version = "0.6", features = ["cors", "fs"] }
+serde_json = "1.0"
+chrono = "0.4"
+futures-util = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = true

@@ -1,3 +1,4 @@
+pub mod api;
 pub mod aux_timer;
 pub mod engine;
 pub mod message;

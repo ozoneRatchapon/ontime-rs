@@ -3,9 +3,9 @@ use worker::*;
 
 use std::time::Duration;
 
-use ontime_core::project::{hash_password, token_matches, Project};
-use ontime_core::rundown::Insert;
-use ontime_core::runtime::{Command, Playback};
+use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
+use ontime_core::project::{hash_password, Project};
+
 use serde::{Deserialize, Serialize};
 
 /// Per-connection metadata, stored on the socket itself.
@@ -143,50 +143,7 @@ impl DurableObject for OntimeProject {
         }
 
         let now = now_ms();
-
-        // overlay and aux timers are independent of the rundown
-        match tag {
-            "message" => {
-                if let Some(payload) = payload {
-                    if self.project.message.apply(payload) {
-                        self.persist().await?;
-                        self.broadcast_runtime(now);
-                    }
-                }
-                return Ok(());
-            }
-            "auxtimer" => {
-                if let Some(payload) = payload {
-                    if self.project.aux_timers.apply(payload, now) {
-                        self.persist().await?;
-                        self.broadcast_runtime(now);
-                        // an aux timer running on its own still needs the tick
-                        self.sync_alarm().await?;
-                    }
-                }
-                return Ok(());
-            }
-            _ => {}
-        }
-
-        // playback commands; tags this engine does not implement are ignored
-        let Some(command) = Command::parse(tag, payload) else {
-            return Ok(());
-        };
-
-        let Some(rundown) = self.project.current().cloned() else {
-            return Ok(());
-        };
-
-        let was_playing = self.project.runtime.playback == Playback::Play;
-        let previous_entry = self.project.runtime.selected_id.clone();
-
-        if self
-            .project
-            .runtime
-            .apply(command, &rundown, now, self.project.timezone_offset)
-        {
-            self.record_report(was_playing, previous_entry, now);
+        if api::apply_socket_command(&mut self.project, tag, payload, now) {
             self.persist().await?;
             self.broadcast_runtime(now);
             self.sync_alarm().await?;
@@ -296,34 +253,6 @@ impl OntimeProject {
         }
     }
 
-    /// Notes when an event actually started or stopped.
-    ///
-    /// The report is what lets an operator compare the run against the plan
-    /// afterwards, so it records wall-clock time-of-day, not epoch.
-    fn record_report(&mut self, was_playing: bool, previous_entry: Option<String>, now: i64) {
-        let clock = (now + self.project.timezone_offset).rem_euclid(86_400_000);
-        let is_playing = self.project.runtime.playback == Playback::Play;
-        let current_entry = self.project.runtime.selected_id.clone();
-
-        // whatever was running has stopped if playback ended or moved on
-        if was_playing {
-            if let Some(previous) = previous_entry.as_deref() {
-                if !is_playing || current_entry.as_deref() != Some(previous) {
-                    self.project.report.on_stop(previous, clock);
-                }
-            }
-        }
-
-        // and a new one has begun if playback just started, or moved to another entry
-        if is_playing {
-            if let Some(current) = current_entry.as_deref() {
-                if !was_playing || previous_entry.as_deref() != Some(current) {
-                    self.project.report.on_start(current, clock);
-                }
-            }
-        }
-    }
-
     /// Announces who is connected. Built from the sockets rather than a field,
     /// because hibernation evicts the object between messages.
     ///
@@ -402,75 +331,7 @@ impl OntimeProject {
     }
 
     fn next_wake(&self) -> Option<Duration> {
-        let runtime = &self.project.runtime;
-
-        if !runtime.is_running() {
-            // A paused show is still losing time against the schedule, and the
-            // operator is watching that figure grow — so the tick continues.
-            // An aux timer runs independently of the rundown too: without this a
-            // stopwatch started while playback is stopped would never update.
-            let needs_tick =
-                runtime.playback == Playback::Pause || self.project.aux_timers.any_running();
-
-            if needs_tick && self.project.heartbeat_ms > 0 {
-                return Some(Duration::from_millis(self.project.heartbeat_ms as u64));
-            }
-            return None;
-        }
-
-        let rundown = self.project.current()?;
-        let event = runtime.selected_id.as_ref().and_then(|id| rundown.get(id));
-        let inputs = runtime.inputs_for(event, self.project.timezone_offset);
-        let now = now_ms();
-
-        // In roll mode the server is the only thing that will start the event, so
-        // it wakes at the exact moment rather than waiting for a heartbeat.
-        if let Some(target) = runtime.secondary_target {
-            let clock = (now + self.project.timezone_offset).rem_euclid(86_400_000);
-            let until_due = (target - clock).max(0) as u64;
-            let heartbeat = self.project.heartbeat_ms.max(0) as u64;
-            let delay = if heartbeat > 0 {
-                until_due.min(heartbeat)
-            } else {
-                until_due
-            };
-            return Some(Duration::from_millis(delay.max(50)));
-        }
-
-        // roll hands over to the next event on its own, so it needs the wake even
-        // without an end action
-        let has_end_action = runtime.playback == Playback::Roll
-            || event
-                .and_then(|e| e.get("endAction"))
-                .and_then(Value::as_str)
-                .is_some_and(|action| action != "none");
-
-        let until_end = match (has_end_action, inputs.ends_at(now)) {
-            (true, Some(ends_at)) => Some((ends_at - now).max(0) as u64),
-            _ => None,
-        };
-
-        // 0 or negative disables the safety net entirely: only the end-of-event
-        // wake remains, which is the cheapest the server can run
-        let heartbeat = self.project.heartbeat_ms;
-        let delay_ms = match (until_end, heartbeat > 0) {
-            (Some(until_end), true) => until_end.min(heartbeat as u64),
-            (Some(until_end), false) => until_end,
-            (None, true) => heartbeat as u64,
-            (None, false) => return None,
-        };
-
-        // a floor stops a rundown of already-expired events spinning the alarm
-        Some(Duration::from_millis(delay_ms.max(50)))
-    }
-
-    /// Persists and notifies clients. Every mutating handler ends with this.
-    async fn commit(&mut self, target: &str, rundown_id: Option<String>) -> Result<()> {
-        self.persist().await?;
-        self.broadcast_refetch(target, rundown_id.as_deref());
-        // an edit can change the loaded event's duration or title
-        self.broadcast_runtime(now_ms());
-        Ok(())
+        api::next_wake_in(&self.project, now_ms()).map(|ms| Duration::from_millis(ms as u64))
     }
 
     /// The token a request is presenting, from any of the places one can travel.
@@ -510,166 +371,73 @@ impl OntimeProject {
         None
     }
 
-    /// Whether the request may act on this room.
+    /// Translates the Worker's request into the transport-agnostic one, hands it
+    /// to the shared routing in `ontime-core`, and carries out what comes back.
     ///
-    /// A room with no password is open, which is how the original behaves when
-    /// `SESSION_PASSWORD` is unset — so adding this cannot lock anyone out of an
-    /// existing deployment. The `SESSION_PASSWORD` secret, when configured, is a
-    /// master key: without it a forgotten room password would be unrecoverable.
-    fn is_authorised(&self, req: &Request) -> bool {
-        let Some(room_hash) = self.project.password_hash.as_deref() else {
-            return true;
-        };
-
-        let Some(presented) = Self::presented_token(req) else {
-            return false;
-        };
-
-        if token_matches(room_hash, &presented) {
-            return true;
-        }
-
-        match self._env.secret("SESSION_PASSWORD") {
-            Ok(master) => token_matches(&hash_password(&master.to_string()), &presented),
-            Err(_) => false,
-        }
-    }
-
+    /// All the routing lives in the core so that another host cannot drift into
+    /// being a second implementation.
     async fn handle(&mut self, req: &mut Request) -> Result<Response> {
-        let raw = req.path();
-        let path = raw.split('?').next().unwrap_or(&raw).trim_end_matches('/');
-        let method = req.method();
+        let path = req.path();
+        let is_upgrade = path.contains("/ws") && !path.contains("/data/");
 
-        // the worker forwards the original URL, so trim anything before the API root
-        let path = ["/data/", "/api/", "/user/", "/ws"]
-            .iter()
-            .find_map(|prefix| path.find(prefix).map(|i| &path[i..]))
-            .unwrap_or(path);
+        let api_request = ApiRequest {
+            method: HttpMethod::parse(req.method().as_ref()),
+            path,
+            body: body(req).await,
+            token: Self::presented_token(req),
+            master_token: self
+                ._env
+                .secret("SESSION_PASSWORD")
+                .ok()
+                .map(|secret| hash_password(&secret.to_string())),
+        };
 
-        let segments: Vec<&str> = path.trim_start_matches('/').split('/').collect();
-
-        // Setting the password is allowed while the room is still open, so a new
-        // room can be claimed; afterwards it needs the current token like anything else.
-        let is_claim = matches!(segments.as_slice(), ["data", "session", "password"])
-            && self.project.password_hash.is_none();
-
-        if !is_claim && !self.is_authorised(req) {
-            return Response::error("Unauthorized", 401);
+        // an upgrade never reaches the shared routing, because the socket belongs
+        // to the host — but it is gated by the same rule
+        if is_upgrade {
+            if !api::is_authorised(&self.project, &api_request) {
+                return Response::error("Unauthorized", 401);
+            }
+            return self.open_websocket();
         }
 
-        match segments.as_slice() {
-            ["ws"] => self.open_websocket(),
+        let response = api::handle(&mut self.project, &api_request);
 
-            ["data", "rundowns", rest @ ..] => self.rundowns(req, &method, rest).await,
-            ["data", "project", rest @ ..] => self.project_data(req, &method, rest).await,
-            ["data", "settings", rest @ ..] => self.settings(req, &method, rest).await,
-            ["data", "view-settings"] => self.view_settings(req, &method).await,
-            ["data", "custom-fields", rest @ ..] => self.custom_fields(req, &method, rest).await,
-            ["data", "url-presets", rest @ ..] => self.url_presets(req, &method, rest).await,
-            // automations drive OSC/HTTP integrations, which a Worker cannot host;
-            // the settings are stored and served, but never acted on
-            ["data", "automations", ..] if method == Method::Get => {
-                Response::from_json(&self.project.automation)
-            }
-            ["data", "automations", ..] => {
-                Response::error("Automations are not supported on the cloud backend", 501)
-            }
-            ["data", "custom-views", ..] => Response::from_json(&json!({ "views": [] })),
-            ["data", "report"] if method == Method::Get => {
-                Response::from_json(&self.project.report)
-            }
-            ["data", "report", "all"] if method == Method::Delete => {
-                self.project.report.clear_all();
-                self.commit("report", None).await?;
-                Response::from_json(&self.project.report)
-            }
-            ["data", "report", id] if method == Method::Delete => {
-                self.project.report.clear_one(id);
-                self.commit("report", None).await?;
-                Response::from_json(&self.project.report)
-            }
-            ["data", "report", ..] => Response::from_json(&self.project.report),
-            ["data", "session", "password"] => {
-                let body = body(req).await;
-                match body.get("password").and_then(Value::as_str) {
-                    Some(password) if !password.is_empty() => {
-                        let hash = hash_password(password);
-                        self.project.password_hash = Some(hash.clone());
-                        self.persist().await?;
-                        // the hash doubles as the bearer token; it is returned once,
-                        // here, because there is no way to recover it from the hash
-                        Response::from_json(&json!({ "protected": true, "token": hash }))
-                    }
-                    // an explicit null clears it, reopening the room
-                    _ if body.get("password").map(Value::is_null).unwrap_or(false) => {
-                        self.project.password_hash = None;
-                        self.persist().await?;
-                        Response::from_json(&json!({ "protected": false }))
-                    }
-                    _ => Response::error("Missing password", 400),
+        let mut should_persist = false;
+        let mut refetches = Vec::new();
+        let mut reschedule = false;
+        for effect in &response.effects {
+            match effect {
+                Effect::Persist => should_persist = true,
+                Effect::Refetch { target, rundown_id } => {
+                    should_persist = true;
+                    refetches.push((target.clone(), rundown_id.clone()));
                 }
+                Effect::Reschedule => reschedule = true,
             }
-            // GetInfo: the client reads every field, so none may be omitted
-            ["data", "session", "info"] => Response::from_json(&json!({
-                "networkInterfaces": [],
-                "version": self.project.settings.version,
-                "serverPort": 443,
-                "publicDir": "",
-            })),
-            // share links are built from the client's own origin, which a Worker
-            // serving no HTML cannot know
-            ["data", "session", "url"] => {
-                Response::error("Share links are not supported on the cloud backend", 501)
-            }
-            ["data", "session", ..] => Response::from_json(&json!({ "clients": {} })),
-            ["data", "assets", "css"] if method == Method::Get => {
-                Response::ok(self.project.css_override.clone())
-            }
-            ["data", "assets", "css"] => {
-                let css = body(req)
-                    .await
-                    .get("css")
-                    .and_then(Value::as_str)
-                    .unwrap_or_default()
-                    .to_string();
-                self.project.css_override = css;
-                self.commit("css-override", None).await?;
-                Ok(Response::empty()?.with_status(204))
-            }
-            ["data", "assets", "css", "restore"] => {
-                self.project.css_override.clear();
-                self.commit("css-override", None).await?;
-                Response::ok("")
-            }
-            ["data", "assets", ..] => {
-                Response::error("Asset uploads are not supported on the cloud backend", 501)
-            }
-            // ProjectFileListResponse — the project *file browser*, not a dump of
-            // the project. A Worker has no filesystem, so the list is empty.
-            ["data", "db", "all"] => Response::from_json(&json!({
-                "files": [],
-                "lastLoadedProject": "",
-            })),
-
-            ["user", "translations", "translations.json"] => Response::from_json(&json!({})),
-
-            // modules that depend on the filesystem, long-lived sockets or OAuth,
-            // none of which a Worker provides — answered explicitly so the client
-            // surfaces a real message instead of a bare 404
-            ["data", "db", ..] => {
-                Response::error("Project files are not supported on the cloud backend", 501)
-            }
-            ["data", "excel", ..] => Response::error(
-                "Excel import/export is not supported on the cloud backend",
-                501,
-            ),
-            ["data", "sheets", ..] => Response::error(
-                "Google Sheets sync is not supported on the cloud backend",
-                501,
-            ),
-
-            _ => Response::error(format!("Not implemented: {method} {path}"), 404),
         }
+
+        if should_persist {
+            self.persist().await?;
+        }
+        for (target, rundown_id) in &refetches {
+            self.broadcast_refetch(target, rundown_id.as_deref());
+        }
+        if !refetches.is_empty() {
+            // an edit can change the loaded event's duration or title
+            self.broadcast_runtime(now_ms());
+        }
+        if reschedule || !refetches.is_empty() {
+            self.sync_alarm().await?;
+        }
+
+        let mut worker_response = match (&response.body, &response.text) {
+            (Some(body), _) => Response::from_json(body)?,
+            (None, Some(text)) => Response::ok(text.clone())?,
+            (None, None) => Response::empty()?,
+        };
+        worker_response = worker_response.with_status(response.status);
+        Ok(worker_response)
     }
 
     fn open_websocket(&mut self) -> Result<Response> {
@@ -703,449 +471,6 @@ impl OntimeProject {
 
         Response::from_websocket(pair.client)
     }
-
-    // #region /data/rundowns =====================================
-
-    async fn rundowns(
-        &mut self,
-        req: &mut Request,
-        method: &Method,
-        rest: &[&str],
-    ) -> Result<Response> {
-        match (method, rest) {
-            // --- project rundowns ---
-            (Method::Get, []) => Response::from_json(&self.project.rundown_list()),
-
-            (Method::Post, []) => {
-                let body = body(req).await;
-                let title = body
-                    .get("title")
-                    .and_then(Value::as_str)
-                    .unwrap_or("Untitled")
-                    .to_string();
-                let id = uuid::Uuid::now_v7().to_string();
-                self.project
-                    .rundowns
-                    .insert(id.clone(), ontime_core::Rundown::new(id, title));
-                self.commit("project-rundowns", None).await?;
-                Response::from_json(&self.project.rundown_list())
-            }
-
-            (Method::Get, ["current"]) => match self.project.current() {
-                Some(rundown) => Response::from_json(rundown),
-                None => Response::error("No rundown loaded", 404),
-            },
-
-            (Method::Post, ["import"]) => {
-                Response::error("Import is not supported on the cloud backend", 501)
-            }
-
-            // --- a single rundown ---
-            (Method::Get, [id]) => match self.project.rundowns.get(*id) {
-                Some(rundown) => Response::from_json(rundown),
-                None => Response::error("Rundown not found", 404),
-            },
-
-            (Method::Patch, [id]) => {
-                let body = body(req).await;
-                let Some(title) = body.get("title").and_then(Value::as_str) else {
-                    return Response::error("Missing title", 400);
-                };
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                rundown.title = title.to_string();
-                self.commit("project-rundowns", None).await?;
-                Response::from_json(&self.project.rundown_list())
-            }
-
-            (Method::Delete, [id]) => {
-                if self.project.rundowns.len() <= 1 {
-                    return Response::error("Cannot delete the only rundown", 400);
-                }
-                self.project.rundowns.remove(*id);
-                self.project.ensure_consistent();
-                self.commit("project-rundowns", None).await?;
-                Response::from_json(&self.project.rundown_list())
-            }
-
-            (Method::Post, [id, "load"]) => {
-                if !self.project.rundowns.contains_key(*id) {
-                    return Response::error("Rundown not found", 404);
-                }
-                self.project.loaded = id.to_string();
-                self.commit("all", Some(id.to_string())).await?;
-                Response::from_json(&self.project.rundown_list())
-            }
-
-            (Method::Post, [id, "duplicate"]) => {
-                let Some(source) = self.project.rundowns.get(*id).cloned() else {
-                    return Response::error("Rundown not found", 404);
-                };
-                let new_id = uuid::Uuid::now_v7().to_string();
-                let mut copy = source;
-                copy.id = new_id.clone();
-                copy.title = format!("{} (copy)", copy.title);
-                self.project.rundowns.insert(new_id, copy);
-                self.commit("project-rundowns", None).await?;
-                Response::from_json(&self.project.rundown_list())
-            }
-
-            // --- entries ---
-            (Method::Post, [id, "entry"]) => {
-                let payload = body(req).await;
-                let at = Insert::from_payload(&payload);
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                let entry = rundown.add_entry(&payload, at);
-                self.commit("rundown", Some(id.to_string())).await?;
-                Ok(Response::from_json(&entry)?.with_status(201))
-            }
-
-            (Method::Put, [id, "entry"]) => {
-                let payload = body(req).await;
-                let Some(entry_id) = payload
-                    .get("id")
-                    .and_then(Value::as_str)
-                    .map(str::to_string)
-                else {
-                    return Response::error("Missing entry id", 400);
-                };
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                let Some(entry) = rundown.edit_entry(&entry_id, &payload) else {
-                    return Response::error("Entry not found", 404);
-                };
-                self.commit("rundown", Some(id.to_string())).await?;
-                Response::from_json(&entry)
-            }
-
-            (Method::Put, [id, "batch"]) => {
-                let payload = body(req).await;
-                let ids = string_list(payload.get("ids"));
-                let data = payload.get("data").cloned().unwrap_or(json!({}));
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                rundown.batch_edit(&ids, &data);
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Delete, [id, "entries"]) => {
-                let payload = body(req).await;
-                let ids = string_list(payload.get("ids"));
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                rundown.delete_entries(&ids);
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Delete, [id, "all"]) => {
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                rundown.delete_all();
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Patch, [id, "reorder"]) => {
-                let payload = body(req).await;
-                let entry_id = payload
-                    .get("entryId")
-                    .and_then(Value::as_str)
-                    .unwrap_or("")
-                    .to_string();
-                let destination = payload
-                    .get("destinationId")
-                    .and_then(Value::as_str)
-                    .unwrap_or("")
-                    .to_string();
-                let order = payload
-                    .get("order")
-                    .and_then(Value::as_str)
-                    .unwrap_or("after")
-                    .to_string();
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                if !rundown.reorder(&entry_id, &destination, &order) {
-                    return Response::error("Could not reorder entry", 400);
-                }
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Patch, [id, "swap"]) => {
-                let payload = body(req).await;
-                let from = payload
-                    .get("from")
-                    .and_then(Value::as_str)
-                    .unwrap_or("")
-                    .to_string();
-                let to = payload
-                    .get("to")
-                    .and_then(Value::as_str)
-                    .unwrap_or("")
-                    .to_string();
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                if !rundown.swap(&from, &to) {
-                    return Response::error("Could not swap entries", 400);
-                }
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Patch, [id, "renumber"]) => {
-                let payload = body(req).await;
-                let start_at = payload
-                    .get("startAt")
-                    .and_then(Value::as_f64)
-                    .unwrap_or(1.0);
-                let increment = payload
-                    .get("increment")
-                    .and_then(Value::as_f64)
-                    .unwrap_or(1.0);
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                rundown.renumber(start_at, increment);
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Patch, [id, "applydelay", delay_id]) => {
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                if !rundown.apply_delay(delay_id) {
-                    return Response::error("Delay not found", 404);
-                }
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Post, [id, "clone", entry_id]) => {
-                let payload = body(req).await;
-                let at = Insert::from_payload(&payload);
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                if rundown.clone_entry(entry_id, at).is_none() {
-                    return Response::error("Entry not found", 404);
-                }
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Post, [id, "group"]) => {
-                let payload = body(req).await;
-                let ids = string_list(payload.get("ids"));
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                if rundown.group_entries(&ids).is_none() {
-                    return Response::error("Could not group entries", 400);
-                }
-                self.respond_with_rundown(id).await
-            }
-
-            (Method::Post, [id, "ungroup", group_id]) => {
-                let Some(rundown) = self.project.get_mut(id) else {
-                    return Response::error("Rundown not found", 404);
-                };
-                if !rundown.ungroup(group_id) {
-                    return Response::error("Group not found", 404);
-                }
-                self.respond_with_rundown(id).await
-            }
-
-            _ => Response::error("Not implemented", 404),
-        }
-    }
-
-    /// Persists, notifies and returns the whole rundown — the shape most
-    /// entry-mutating endpoints reply with.
-    async fn respond_with_rundown(&mut self, id: &str) -> Result<Response> {
-        self.commit("rundown", Some(id.to_string())).await?;
-        match self.project.rundowns.get(id) {
-            Some(rundown) => Response::from_json(rundown),
-            None => Response::error("Rundown not found", 404),
-        }
-    }
-
-    // #endregion /data/rundowns ==================================
-    // #region project settings ===================================
-
-    async fn project_data(
-        &mut self,
-        req: &mut Request,
-        method: &Method,
-        rest: &[&str],
-    ) -> Result<Response> {
-        if !rest.is_empty() {
-            return Response::error("Not implemented", 404);
-        }
-        match method {
-            Method::Get => Response::from_json(&self.project.project),
-            Method::Post => {
-                let patch = body(req).await;
-                let mut merged = serde_json::to_value(&self.project.project)?;
-                shallow_merge(&mut merged, &patch);
-                self.project.project = serde_json::from_value(merged)
-                    .map_err(|e| Error::RustError(format!("Invalid project data: {e}")))?;
-                self.commit("project-data", None).await?;
-                Response::from_json(&self.project.project)
-            }
-            _ => Response::error("Not implemented", 404),
-        }
-    }
-
-    async fn settings(
-        &mut self,
-        req: &mut Request,
-        method: &Method,
-        rest: &[&str],
-    ) -> Result<Response> {
-        match (method, rest) {
-            (Method::Get, []) => {
-                let mut settings = serde_json::to_value(&self.project.settings)?;
-                // not part of the client's Settings type — a Worker has no local
-                // timezone, so the operator's UTC offset has to be configurable
-                if let Some(obj) = settings.as_object_mut() {
-                    obj.insert("timezoneOffset".into(), json!(self.project.timezone_offset));
-                    obj.insert("heartbeatMs".into(), json!(self.project.heartbeat_ms));
-                }
-                Response::from_json(&settings)
-            }
-            (Method::Post, []) => {
-                let patch = body(req).await;
-                if let Some(offset) = patch.get("timezoneOffset").and_then(Value::as_i64) {
-                    self.project.timezone_offset = offset;
-                }
-                if let Some(heartbeat) = patch.get("heartbeatMs").and_then(Value::as_i64) {
-                    // clamped: below 250ms the wake-ups cost more than they help,
-                    // above a minute a stale client looks broken
-                    self.project.heartbeat_ms = if heartbeat <= 0 {
-                        0
-                    } else {
-                        heartbeat.clamp(250, 60_000)
-                    };
-                    self.sync_alarm().await?;
-                }
-                let mut merged = serde_json::to_value(&self.project.settings)?;
-                shallow_merge(&mut merged, &patch);
-                self.project.settings = serde_json::from_value(merged)
-                    .map_err(|e| Error::RustError(format!("Invalid settings: {e}")))?;
-                self.commit("settings", None).await?;
-                Response::from_json(&self.project.settings)
-            }
-            // PortInfo. The cloud backend has no configurable port; report the edge one.
-            (Method::Get, ["serverport"]) => {
-                Response::from_json(&json!({ "port": 443, "pendingRestart": false }))
-            }
-            (_, ["welcomedialog"]) => Response::from_json(&json!({ "status": "ok" })),
-            _ => Response::error("Not implemented", 404),
-        }
-    }
-
-    async fn view_settings(&mut self, req: &mut Request, method: &Method) -> Result<Response> {
-        match method {
-            Method::Get => Response::from_json(&self.project.view_settings),
-            Method::Post => {
-                let patch = body(req).await;
-                let mut merged = serde_json::to_value(&self.project.view_settings)?;
-                shallow_merge(&mut merged, &patch);
-                self.project.view_settings = serde_json::from_value(merged)
-                    .map_err(|e| Error::RustError(format!("Invalid view settings: {e}")))?;
-                self.commit("view-settings", None).await?;
-                Response::from_json(&self.project.view_settings)
-            }
-            _ => Response::error("Not implemented", 404),
-        }
-    }
-
-    async fn custom_fields(
-        &mut self,
-        req: &mut Request,
-        method: &Method,
-        rest: &[&str],
-    ) -> Result<Response> {
-        match (method, rest) {
-            (Method::Get, []) => Response::from_json(&self.project.custom_fields),
-            (Method::Post, []) => {
-                let field = body(req).await;
-                let Some(key) = field
-                    .get("label")
-                    .and_then(Value::as_str)
-                    .map(str::to_string)
-                else {
-                    return Response::error("Missing label", 400);
-                };
-                if let Some(fields) = self.project.custom_fields.as_object_mut() {
-                    fields.insert(key, field);
-                }
-                self.commit("custom-fields", None).await?;
-                Response::from_json(&self.project.custom_fields)
-            }
-            (Method::Put, [key]) => {
-                let field = body(req).await;
-                if let Some(fields) = self.project.custom_fields.as_object_mut() {
-                    fields.insert((*key).to_string(), field);
-                }
-                self.commit("custom-fields", None).await?;
-                Response::from_json(&self.project.custom_fields)
-            }
-            (Method::Delete, [key]) => {
-                if let Some(fields) = self.project.custom_fields.as_object_mut() {
-                    fields.remove(*key);
-                }
-                self.commit("custom-fields", None).await?;
-                Response::from_json(&self.project.custom_fields)
-            }
-            _ => Response::error("Not implemented", 404),
-        }
-    }
-
-    async fn url_presets(
-        &mut self,
-        req: &mut Request,
-        method: &Method,
-        rest: &[&str],
-    ) -> Result<Response> {
-        match (method, rest) {
-            (Method::Get, []) => Response::from_json(&self.project.url_presets),
-            (Method::Post, []) => {
-                let preset = body(req).await;
-                self.project.url_presets.push(preset);
-                self.commit("url-presets", None).await?;
-                Response::from_json(&self.project.url_presets)
-            }
-            (Method::Put, [alias]) => {
-                let preset = body(req).await;
-                let position = self
-                    .project
-                    .url_presets
-                    .iter()
-                    .position(|p| p.get("alias").and_then(Value::as_str) == Some(*alias));
-                match position {
-                    Some(i) => self.project.url_presets[i] = preset,
-                    None => self.project.url_presets.push(preset),
-                }
-                self.commit("url-presets", None).await?;
-                Response::from_json(&self.project.url_presets)
-            }
-            (Method::Delete, [alias]) => {
-                self.project
-                    .url_presets
-                    .retain(|p| p.get("alias").and_then(Value::as_str) != Some(*alias));
-                self.commit("url-presets", None).await?;
-                Response::from_json(&self.project.url_presets)
-            }
-            _ => Response::error("Not implemented", 404),
-        }
-    }
-
-    // #endregion project settings ================================
 }
 
 // #region helpers ================================================
@@ -1156,27 +481,6 @@ async fn body(req: &mut Request) -> Value {
     match req.json::<Value>().await {
         Ok(value) if value.is_object() => value,
         _ => json!({}),
-    }
-}
-
-fn string_list(value: Option<&Value>) -> Vec<String> {
-    value
-        .and_then(Value::as_array)
-        .map(|list| {
-            list.iter()
-                .filter_map(Value::as_str)
-                .map(str::to_string)
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
-fn shallow_merge(target: &mut Value, patch: &Value) {
-    let (Some(target), Some(patch)) = (target.as_object_mut(), patch.as_object()) else {
-        return;
-    };
-    for (key, value) in patch {
-        target.insert(key.clone(), value.clone());
     }
 }
 
