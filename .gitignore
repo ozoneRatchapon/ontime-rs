@@ -57,3 +57,8 @@ ontime-data/
 
 # Claude Code metadata
 .claude/
+
+# Rust / Cloudflare Workers
+target/
+apps/server-rs/build/
+apps/server-rs/.wrangler/

@@ -1,0 +1,112 @@
+name: Rust backend test
+
+on:
+  pull_request:
+    branches: '*'
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      # the engine is shared by the worker and the browser, so its tests are the
+      # cheapest place to catch a regression in either
+      - name: Unit tests
+        run: cargo test --manifest-path packages/ontime-core/Cargo.toml
+
+      - name: Check the worker builds for wasm
+        run: cargo check --manifest-path apps/server-rs/Cargo.toml --target wasm32-unknown-unknown
+
+      - name: Clippy
+        run: |
+          cargo clippy --manifest-path packages/ontime-core/Cargo.toml -- -D warnings
+          cargo clippy --manifest-path apps/server-rs/Cargo.toml --target wasm32-unknown-unknown -- -D warnings
+
+      - name: Formatting
+        run: |
+          cargo fmt --manifest-path packages/ontime-core/Cargo.toml --check
+          cargo fmt --manifest-path apps/server-rs/Cargo.toml --check
+
+      # wasm-bindgen the CLI and the crate must be the exact same version or the
+      # schema check fails; read it from the lockfile rather than pinning twice
+      - name: Install wasm tooling
+        run: |
+          version=$(grep -A1 '^name = "wasm-bindgen"$' packages/ontime-wasm/Cargo.lock | grep '^version' | head -1 | cut -d'"' -f2)
+          echo "wasm-bindgen $version"
+          cargo install -f wasm-bindgen-cli --version "$version"
+          cargo install -q worker-build@^0.1
+
+      - name: Build the wasm timer engine
+        run: packages/ontime-wasm/build.sh
+
+      # end-to-end against a real worker: this is what catches wrong response
+      # shapes, room leaks and a timer that stops ticking
+      - name: End-to-end suites
+        run: apps/server-rs/tests/e2e/run.sh --start
+
+      - name: Worker log on failure
+        if: failure()
+        run: cat /tmp/ontime-e2e-wrangler.log || true
+
+  client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install wasm tooling
+        run: |
+          version=$(grep -A1 '^name = "wasm-bindgen"$' packages/ontime-wasm/Cargo.lock | grep '^version' | head -1 | cut -d'"' -f2)
+          cargo install -f wasm-bindgen-cli --version "$version"
+
+      # deploy-cloud.sh encodes the build ordering and refuses a build that points
+      # at the wrong worker or is missing the wasm asset. Calling `pnpm build`
+      # directly here would pass while producing a client that cannot reach a backend.
+      - name: Build and check the client
+        run: ./deploy-cloud.sh --client --dry-run
+
+      # only the areas carrying local patches; the rest is upstream's to test
+      - name: Client unit tests for locally patched code
+        working-directory: apps/client
+        run: npx vitest run src/common/stores src/common/utils
