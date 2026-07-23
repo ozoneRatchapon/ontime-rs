@@ -116,13 +116,17 @@ pub struct TimerInputs {
 impl TimerInputs {
     pub fn elapsed(&self, now: i64) -> Option<i64> {
         let started_at = self.started_at?;
-        match self.playback {
+        let elapsed = match self.playback {
             // roll counts exactly like play once its event is under way; the
             // difference is only in how the event was chosen
-            Playback::Play | Playback::Roll => Some(now - started_at - self.paused_total),
-            Playback::Pause => Some(self.paused_at? - started_at - self.paused_total),
-            _ => None,
-        }
+            Playback::Play | Playback::Roll => now - started_at - self.paused_total,
+            Playback::Pause => self.paused_at? - started_at - self.paused_total,
+            _ => return None,
+        };
+        // Anchoring the start to the nearest second can place it up to half a
+        // second in the future. Without this the remaining time would briefly
+        // exceed the duration and a 60s event would flash 01:01.
+        Some(elapsed.max(0))
     }
 
     pub fn duration(&self) -> Option<i64> {
@@ -253,7 +257,16 @@ impl Runtime {
         // resuming from a pause keeps the elapsed time
         if self.playback == Playback::Pause {
             if let Some(paused_at) = self.paused_at.take() {
-                self.paused_total += now - paused_at;
+                // Re-anchor rather than simply adding the paused span: the span is
+                // an arbitrary fraction of a second, and carrying it forward would
+                // put the countdown back out of step with the wall clock. The time
+                // already counted is preserved to the nearest second.
+                let counted = paused_at - self.started_at.unwrap_or(paused_at) - self.paused_total;
+                // anchoring `now - counted` keeps the displayed value within half a
+                // second of where it was paused; anchoring the two terms separately
+                // could shift it by a whole second, which reads as a skipped tick
+                self.started_at = Some(align_to_second(now - counted));
+                self.paused_total = 0;
             }
             self.playback = Playback::Play;
             return true;
@@ -272,7 +285,12 @@ impl Runtime {
         }
 
         self.playback = Playback::Play;
-        self.started_at = Some(now);
+        // Anchored to a whole second, not to the instant the operator pressed the
+        // button: the displayed countdown changes when the remaining time crosses
+        // a second measured from here, so anchoring is what makes it tick in step
+        // with the wall clock rather than at whatever fraction of a second the
+        // press happened to land on.
+        self.started_at = Some(align_to_second(now));
         self.paused_at = None;
         self.paused_total = 0;
         self.added_time = 0;
@@ -480,7 +498,9 @@ impl Runtime {
             if target - clock > 0 {
                 return false;
             }
-            self.started_at = Some(now);
+            // anchor to the instant the event was actually due, not to the tick
+            // that happened to notice — the target is already a whole second
+            self.started_at = Some(align_to_second(now - (clock - target)));
             self.secondary_target = None;
             if self.actual_start.is_none() {
                 self.actual_start = Some(now);
@@ -665,6 +685,14 @@ impl Runtime {
 }
 
 // #region helpers ================================================
+
+/// Rounds an instant to the nearest whole second.
+///
+/// Every real timezone is a whole number of minutes from UTC, so a second
+/// boundary in epoch time is also one on the operator's wall clock.
+fn align_to_second(epoch_ms: i64) -> i64 {
+    (epoch_ms + 500).div_euclid(1000) * 1000
+}
 
 /// Which event the wall clock says should be on air, and how far into it we are.
 pub struct RollTarget {

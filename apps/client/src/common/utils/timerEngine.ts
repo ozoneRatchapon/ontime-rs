@@ -16,11 +16,21 @@ import init, { engine_info as engineInfo, OntimeTimer } from 'ontime-timer-engin
 import { patchRuntimeProperty } from '../stores/runtime';
 
 /**
- * How often the store is patched. The countdown is read to the second and progress
- * bars interpolate, so there is nothing to gain from patching on every frame — and
- * every patch notifies each subscriber.
+ * How often the store is patched while something is running. The countdown is read
+ * to the second and progress bars interpolate, so there is nothing to gain from
+ * patching on every frame — and every patch notifies each subscriber.
  */
 const PATCH_INTERVAL_MS = 50;
+
+/**
+ * How often the wall clock is patched while nothing is running.
+ *
+ * The clock has to keep moving even when playback is stopped, or the operator
+ * presses start against a display that is up to a second stale and the countdown
+ * appears to begin out of step. Doing it here rather than with a server heartbeat
+ * keeps an idle room costing nothing.
+ */
+const IDLE_PATCH_INTERVAL_MS = 200;
 
 let engine: OntimeTimer | null = null;
 let frame: number | null = null;
@@ -111,7 +121,7 @@ export function applyEngineState(enginePayload: unknown): boolean {
 
   // patch once immediately so a state change lands without waiting for a frame
   lastPatch = 0;
-  tick();
+  schedule();
   return true;
 }
 
@@ -123,6 +133,20 @@ export function stopTimerEngine() {
   }
 }
 
+/**
+ * Schedules the next frame, replacing any already pending.
+ *
+ * Every packet restarts the loop, so without cancelling first each one would
+ * leave its predecessor running and the loops would accumulate for the length of
+ * the event.
+ */
+function schedule() {
+  if (frame !== null) {
+    cancelAnimationFrame(frame);
+  }
+  frame = requestAnimationFrame(tick);
+}
+
 function tick() {
   frame = null;
 
@@ -130,20 +154,27 @@ function tick() {
     return;
   }
 
+  const running = engine.is_running();
   const now = Date.now();
-  if (now - lastPatch >= PATCH_INTERVAL_MS) {
+  const interval = running ? PATCH_INTERVAL_MS : IDLE_PATCH_INTERVAL_MS;
+
+  if (now - lastPatch >= interval) {
     lastPatch = now;
 
-    const timer = engine.tick(now);
-    if (timer) {
-      patchRuntimeProperty('timer', JSON.parse(timer));
-      patchRuntimeProperty('clock', engine.clock(now));
+    patchRuntimeProperty('clock', engine.clock(now));
+
+    // there is no timer to advance while nothing is running; the server's last
+    // packet already holds the correct idle state
+    if (running) {
+      const timer = engine.tick(now);
+      if (timer) {
+        patchRuntimeProperty('timer', JSON.parse(timer));
+      }
     }
   }
 
   // requestAnimationFrame pauses on a hidden tab, which is what we want: the next
-  // frame after it wakes recomputes from the absolute start time, so nothing drifts
-  if (engine.is_running()) {
-    frame = requestAnimationFrame(tick);
-  }
+  // frame after it wakes recomputes from the absolute start time, so nothing drifts.
+  // The loop continues while idle so the clock does not freeze.
+  schedule();
 }

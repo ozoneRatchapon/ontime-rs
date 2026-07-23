@@ -127,10 +127,13 @@ fn pausing_freezes_the_timer_and_resuming_continues_it() {
 
     runtime.apply(Command::Start, &rundown, T0 + 50_000, 0);
     assert_eq!(runtime.playback, Playback::Play);
-    assert_eq!(runtime.paused_total, 30_000);
 
     // 10s after resuming, 30s total elapsed
     assert_eq!(timer(&runtime, &rundown, T0 + 60_000)["current"], 30_000);
+
+    // resuming re-anchors to a whole second rather than carrying the paused span
+    // forward, so the countdown stays in step with the wall clock
+    assert_eq!(runtime.started_at.unwrap() % 1000, 0);
 }
 
 #[test]
@@ -470,4 +473,147 @@ fn a_tick_does_nothing_when_playback_is_stopped() {
 
     let mut runtime = Runtime::default();
     assert!(!runtime.on_tick(&rundown, T0 + 60_000, 0));
+}
+
+// --- ticking in step with the wall clock -----------------------------------
+//
+// The countdown's displayed second changes when the remaining time crosses a
+// whole second. If that is measured from the instant the operator pressed the
+// button, it changes at some arbitrary fraction of a second and visibly drifts
+// out of step with the clock beside it. These pin the alignment.
+
+/// The instant at which `ceil(current / 1000)` next changes, searched to the ms.
+/// This is exactly what the client displays: see `millisToSeconds` in
+/// packages/utils, which uses `Math.ceil` for a count-down.
+fn next_display_change(runtime: &Runtime, rundown: &Rundown, from: i64) -> i64 {
+    let displayed = |t: i64| {
+        let current = timer(runtime, rundown, t)["current"].as_i64().unwrap();
+        (current as f64 / 1000.0).ceil() as i64
+    };
+    let start = displayed(from);
+    (from + 1..=from + 2000)
+        .find(|t| displayed(*t) != start)
+        .expect("the countdown should change within two seconds")
+}
+
+#[test]
+fn the_countdown_changes_on_a_whole_second_however_late_the_press() {
+    let (rundown, _) = fixture();
+
+    // press at every awkward fraction of a second
+    for offset in [0, 1, 137, 350, 500, 501, 750, 999] {
+        let mut runtime = Runtime::default();
+        let pressed = T0 + offset;
+        runtime.apply(Command::Start, &rundown, pressed, 0);
+
+        let change = next_display_change(&runtime, &rundown, pressed);
+        assert_eq!(
+            change % 1000,
+            0,
+            "pressed at +{offset}ms, countdown changed at {}ms past the second",
+            change % 1000
+        );
+    }
+}
+
+#[test]
+fn the_countdown_keeps_ticking_on_whole_seconds_for_the_whole_event() {
+    let (rundown, _) = fixture();
+    let mut runtime = Runtime::default();
+    runtime.apply(Command::Start, &rundown, T0 + 350, 0);
+
+    // walk several transitions, not just the first
+    let mut at = T0 + 350;
+    for _ in 0..5 {
+        at = next_display_change(&runtime, &rundown, at);
+        assert_eq!(at % 1000, 0, "drifted off the second at {at}");
+    }
+}
+
+#[test]
+fn alignment_survives_a_pause_at_an_awkward_moment() {
+    let (rundown, _) = fixture();
+    let mut runtime = Runtime::default();
+    runtime.apply(Command::Start, &rundown, T0 + 350, 0);
+
+    // pause and resume on fractions of a second
+    runtime.apply(Command::Pause, &rundown, T0 + 12_617, 0);
+    runtime.apply(Command::Start, &rundown, T0 + 40_212, 0);
+
+    let mut at = T0 + 40_212;
+    for _ in 0..3 {
+        at = next_display_change(&runtime, &rundown, at);
+        assert_eq!(at % 1000, 0, "drifted off the second after a pause at {at}");
+    }
+}
+
+#[test]
+fn alignment_survives_added_time() {
+    let (rundown, _) = fixture();
+    let mut runtime = Runtime::default();
+    runtime.apply(Command::Start, &rundown, T0 + 350, 0);
+    runtime.apply(Command::AddTime(30_000), &rundown, T0 + 4_321, 0);
+
+    let change = next_display_change(&runtime, &rundown, T0 + 4_321);
+    assert_eq!(change % 1000, 0);
+}
+
+#[test]
+fn a_press_is_never_moved_by_more_than_half_a_second() {
+    let (rundown, _) = fixture();
+
+    for offset in [0, 350, 500, 999] {
+        let mut runtime = Runtime::default();
+        runtime.apply(Command::Start, &rundown, T0 + offset, 0);
+        let moved = (runtime.started_at.unwrap() - (T0 + offset)).abs();
+        assert!(moved <= 500, "press at +{offset}ms was moved {moved}ms");
+    }
+}
+
+#[test]
+fn the_countdown_never_exceeds_the_duration_while_anchoring() {
+    let (rundown, _) = fixture();
+
+    // pressing just past a second rounds the anchor forward, so for a moment the
+    // start is in the future; the remaining time must not read above the duration
+    // or a 60s event would flash 01:01
+    for offset in [500, 600, 750, 999] {
+        let mut runtime = Runtime::default();
+        let pressed = T0 + offset;
+        runtime.apply(Command::Start, &rundown, pressed, 0);
+
+        for t in pressed..pressed + 500 {
+            let current = timer(&runtime, &rundown, t)["current"].as_i64().unwrap();
+            assert!(
+                current <= 60_000,
+                "pressed at +{offset}ms: showed {current}ms remaining of a 60000ms event"
+            );
+        }
+    }
+}
+
+#[test]
+fn resuming_never_moves_the_displayed_value_by_a_whole_second() {
+    let (rundown, _) = fixture();
+
+    for (pause_at, resume_at) in [(12_617, 40_212), (5_001, 9_999), (30_500, 31_499)] {
+        let mut runtime = Runtime::default();
+        runtime.apply(Command::Start, &rundown, T0 + 350, 0);
+        runtime.apply(Command::Pause, &rundown, T0 + pause_at, 0);
+
+        let paused_value = timer(&runtime, &rundown, T0 + pause_at)["current"]
+            .as_i64()
+            .unwrap();
+
+        runtime.apply(Command::Start, &rundown, T0 + resume_at, 0);
+        let resumed_value = timer(&runtime, &rundown, T0 + resume_at)["current"]
+            .as_i64()
+            .unwrap();
+
+        let moved = (resumed_value - paused_value).abs();
+        assert!(
+            moved <= 500,
+            "paused at {pause_at} resumed at {resume_at}: value moved {moved}ms"
+        );
+    }
 }

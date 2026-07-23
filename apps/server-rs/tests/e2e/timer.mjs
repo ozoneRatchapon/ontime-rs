@@ -1,7 +1,11 @@
 // Drives playback over the websocket exactly as apps/client does and checks the
 // runtime-data packets that come back.
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
-const wsUrl = base.replace(/^http/, 'ws') + '/ws';
+// its own room: a stray aux timer or a half-finished run in the shared default
+// room would otherwise break the "nothing is sent while stopped" assertions
+const room = 'tmr-' + (Math.floor(Date.now() / 1000) % 100000);
+const prefixed = `${base}/r/${room}`;
+const wsUrl = base.replace(/^http/, 'ws') + `/ws?room=${room}`;
 
 let failed = false;
 const check = (label, actual, expected) => {
@@ -23,7 +27,7 @@ const near = (label, actual, expected, tolerance) => {
 };
 
 const api = (method, path, body) =>
-  fetch(`${base}${path}`, {
+  fetch(`${prefixed}${path}`, {
     method,
     headers: { 'content-type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
@@ -127,9 +131,10 @@ check('current did not move while paused', latest().timer.current, atPause);
 console.log('== resume ==');
 const resumed = await sendAndAwait('start', undefined);
 check('playback is play', resumed.timer.playback, 'play');
-// resuming does not lose progress: it banks the paused span instead of moving the start
-check('resumes where it paused', resumed.timer.current, atPause);
-near('paused span was banked', resumed._engine.inputs.pausedTotal, 1800, 700);
+// resuming re-anchors to a whole second so the countdown stays in step with the
+// wall clock, which can move the value by up to half a second
+near('resumes close to where it paused', resumed.timer.current, atPause, 500);
+check('anchored to a whole second', resumed._engine.inputs.startedAt % 1000, 0);
 
 console.log('== addtime ==');
 assertSocketAlive('addtime');

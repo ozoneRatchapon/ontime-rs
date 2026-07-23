@@ -229,3 +229,66 @@ fn playback_and_direction_serialise_to_the_clients_values() {
         json!("count-down")
     );
 }
+
+#[test]
+fn an_aux_timer_ticks_on_whole_seconds_however_late_the_press() {
+    // it sits next to the wall clock on screen, so its second has to change when
+    // the clock's does — the same requirement as the main countdown
+    let displayed = |timer: &AuxTimer, t: i64| (timer.current(t) as f64 / 1000.0).ceil() as i64;
+
+    for offset in [0, 137, 350, 500, 750, 999] {
+        let mut timer = AuxTimer::default();
+        timer.set_time(60_000);
+        let pressed = T0 + offset;
+        timer.start(pressed);
+
+        let first = displayed(&timer, pressed);
+        let change = (pressed + 1..=pressed + 2000)
+            .find(|t| displayed(&timer, *t) != first)
+            .expect("should change within two seconds");
+
+        assert_eq!(
+            change % 1000,
+            0,
+            "pressed at +{offset}ms, changed {}ms past the second",
+            change % 1000
+        );
+    }
+}
+
+#[test]
+fn an_aux_timer_never_shows_more_than_it_was_set_to() {
+    // anchoring forward can put the start briefly in the future
+    for offset in [500, 750, 999] {
+        let mut timer = AuxTimer::default();
+        timer.set_time(60_000);
+        let pressed = T0 + offset;
+        timer.start(pressed);
+
+        for t in pressed..pressed + 500 {
+            assert!(
+                timer.current(t) <= 60_000,
+                "pressed at +{offset}ms showed {}ms of a 60000ms timer",
+                timer.current(t)
+            );
+        }
+    }
+}
+
+#[test]
+fn aux_alignment_survives_pause_and_resume() {
+    let displayed = |timer: &AuxTimer, t: i64| (timer.current(t) as f64 / 1000.0).ceil() as i64;
+
+    let mut timer = AuxTimer::default();
+    timer.set_time(60_000);
+    timer.start(T0 + 350);
+    timer.pause(T0 + 12_617);
+    timer.start(T0 + 40_212);
+
+    let from = T0 + 40_212;
+    let first = displayed(&timer, from);
+    let change = (from + 1..=from + 2000)
+        .find(|t| displayed(&timer, *t) != first)
+        .expect("should change within two seconds");
+    assert_eq!(change % 1000, 0);
+}

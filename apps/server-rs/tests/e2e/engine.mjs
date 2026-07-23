@@ -7,6 +7,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
+// its own room: a stray aux timer or a half-finished run in the shared default
+// room would otherwise break the "nothing is sent while stopped" assertions
+const room = 'eng-' + (Math.floor(Date.now() / 1000) % 100000);
+const prefixed = `${base}/r/${room}`;
 // resolved from this file so the suite runs from any checkout;
 // build it first with packages/ontime-wasm/build.sh
 const pkg = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../packages/ontime-wasm/pkg');
@@ -28,7 +32,7 @@ check('reports its identity', JSON.parse(wasm.engine_info()).name === 'ontime-wa
 
 // --- set up a rundown ---------------------------------------------
 const api = (method, path, body) =>
-  fetch(`${base}${path}`, {
+  fetch(`${prefixed}${path}`, {
     method,
     headers: { 'content-type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
@@ -42,7 +46,7 @@ await api('POST', `/data/rundowns/${rid}/entry`, {
 });
 
 // --- drive playback -----------------------------------------------
-const ws = new WebSocket(base.replace(/^http/, 'ws') + '/ws');
+const ws = new WebSocket(base.replace(/^http/, 'ws') + `/ws?room=${room}`);
 const packets = [];
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 

@@ -12,6 +12,16 @@ use serde_json::{json, Value};
 /// matching the original's `auxTimerDefault`.
 pub const DEFAULT_DURATION: i64 = 5 * 60_000;
 
+/// Rounds an instant to the nearest whole second.
+///
+/// An aux timer sits next to the wall clock on screen, so its displayed second
+/// has to change at the same moment the clock's does. Anchoring the start to a
+/// second boundary is what achieves that; anchoring to the instant the operator
+/// pressed the button leaves the two visibly out of step.
+fn align_to_second(epoch_ms: i64) -> i64 {
+    (epoch_ms + 500).div_euclid(1000) * 1000
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum SimplePlayback {
@@ -64,11 +74,14 @@ impl AuxTimer {
         let Some(started_at) = self.started_at else {
             return 0;
         };
-        match self.playback {
+        let elapsed = match self.playback {
             SimplePlayback::Start => now - started_at,
             SimplePlayback::Pause => self.paused_at.unwrap_or(started_at) - started_at,
             SimplePlayback::Stop => 0,
-        }
+        };
+        // rounding to the nearest second can put the anchor briefly in the
+        // future, which would read as more time than the timer was set to
+        elapsed.max(0)
     }
 
     /// The displayed value. Counts down towards zero and past it, or up from the
@@ -100,7 +113,7 @@ impl AuxTimer {
         // counted so far is folded into the duration and the clock restarts
         if self.playback == SimplePlayback::Start {
             self.duration = self.current(now);
-            self.started_at = Some(now);
+            self.started_at = Some(align_to_second(now));
         }
         self.direction = direction;
     }
@@ -108,14 +121,15 @@ impl AuxTimer {
     pub fn start(&mut self, now: i64) {
         match self.playback {
             SimplePlayback::Start => return,
-            // resume without losing what was already counted
+            // resume without losing what was already counted, re-anchoring so
+            // the display stays in step with the clock
             SimplePlayback::Pause => {
                 let counted = self.paused_at.unwrap_or(now) - self.started_at.unwrap_or(now);
-                self.started_at = Some(now - counted);
+                self.started_at = Some(align_to_second(now - counted));
                 self.paused_at = None;
             }
             SimplePlayback::Stop => {
-                self.started_at = Some(now);
+                self.started_at = Some(align_to_second(now));
                 self.paused_at = None;
             }
         }
