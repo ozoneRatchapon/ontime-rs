@@ -174,6 +174,21 @@ pub fn may_create_room(req: &ApiRequest) -> bool {
         .is_some_and(|presented| token_matches(master, presented))
 }
 
+/// The key a custom field is stored under, matching the original's
+/// `customFieldLabelToKey`.
+fn custom_field_key(label: &str) -> String {
+    label.trim().replace(' ', "_")
+}
+
+/// The original accepts only letters, numbers and spaces in a label.
+fn is_valid_custom_field_label(label: &str) -> bool {
+    let trimmed = label.trim();
+    !trimmed.is_empty()
+        && trimmed
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == ' ')
+}
+
 fn string_list(value: Option<&Value>) -> Vec<String> {
     value
         .and_then(Value::as_array)
@@ -719,13 +734,18 @@ fn custom_fields(
         (HttpMethod::Get, []) => ApiResponse::json(&project.custom_fields),
         (HttpMethod::Post, []) => {
             let field = req.body.clone();
-            let Some(key) = field
-                .get("label")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-            else {
+            let Some(label) = field.get("label").and_then(Value::as_str) else {
                 return ApiResponse::error("Missing label", 400);
             };
+            if !is_valid_custom_field_label(label) {
+                // the original validates this, so accepting more here would let
+                // us create fields the real client cannot handle
+                return ApiResponse::error(
+                    "A custom field label may only contain letters, numbers and spaces",
+                    400,
+                );
+            }
+            let key = custom_field_key(label);
             if let Some(fields) = project.custom_fields.as_object_mut() {
                 fields.insert(key, field);
             }

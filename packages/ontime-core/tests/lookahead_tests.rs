@@ -396,3 +396,37 @@ fn creating_a_room_needs_the_master_password_once_one_is_configured() {
     // anyone out of what they already have
     assert!(may_create_room(&request(None, false)));
 }
+
+// --- custom fields -------------------------------------------------------
+
+#[test]
+fn a_custom_field_is_keyed_the_way_the_client_expects() {
+    use ontime_core::api::{handle, ApiRequest, HttpMethod};
+    use ontime_core::project::Project;
+
+    let mut project = Project::default();
+    let create = |project: &mut Project, label: &str| {
+        handle(
+            project,
+            &ApiRequest {
+                method: HttpMethod::Post,
+                path: "/data/custom-fields".into(),
+                body: json!({ "type": "text", "colour": "", "label": label }),
+                token: None,
+                master_token: None,
+                room_is_new: false,
+            },
+        )
+    };
+
+    // spaces become underscores, as customFieldLabelToKey does
+    let response = create(&mut project, "Mic 2");
+    assert_eq!(response.status, 200);
+    assert!(project.custom_fields.get("Mic_2").is_some());
+
+    // the original only accepts letters, numbers and spaces; accepting more
+    // would create fields the real client cannot handle
+    assert_eq!(create(&mut project, "สถานที่").status, 400);
+    assert_eq!(create(&mut project, "").status, 400);
+    assert_eq!(create(&mut project, "with-hyphen").status, 400);
+}
