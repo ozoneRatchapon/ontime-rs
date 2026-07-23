@@ -176,7 +176,7 @@ asserting the joined event reads 40 minutes remaining rather than a fresh hour.
 
 18 unit tests, plus `tests/e2e/roll.mjs` driving a real rundown against the clock.
 
-## Phase 3 — the native target, and what it unlocks
+## Phase 3 — the native target — **DONE**
 
 `ontime-core` is already proven on three targets from one source: native (51 tests),
 `wasm32` in a Worker, `wasm32` in a browser. A native server binary — axum reusing
@@ -192,8 +192,45 @@ Why this is the highest-leverage item despite not being a feature:
 
 This is what "all Rust" should mean in practice: one engine, every host.
 
-**Exit:** `cargo run -p ontime-server-native` serves the same client, passing the
-same seven suites.
+**Exit met.** `apps/server-native` answers the same ten suites as the Worker, and
+CI runs them against both.
+
+### What actually moved
+
+`ontime-core::api` now owns the HTTP routing, the auth rule, the wake policy and
+the websocket command handling. The Worker went from **1,345 lines to 487** and is
+an adapter: translate the request, call the core, carry out the effects.
+
+`Effect` is the seam. The core returns *what must happen* — persist, tell clients,
+reschedule — and each host decides *how*, because a Durable Object alarm and a
+tokio interval have nothing in common.
+
+### Three drifts the work exposed
+
+Each was a behaviour that lived in the Worker rather than the core, and each meant
+the second host silently lacked it. Each was caught by the suites, not by reading:
+
+| Drift | Consequence |
+|---|---|
+| the websocket upgrade bypassed the auth check | `/ws` was briefly unauthenticated |
+| the tick cadence ignored `heartbeat_ms` | the native host broadcast twice a second regardless of configuration |
+| `record_report` sat in the Worker | the run report was never recorded natively |
+
+All three were fixed by moving the behaviour into the core. `next_wake_in` and
+`apply_socket_command` exist because of them.
+
+The client list is the one thing each host still owns, because the connections are
+its own: the Worker keeps it on the socket attachment, the native server in a map.
+
+### What this unlocks
+
+The 4,561 lines Workers structurally cannot host — automations and OSC, Excel
+import/export, project files, Google Sheets — are now reachable from a process
+that has a filesystem and can open sockets. None of them are built; this is the
+foundation they needed.
+
+And the Workers-versus-VM choice is no longer a choice made once: the same code
+runs on both, decided per deployment.
 
 ## Phase 4 — deliberately not doing
 
@@ -216,6 +253,21 @@ software feel broken. Phase 2 is deeper but affects a number most users read rat
 than act on.
 
 Phase 3 can start in parallel with either — it touches no existing behaviour.
+
+## Where this ended
+
+Phases 0 through 3 are done. Measured against the stopping rule below: a show can
+be run from this without the desktop app, provided it needs no OSC, no file
+import and no Sheets — and those are now buildable rather than impossible.
+
+Remaining, in the order they would be worth doing:
+
+1. **Custom views** — still an empty stub.
+2. **The features the native target unlocks** — automations/OSC, Excel, project
+   files, Sheets. Each is a real piece of work; none is blocked any more.
+3. **Room provisioning** — any name still creates a room on first use.
+4. **`SESSION_PASSWORD` is not set** on the deployment. Without it a forgotten
+   room password makes that room unreachable. One `wrangler secret put`.
 
 ## How to know when to stop
 
