@@ -94,20 +94,31 @@ all 51 unit tests and all 7 e2e suites afterwards).
 **Exit:** a clean checkout can build, test and deploy with one command, and upstream
 can be merged.
 
-## Phase 1 — operator completeness (~500 TS lines)
+## Phase 1 — operator completeness — **DONE**
 
-The cheapest work with the most visible effect: the client already renders these
-controls and they currently do nothing.
+The client already rendered these controls; they now do something.
 
-- **aux timers** (165) — three independent count up/down timers
-- **message service** (101) — the text/blackout/blink overlay on the timer views
-- **report** (85) — actual vs planned per event
-- **session/clients** (150) — the client list, rename and redirect
+- **aux timers** — `packages/ontime-core/src/aux_timer.rs`, 18 tests
+- **message overlay** — `packages/ontime-core/src/message.rs`
+- **report** — same module, plus `GET/DELETE /data/report`
+- **client list** — `apps/server-rs/src/room.rs`, stored on the socket attachment
 
-All four are self-contained and none depend on Phase 2.
+Verified by `tests/e2e/operator.mjs`, 44 checks passing on production.
 
-**Exit:** every control in the operator UI does something, or says plainly that it
-cannot.
+Three things worth recording:
+
+- **Aux timers keep the tick alive by themselves.** `next_wake` only considered the
+  playback runtime, so a stopwatch started while playback was stopped would have
+  frozen. Caught by asserting playback stays `stop` while aux1 counts.
+- **The connect packet and the broadcast packet were composed separately**, so the
+  aux timers appeared on change but were missing on connect. They now share one
+  `runtime_payload()`; the duplication was the bug.
+- **A closing socket is still in `get_websockets()`** while `websocket_close` runs.
+  The first version broadcast a client list that still included the leaving client.
+  It is now excluded by id.
+
+The client list lives in the socket's attachment rather than a field, because
+hibernation evicts the object between messages — a field would not survive.
 
 ## Phase 2 — timing fidelity (~2,000 TS lines)
 

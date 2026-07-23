@@ -5,7 +5,44 @@ use std::time::Duration;
 
 use ontime_core::project::{hash_password, token_matches, Project};
 use ontime_core::rundown::Insert;
-use ontime_core::runtime::Command;
+use ontime_core::runtime::{Command, Playback};
+use serde::{Deserialize, Serialize};
+
+/// Per-connection metadata, stored on the socket itself.
+///
+/// Hibernation evicts the Durable Object between messages, so this cannot live in
+/// a field — the attachment survives with the socket, which is exactly what a
+/// client list needs.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ClientInfo {
+    id: String,
+    name: String,
+    #[serde(default = "unknown_type")]
+    client_type: String,
+    #[serde(default)]
+    identify: bool,
+    #[serde(default)]
+    origin: String,
+    #[serde(default)]
+    path: String,
+}
+
+fn unknown_type() -> String {
+    "ontime".to_string()
+}
+
+impl ClientInfo {
+    fn to_client(&self) -> Value {
+        json!({
+            "name": self.name,
+            "type": self.client_type,
+            "identify": self.identify,
+            "origin": self.origin,
+            "path": self.path,
+        })
+    }
+}
 
 /// Single storage key holding the whole project document.
 /// On the SQLite backend a key and its value together cannot exceed 2 MB, which
@@ -74,17 +111,78 @@ impl DurableObject for OntimeProject {
             return Ok(());
         }
 
+        // client bookkeeping: the socket carries its own record
+        if tag == "client-set" || tag == "client-set-path" {
+            if let Ok(Some(mut info)) = ws.deserialize_attachment::<ClientInfo>() {
+                match (tag, payload) {
+                    ("client-set-path", Some(path)) => {
+                        if let Some(path) = path.as_str() {
+                            info.path = path.to_string();
+                        }
+                    }
+                    ("client-set", Some(patch)) => {
+                        if let Some(name) = patch.get("name").and_then(Value::as_str) {
+                            info.name = name.to_string();
+                        }
+                        if let Some(identify) = patch.get("identify").and_then(Value::as_bool) {
+                            info.identify = identify;
+                        }
+                        if let Some(origin) = patch.get("origin").and_then(Value::as_str) {
+                            info.origin = origin.to_string();
+                        }
+                        if let Some(client_type) = patch.get("type").and_then(Value::as_str) {
+                            info.client_type = client_type.to_string();
+                        }
+                    }
+                    _ => {}
+                }
+                let _ = ws.serialize_attachment(&info);
+                self.broadcast_client_list(None);
+            }
+            return Ok(());
+        }
+
+        let now = now_ms();
+
+        // overlay and aux timers are independent of the rundown
+        match tag {
+            "message" => {
+                if let Some(payload) = payload {
+                    if self.project.message.apply(payload) {
+                        self.persist().await?;
+                        self.broadcast_runtime(now);
+                    }
+                }
+                return Ok(());
+            }
+            "auxtimer" => {
+                if let Some(payload) = payload {
+                    if self.project.aux_timers.apply(payload, now) {
+                        self.persist().await?;
+                        self.broadcast_runtime(now);
+                        // an aux timer running on its own still needs the tick
+                        self.sync_alarm().await?;
+                    }
+                }
+                return Ok(());
+            }
+            _ => {}
+        }
+
         // playback commands; tags this engine does not implement are ignored
         let Some(command) = Command::parse(tag, payload) else {
             return Ok(());
         };
 
-        let now = now_ms();
         let Some(rundown) = self.project.current().cloned() else {
             return Ok(());
         };
 
+        let was_playing = self.project.runtime.playback == Playback::Play;
+        let previous_entry = self.project.runtime.selected_id.clone();
+
         if self.project.runtime.apply(command, &rundown, now) {
+            self.record_report(was_playing, previous_entry, now);
             self.persist().await?;
             self.broadcast_runtime(now);
             self.sync_alarm().await?;
@@ -115,11 +213,17 @@ impl DurableObject for OntimeProject {
 
     async fn websocket_close(
         &mut self,
-        _ws: WebSocket,
+        ws: WebSocket,
         _code: usize,
         _reason: String,
         _clean: bool,
     ) -> Result<()> {
+        let leaving = ws
+            .deserialize_attachment::<ClientInfo>()
+            .ok()
+            .flatten()
+            .map(|info| info.id);
+        self.broadcast_client_list(leaving.as_deref());
         Ok(())
     }
 }
@@ -184,15 +288,84 @@ impl OntimeProject {
         }
     }
 
-    /// Sends the current playback state to every connected client.
-    fn broadcast_runtime(&self, now: i64) {
-        let Some(rundown) = self.project.current() else {
-            return;
-        };
-        let payload = self
+    /// Notes when an event actually started or stopped.
+    ///
+    /// The report is what lets an operator compare the run against the plan
+    /// afterwards, so it records wall-clock time-of-day, not epoch.
+    fn record_report(&mut self, was_playing: bool, previous_entry: Option<String>, now: i64) {
+        let clock = (now + self.project.timezone_offset).rem_euclid(86_400_000);
+        let is_playing = self.project.runtime.playback == Playback::Play;
+        let current_entry = self.project.runtime.selected_id.clone();
+
+        // whatever was running has stopped if playback ended or moved on
+        if was_playing {
+            if let Some(previous) = previous_entry.as_deref() {
+                if !is_playing || current_entry.as_deref() != Some(previous) {
+                    self.project.report.on_stop(previous, clock);
+                }
+            }
+        }
+
+        // and a new one has begun if playback just started, or moved to another entry
+        if is_playing {
+            if let Some(current) = current_entry.as_deref() {
+                if !was_playing || previous_entry.as_deref() != Some(current) {
+                    self.project.report.on_start(current, clock);
+                }
+            }
+        }
+    }
+
+    /// Announces who is connected. Built from the sockets rather than a field,
+    /// because hibernation evicts the object between messages.
+    ///
+    /// `leaving` is the id of a socket that is closing: it is still present in
+    /// `get_websockets()` while `websocket_close` runs, so it has to be excluded
+    /// explicitly or a disconnect never shows up.
+    fn broadcast_client_list(&self, leaving: Option<&str>) {
+        let mut clients = serde_json::Map::new();
+        for socket in self.state.get_websockets() {
+            if let Ok(Some(info)) = socket.deserialize_attachment::<ClientInfo>() {
+                if leaving == Some(info.id.as_str()) {
+                    continue;
+                }
+                clients.insert(info.id.clone(), info.to_client());
+            }
+        }
+
+        let packet = json!({ "tag": "client-list", "payload": clients }).to_string();
+        for socket in self.state.get_websockets() {
+            let _ = socket.send_with_str(&packet);
+        }
+    }
+
+    /// The whole `runtime-data` payload: playback, aux timers and the overlay all
+    /// live in the same client store.
+    ///
+    /// Built in one place because it is sent from two — on connect and on change —
+    /// and the two drifting apart is how the aux timers first went missing.
+    fn runtime_payload(&self, now: i64) -> Option<Value> {
+        let rundown = self.project.current()?;
+        let mut payload = self
             .project
             .runtime
             .snapshot(rundown, now, self.project.timezone_offset);
+
+        if let Some(obj) = payload.as_object_mut() {
+            if let Some(aux) = self.project.aux_timers.snapshot(now).as_object() {
+                obj.extend(aux.clone());
+            }
+            obj.insert("message".into(), json!(self.project.message));
+        }
+
+        Some(payload)
+    }
+
+    /// Sends the current playback state to every connected client.
+    fn broadcast_runtime(&self, now: i64) {
+        let Some(payload) = self.runtime_payload(now) else {
+            return;
+        };
         let packet = json!({ "tag": "runtime-data", "payload": payload }).to_string();
 
         for socket in self.state.get_websockets() {
@@ -222,7 +395,13 @@ impl OntimeProject {
 
     fn next_wake(&self) -> Option<Duration> {
         let runtime = &self.project.runtime;
+
+        // an aux timer runs independently of the rundown; without this a
+        // stopwatch started while playback is stopped would never update
         if !runtime.is_running() {
+            if self.project.aux_timers.any_running() && self.project.heartbeat_ms > 0 {
+                return Some(Duration::from_millis(self.project.heartbeat_ms as u64));
+            }
             return None;
         }
 
@@ -365,7 +544,20 @@ impl OntimeProject {
                 Response::error("Automations are not supported on the cloud backend", 501)
             }
             ["data", "custom-views", ..] => Response::from_json(&json!({ "views": [] })),
-            ["data", "report", ..] => Response::from_json(&json!({})),
+            ["data", "report"] if method == Method::Get => {
+                Response::from_json(&self.project.report)
+            }
+            ["data", "report", "all"] if method == Method::Delete => {
+                self.project.report.clear_all();
+                self.commit("report", None).await?;
+                Response::from_json(&self.project.report)
+            }
+            ["data", "report", id] if method == Method::Delete => {
+                self.project.report.clear_one(id);
+                self.commit("report", None).await?;
+                Response::from_json(&self.project.report)
+            }
+            ["data", "report", ..] => Response::from_json(&self.project.report),
             ["data", "session", "password"] => {
                 let body = body(req).await;
                 match body.get("password").and_then(Value::as_str) {
@@ -453,22 +645,27 @@ impl OntimeProject {
         let pair = WebSocketPair::new()?;
         self.state.accept_web_socket(&pair.server);
 
+        let id = uuid::Uuid::now_v7().to_string();
+        let name = format!("client-{}", &id[..8]);
+        let info = ClientInfo {
+            id: id.clone(),
+            name: name.clone(),
+            client_type: unknown_type(),
+            identify: false,
+            origin: String::new(),
+            path: String::new(),
+        };
+        let _ = pair.server.serialize_attachment(&info);
+
         let init = json!({
             "tag": "client-init",
-            "payload": {
-                "clientId": uuid::Uuid::now_v7().to_string(),
-                "clientName": "ontime-cloud",
-            }
+            "payload": { "clientId": id, "clientName": name }
         });
         let _ = pair.server.send_with_str(init.to_string());
 
         // a client that connects mid-show needs the playback state straight away,
         // not on the next tick (and there is no tick at all when nothing is running)
-        if let Some(rundown) = self.project.current() {
-            let payload =
-                self.project
-                    .runtime
-                    .snapshot(rundown, now_ms(), self.project.timezone_offset);
+        if let Some(payload) = self.runtime_payload(now_ms()) {
             let packet = json!({ "tag": "runtime-data", "payload": payload });
             let _ = pair.server.send_with_str(packet.to_string());
         }

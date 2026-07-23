@@ -69,6 +69,7 @@ suites=(
   "engine.mjs:node"   # browser wasm engine agrees with the server
   "rooms.mjs:node"    # project isolation
   "auth.mjs:node"     # per-room password
+  "operator.mjs:node" # aux timers, message overlay, report, client list
 )
 
 echo

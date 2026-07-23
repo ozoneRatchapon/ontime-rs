@@ -5,6 +5,8 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+use crate::aux_timer::AuxTimers;
+use crate::message::{MessageState, Report};
 use crate::rundown::Rundown;
 use crate::runtime::Runtime;
 
@@ -86,6 +88,15 @@ pub struct Project {
     /// Playback state, persisted so a restart mid-show resumes where it left off.
     #[serde(default)]
     pub runtime: Runtime,
+    /// The three auxiliary stopwatches, independent of the rundown.
+    #[serde(default)]
+    pub aux_timers: AuxTimers,
+    /// The operator's overlay on the timer views.
+    #[serde(default)]
+    pub message: MessageState,
+    /// When each event actually ran.
+    #[serde(default)]
+    pub report: Report,
     /// Milliseconds to add to UTC to get the operator's wall clock. A Worker has
     /// no local timezone, so without this every displayed time-of-day is UTC.
     #[serde(default)]
@@ -152,6 +163,9 @@ impl Default for Project {
             }),
             css_override: String::new(),
             runtime: Runtime::default(),
+            aux_timers: AuxTimers::default(),
+            message: MessageState::default(),
+            report: Report::default(),
             timezone_offset: 0,
             heartbeat_ms: default_heartbeat_ms(),
             password_hash: None,
