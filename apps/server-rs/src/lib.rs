@@ -1,237 +1,162 @@
 mod room;
-mod types;
 
 use worker::*;
 
-pub use room::OntimeRoom;
+pub use room::OntimeProject;
 
-fn add_cors_headers(mut res: Response) -> Result<Response> {
-    let headers = res.headers_mut();
+/// Every room is a Durable Object instance; a single project lives in one room.
+const DEFAULT_ROOM: &str = "default_room";
+
+/// Rebuilds the response with CORS headers.
+///
+/// A response that came back from a Durable Object stub carries immutable
+/// headers, so they have to be copied into a fresh `Headers` rather than
+/// mutated in place.
+async fn with_cors(mut res: Response) -> Result<Response> {
+    // a websocket upgrade has no body to read and needs no CORS headers
+    if res.status_code() == 101 {
+        return Ok(res);
+    }
+
+    let status = res.status_code();
+    let mut headers = Headers::new();
+    for (key, value) in res.headers().entries() {
+        headers.set(&key, &value)?;
+    }
     headers.set("Access-Control-Allow-Origin", "*")?;
-    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")?;
+    headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    )?;
     headers.set("Access-Control-Allow-Headers", "*")?;
-    Ok(res)
+
+    let body = res.bytes().await?;
+    Ok(ResponseBuilder::new()
+        .with_status(status)
+        .with_headers(headers)
+        .fixed(body))
+}
+
+/// A room name has to be safe to put in a URL and stable as a Durable Object key.
+fn is_valid_room(name: &str) -> bool {
+    !name.is_empty()
+        && name.len() <= 64
+        && name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+}
+
+/// Where a request's room came from, and what is left of the path.
+struct Routed {
+    room: String,
+    /// Path with the `/r/<room>` prefix removed, so the Durable Object always
+    /// sees the same shape regardless of how the room was addressed.
+    path: String,
+}
+
+/// Resolves the room, in order of precedence:
+///
+/// 1. a `/r/<room>/…` path prefix — used by REST, because the client composes
+///    request paths by appending to `serverURL` and cannot carry a query string
+/// 2. `?room=` — used by the websocket, which has no path to spare
+/// 3. the shared default room
+fn route(path: &str, url: &Url) -> Routed {
+    if let Some(rest) = path.strip_prefix("/r/") {
+        let (room, remainder) = match rest.find('/') {
+            Some(index) => (&rest[..index], &rest[index..]),
+            None => (rest, ""),
+        };
+        if is_valid_room(room) {
+            return Routed {
+                room: room.to_string(),
+                path: if remainder.is_empty() {
+                    "/".to_string()
+                } else {
+                    remainder.to_string()
+                },
+            };
+        }
+    }
+
+    let room = url
+        .query_pairs()
+        .find(|(key, _)| key == "room")
+        .map(|(_, value)| value.to_string())
+        .filter(|room| is_valid_room(room))
+        .unwrap_or_else(|| DEFAULT_ROOM.to_string());
+
+    Routed {
+        room,
+        path: path.to_string(),
+    }
+}
+
+/// Hands the request to the room's Durable Object, which owns all project state.
+///
+/// The room prefix is stripped before forwarding so every room's Durable Object
+/// receives identical paths — it never needs to know how it was addressed.
+async fn forward(mut req: Request, env: &Env, routed: &Routed) -> Result<Response> {
+    let stub = env
+        .durable_object("ONTIME_PROJECT")?
+        .id_from_name(&routed.room)?
+        .get_stub()?;
+
+    let original = req.url()?;
+    if original.path() == routed.path {
+        // nothing to rewrite — notably the websocket upgrade, which must be passed
+        // through untouched for the runtime to recognise it
+        return stub.fetch_with_request(req).await;
+    }
+
+    let mut url = original;
+    url.set_path(&routed.path);
+
+    let method = req.method();
+    let headers = req.headers().clone();
+    let body = match method {
+        Method::Get | Method::Head | Method::Options => None,
+        // the body cannot be moved across a rebuilt request as a stream
+        _ => Some(req.bytes().await.unwrap_or_default().into()),
+    };
+
+    let forwarded = Request::new_with_init(
+        url.as_str(),
+        &RequestInit {
+            method,
+            headers,
+            body,
+            ..Default::default()
+        },
+    )?;
+
+    stub.fetch_with_request(forwarded).await
 }
 
 #[event(fetch)]
 pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
+    console_error_panic_hook::set_once();
+
     if req.method() == Method::Options {
-        let headers = Headers::new();
-        let res = Response::empty()?.with_headers(headers);
-        return add_cors_headers(res);
+        return with_cors(Response::empty()?).await;
     }
 
-    let router = Router::new();
+    let Ok(url) = req.url() else {
+        return with_cors(Response::error("Bad request", 400)?).await;
+    };
+    let path = url.path().to_string();
+    let routed = route(&path, &url);
 
-    let result = router
-        .get("/", |_req, _ctx| Response::from_html("<h1>🚀 Ontime RS Cloudfire Worker Online</h1><p>API State: <a href='/api/state'>/api/state</a></p><p>Health Check: <a href='/api/health'>/api/health</a></p>"))
-        .get("/api/health", |_req, _ctx| Response::ok("Ontime RS Cloudfire Worker Online"))
-        .on_async("/room/:room_id/ws", |req, ctx| async move {
-            let room_id = ctx.param("room_id").unwrap_or(&"default_room".to_string()).to_string();
-            let namespace = ctx.durable_object("ONTIME_ROOM")?;
-            let stub = namespace.id_from_name(&room_id)?.get_stub()?;
-            stub.fetch_with_request(req).await
-        })
-        .on_async("/room/:room_id/api/state", |req, ctx| async move {
-            let room_id = ctx.param("room_id").unwrap_or(&"default_room".to_string()).to_string();
-            let namespace = ctx.durable_object("ONTIME_ROOM")?;
-            let stub = namespace.id_from_name(&room_id)?.get_stub()?;
-            stub.fetch_with_request(req).await
-        })
-        .on_async("/ws", |req, ctx| async move {
-            let url = req.url()?;
-            let query_room = url.query_pairs().find(|(k, _)| k == "room").map(|(_, v)| v.to_string());
-            let room_id = query_room.unwrap_or_else(|| "default_room".to_string());
-            let namespace = ctx.durable_object("ONTIME_ROOM")?;
-            let stub = namespace.id_from_name(&room_id)?.get_stub()?;
-            stub.fetch_with_request(req).await
-        })
-        .on_async("/api/state", |req, ctx| async move {
-            let url = req.url()?;
-            let query_room = url.query_pairs().find(|(k, _)| k == "room").map(|(_, v)| v.to_string());
-            let room_id = query_room.unwrap_or_else(|| "default_room".to_string());
-            let namespace = ctx.durable_object("ONTIME_ROOM")?;
-            let stub = namespace.id_from_name(&room_id)?.get_stub()?;
-            stub.fetch_with_request(req).await
-        })
-        .on_async("/data/*path", |mut req, _ctx| async move {
-            let url = match req.url() {
-                Ok(u) => u,
-                Err(e) => return Response::error(format!("URL_ERR: {e}"), 400),
-            };
-            let path_string = url.path();
-            match path_string.as_bytes() {
-                p if p.starts_with(b"/data/rundowns") => {
-                    let title = "Ontime Production Rundown".to_string();
-                    if p == b"/data/rundowns" && req.method() == Method::Post {
-                        Response::from_json(&serde_json::json!({
-                            "loaded": "default_rundown",
-                            "rundowns": [
-                                {
-                                    "id": "default_rundown",
-                                    "title": title,
-                                    "numEntries": 3,
-                                    "revision": 1
-                                }
-                            ]
-                        }))
-                    } else if p == b"/data/rundowns" {
-                        Response::from_json(&serde_json::json!({
-                            "loaded": "default_rundown",
-                            "rundowns": [
-                                {
-                                    "id": "default_rundown",
-                                    "title": title,
-                                    "numEntries": 3,
-                                    "revision": 1
-                                }
-                            ]
-                        }))
-                    } else {
-                        // Return full Rundown for /data/rundowns/current or /data/rundowns/:id
-                        Response::from_json(&serde_json::json!({
-                            "id": "default_rundown",
-                            "title": title,
-                            "order": ["entry_1", "entry_2", "entry_3"],
-                            "flatOrder": ["entry_1", "entry_2", "entry_3"],
-                            "entries": {
-                                "entry_1": {
-                                    "type": "event",
-                                    "id": "entry_1",
-                                    "cue": "1",
-                                    "title": "Welcome & Intro",
-                                    "duration": 300000,
-                                    "subtitle": null,
-                                    "presenter": null,
-                                    "note": null,
-                                    "flag": false,
-                                    "endAction": "none",
-                                    "timerType": "countDown",
-                                    "countToEnd": false,
-                                    "linkStart": false,
-                                    "timeStrategy": "relative",
-                                    "timeStart": 0,
-                                    "timeEnd": 300000,
-                                    "skip": false,
-                                    "colour": "",
-                                    "timeWarning": 120000,
-                                    "timeDanger": 60000,
-                                    "custom": {},
-                                    "triggers": [],
-                                    "parent": null,
-                                    "revision": 1,
-                                    "delay": 0,
-                                    "dayOffset": 0,
-                                    "gap": 0
-                                },
-                                "entry_2": {
-                                    "type": "event",
-                                    "id": "entry_2",
-                                    "cue": "2",
-                                    "title": "Keynote Presentation",
-                                    "duration": 1800000,
-                                    "subtitle": null,
-                                    "presenter": null,
-                                    "note": null,
-                                    "flag": false,
-                                    "endAction": "none",
-                                    "timerType": "countDown",
-                                    "countToEnd": false,
-                                    "linkStart": false,
-                                    "timeStrategy": "relative",
-                                    "timeStart": 0,
-                                    "timeEnd": 1800000,
-                                    "skip": false,
-                                    "colour": "",
-                                    "timeWarning": 120000,
-                                    "timeDanger": 60000,
-                                    "custom": {},
-                                    "triggers": [],
-                                    "parent": null,
-                                    "revision": 1,
-                                    "delay": 0,
-                                    "dayOffset": 0,
-                                    "gap": 0
-                                },
-                                "entry_3": {
-                                    "type": "event",
-                                    "id": "entry_3",
-                                    "cue": "3",
-                                    "title": "Q&A Session",
-                                    "duration": 600000,
-                                    "subtitle": null,
-                                    "presenter": null,
-                                    "note": null,
-                                    "flag": false,
-                                    "endAction": "none",
-                                    "timerType": "countDown",
-                                    "countToEnd": false,
-                                    "linkStart": false,
-                                    "timeStrategy": "relative",
-                                    "timeStart": 0,
-                                    "timeEnd": 600000,
-                                    "skip": false,
-                                    "colour": "",
-                                    "timeWarning": 120000,
-                                    "timeDanger": 60000,
-                                    "custom": {},
-                                    "triggers": [],
-                                    "parent": null,
-                                    "revision": 1,
-                                    "delay": 0,
-                                    "dayOffset": 0,
-                                    "gap": 0
-                                }
-                            },
-                            "revision": 1
-                        }))
-                    }
-                }
-                b"/data/project" => Response::from_json(&serde_json::json!({
-                    "title": "Ontime Production Rundown",
-                    "description": "Live Event Schedule",
-                    "publicUrl": null
-                })),
-                b"/data/settings" => Response::from_json(&serde_json::json!({
-                    "version": "4.11.0",
-                    "timeFormat": "24h",
-                    "editorKey": null,
-                    "operatorKey": null
-                })),
-                b"/data/view-settings" => Response::from_json(&serde_json::json!({
-                    "theme": "dark",
-                    "fontSize": 16,
-                    "showSeconds": true
-                })),
-                b"/data/url-presets" => Response::from_json(&serde_json::json!([])),
-                b"/data/custom-views" => Response::from_json(&serde_json::json!([])),
-                b"/data/session" => Response::from_json(&serde_json::json!({ "activeConnections": 1 })),
-                b"/data/session/info" => Response::from_json(&serde_json::json!({ "version": "v3.13.1", "isCloud": true })),
-                b"/data/report" => Response::from_json(&serde_json::json!([])),
-                b"/data/custom-fields" => Response::from_json(&serde_json::json!({})),
-                b"/data/assets/css" => Response::ok(""),
-                _ => Response::from_json(&serde_json::json!({})),
-            }
-        })
-        .on_async("/api/v1/control/*path", |req, ctx| async move {
-            let url = req.url()?;
-            let query_room = url.query_pairs().find(|(k, _)| k == "room").map(|(_, v)| v.to_string());
-            let room_id = query_room.unwrap_or_else(|| "default_room".to_string());
-            let namespace = ctx.durable_object("ONTIME_ROOM")?;
-            let stub = namespace.id_from_name(&room_id)?.get_stub()?;
-            stub.fetch_with_request(req).await
-        })
-        .on_async("/user/*path", |_req, _ctx| async move {
-            Response::from_json(&serde_json::json!({}))
-        })
-        .run(req, env)
-        .await;
+    let result = match routed.path.as_str() {
+        "/" | "/api/health" => Response::ok("ontime-server-rs online"),
+        // everything the client talks to is project state, so it all goes to the DO
+        p if p == "/ws" || p.starts_with("/data/") || p.starts_with("/user/") => {
+            forward(req, &env, &routed).await
+        }
+        _ => Response::error("Not found", 404),
+    };
 
     match result {
-        Ok(res) => add_cors_headers(res),
-        Err(err) => {
-            let res = Response::error(format!("ROUTER_EXEC_ERROR: {err:?}"), 500)?;
-            add_cors_headers(res)
-        }
+        Ok(res) => with_cors(res).await,
+        Err(err) => with_cors(Response::error(format!("WORKER_ERROR: {err}"), 500)?).await,
     }
 }

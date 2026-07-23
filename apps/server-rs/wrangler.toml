@@ -5,10 +5,23 @@ compatibility_date = "2026-07-01"
 [build]
 command = "cargo install -q worker-build@^0.1 && worker-build --release"
 
-[[durable_objects.bindings]]
-name = "ONTIME_ROOM"
-class_name = "OntimeRoom"
+[observability]
+enabled = true
 
+[[durable_objects.bindings]]
+name = "ONTIME_PROJECT"
+class_name = "OntimeProject"
+
+# v1 created a key-value backed class, which is a paid-plan feature — every
+# request to it failed with a 500. Storage type is immutable once a namespace
+# exists, so v2 drops that class and introduces a SQLite-backed one under a new
+# name. SQLite-backed Durable Objects are the variant available on the free plan.
+# The v1 class never held usable data, so nothing is lost.
 [[migrations]]
 tag = "v1"
 new_classes = ["OntimeRoom"]
+
+[[migrations]]
+tag = "v2"
+deleted_classes = ["OntimeRoom"]
+new_sqlite_classes = ["OntimeProject"]
