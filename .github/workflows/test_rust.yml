@@ -44,15 +44,20 @@ jobs:
       - name: Check the worker builds for wasm
         run: cargo check --manifest-path apps/server-rs/Cargo.toml --target wasm32-unknown-unknown
 
+      - name: Check the native server builds
+        run: cargo check --manifest-path apps/server-native/Cargo.toml
+
       - name: Clippy
         run: |
           cargo clippy --manifest-path packages/ontime-core/Cargo.toml -- -D warnings
           cargo clippy --manifest-path apps/server-rs/Cargo.toml --target wasm32-unknown-unknown -- -D warnings
+          cargo clippy --manifest-path apps/server-native/Cargo.toml --all-targets -- -D warnings
 
       - name: Formatting
         run: |
           cargo fmt --manifest-path packages/ontime-core/Cargo.toml --check
           cargo fmt --manifest-path apps/server-rs/Cargo.toml --check
+          cargo fmt --manifest-path apps/server-native/Cargo.toml --check
 
       # wasm-bindgen the CLI and the crate must be the exact same version or the
       # schema check fails; read it from the lockfile rather than pinning twice
@@ -68,8 +73,23 @@ jobs:
 
       # end-to-end against a real worker: this is what catches wrong response
       # shapes, room leaks and a timer that stops ticking
-      - name: End-to-end suites
+      - name: End-to-end suites against the Worker
         run: apps/server-rs/tests/e2e/run.sh --start
+
+      # the same suites against the other host: this is what proves the two share
+      # one implementation rather than merely resembling each other
+      - name: End-to-end suites against the native server
+        run: |
+          cargo build --release --manifest-path apps/server-native/Cargo.toml
+          BIN=$(cargo metadata --format-version 1 --no-deps \
+            --manifest-path apps/server-native/Cargo.toml \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['target_directory'])")/release/ontime-server-native
+          ONTIME_DATA_DIR=$(mktemp -d) PORT=4001 "$BIN" &
+          for _ in $(seq 1 60); do
+            curl -sf http://127.0.0.1:4001/api/health >/dev/null && break
+            sleep 1
+          done
+          apps/server-rs/tests/e2e/run.sh http://127.0.0.1:4001
 
       - name: Worker log on failure
         if: failure()
