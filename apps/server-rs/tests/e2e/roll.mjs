@@ -54,12 +54,29 @@ const b = await api('POST', `/data/rundowns/${rid}/entry`, {
 
 const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}`);
 const runtime = [];
-const send = (tag, payload) => ws.send(JSON.stringify({ tag, payload }));
+const send = (tag, payload) => {
+  assertSocketAlive(tag);
+  ws.send(JSON.stringify({ tag, payload }));
+};
 const latest = () => runtime[runtime.length - 1];
+// a deploy rolling over closes the socket; without noticing, the suite would
+// carry on and fail on a stale packet, which reads as a mysterious flake
+let socketClosed = null;
+ws.addEventListener('close', (event) => {
+  socketClosed = `code ${event.code}${event.reason ? ` (${event.reason})` : ''}`;
+});
 ws.addEventListener('message', (e) => {
   const p = JSON.parse(e.data);
   if (p.tag === 'runtime-data') runtime.push(p.payload);
 });
+
+function assertSocketAlive(stage) {
+  if (socketClosed !== null) {
+    console.log(`\n  the websocket closed during "${stage}": ${socketClosed}`);
+    console.log('  a deploy rolling over mid-run will do this; rerun against a settled deployment');
+    process.exit(1);
+  }
+}
 await new Promise((resolve, reject) => {
   ws.addEventListener('open', resolve);
   ws.addEventListener('error', () => reject(new Error('socket error')));

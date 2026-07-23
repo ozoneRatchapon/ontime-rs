@@ -617,3 +617,112 @@ fn resuming_never_moves_the_displayed_value_by_a_whole_second() {
         );
     }
 }
+
+// --- events pinned to a wall-clock end -------------------------------------
+
+/// A single event planned 10:00–11:00 that counts to its end rather than for a
+/// duration. Starting it late must not buy it extra time.
+fn count_to_end_show() -> (Rundown, String) {
+    let mut rundown = Rundown::new("default", "CountToEnd");
+    let entry = rundown.add_entry(
+        &json!({
+            "title": "to the end",
+            "timeStart": 36_000_000,
+            "duration": 3_600_000,
+            "timeEnd": 39_600_000,
+            "countToEnd": true,
+        }),
+        Insert::End,
+    );
+    let id = entry["id"].as_str().unwrap().to_string();
+    (rundown, id)
+}
+
+/// Epoch midnight so a time of day maps onto an epoch directly.
+const DAY_START: i64 = 1_700_000_000_000 - (1_700_000_000_000 % 86_400_000);
+
+#[test]
+fn a_count_to_end_event_started_on_time_shows_its_full_span() {
+    let (rundown, _) = count_to_end_show();
+    let mut runtime = Runtime::default();
+    runtime.apply(Command::Start, &rundown, DAY_START + 36_000_000, 0);
+
+    assert_eq!(
+        timer(&runtime, &rundown, DAY_START + 36_000_000)["current"],
+        3_600_000
+    );
+}
+
+#[test]
+fn a_count_to_end_event_started_late_still_ends_at_its_planned_time() {
+    let (rundown, _) = count_to_end_show();
+    let mut runtime = Runtime::default();
+
+    // twenty minutes late
+    let started = DAY_START + 36_000_000 + 1_200_000;
+    runtime.apply(Command::Start, &rundown, started, 0);
+
+    // it has forty minutes left, not a fresh hour
+    assert_eq!(timer(&runtime, &rundown, started)["current"], 2_400_000);
+}
+
+#[test]
+fn a_count_to_end_event_counts_the_wall_clock_not_the_elapsed_time() {
+    let (rundown, _) = count_to_end_show();
+    let mut runtime = Runtime::default();
+    let started = DAY_START + 36_000_000;
+    runtime.apply(Command::Start, &rundown, started, 0);
+
+    // pausing does not stop the clock reaching the planned end
+    runtime.apply(Command::Pause, &rundown, started + 600_000, 0);
+    assert_eq!(
+        timer(&runtime, &rundown, started + 1_200_000)["current"],
+        2_400_000
+    );
+}
+
+#[test]
+fn added_time_extends_a_count_to_end_event() {
+    let (rundown, _) = count_to_end_show();
+    let mut runtime = Runtime::default();
+    let started = DAY_START + 36_000_000;
+    runtime.apply(Command::Start, &rundown, started, 0);
+    runtime.apply(Command::AddTime(300_000), &rundown, started, 0);
+
+    assert_eq!(timer(&runtime, &rundown, started)["current"], 3_900_000);
+}
+
+#[test]
+fn a_count_to_end_event_running_past_its_end_goes_negative() {
+    let (rundown, _) = count_to_end_show();
+    let mut runtime = Runtime::default();
+    let started = DAY_START + 36_000_000;
+    runtime.apply(Command::Start, &rundown, started, 0);
+
+    let overrun = timer(&runtime, &rundown, DAY_START + 39_600_000 + 60_000);
+    assert_eq!(overrun["current"], -60_000);
+    assert_eq!(overrun["phase"], "overtime");
+}
+
+#[test]
+fn a_count_to_end_event_through_midnight_is_not_a_day_out() {
+    let mut rundown = Rundown::new("default", "Overnight");
+    // 23:30 to 00:30, counting to the end
+    rundown.add_entry(
+        &json!({
+            "title": "overnight",
+            "timeStart": 84_600_000,
+            "duration": 3_600_000,
+            "timeEnd": 1_800_000,
+            "countToEnd": true,
+        }),
+        Insert::End,
+    );
+
+    let mut runtime = Runtime::default();
+    let started = DAY_START + 84_600_000;
+    runtime.apply(Command::Start, &rundown, started, 0);
+
+    // an hour to run, not minus twenty-three
+    assert_eq!(timer(&runtime, &rundown, started)["current"], 3_600_000);
+}

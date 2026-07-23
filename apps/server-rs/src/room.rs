@@ -420,7 +420,7 @@ impl OntimeProject {
 
         let rundown = self.project.current()?;
         let event = runtime.selected_id.as_ref().and_then(|id| rundown.get(id));
-        let inputs = runtime.inputs_for(event);
+        let inputs = runtime.inputs_for(event, self.project.timezone_offset);
         let now = now_ms();
 
         // In roll mode the server is the only thing that will start the event, so
@@ -445,7 +445,7 @@ impl OntimeProject {
                 .and_then(Value::as_str)
                 .is_some_and(|action| action != "none");
 
-        let until_end = match (has_end_action, inputs.ends_at()) {
+        let until_end = match (has_end_action, inputs.ends_at(now)) {
             (true, Some(ends_at)) => Some((ends_at - now).max(0) as u64),
             _ => None,
         };

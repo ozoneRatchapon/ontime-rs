@@ -8,7 +8,9 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::offset::{find_day_offset, runtime_offset, OffsetInputs};
+use crate::offset::{
+    expected_start, find_day_offset, runtime_offset, ExpectedStartInputs, OffsetInputs, OffsetMode,
+};
 use crate::rundown::{Rundown, MS_PER_DAY};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
@@ -111,6 +113,19 @@ pub struct TimerInputs {
     /// is running.
     #[serde(default)]
     pub secondary_timer: Option<i64>,
+    /// The event counts to a fixed wall-clock end rather than for a duration.
+    #[serde(default)]
+    pub count_to_end: bool,
+    /// The event's planned end, as a time of day. Only meaningful with
+    /// `count_to_end`.
+    #[serde(default)]
+    pub time_end: Option<i64>,
+    /// Whether the event runs through midnight, which its end time alone cannot say.
+    #[serde(default)]
+    pub crosses_midnight: bool,
+    /// Needed because a count-to-end timer is measured against the wall clock.
+    #[serde(default)]
+    pub tz_offset: i64,
 }
 
 impl TimerInputs {
@@ -134,6 +149,15 @@ impl TimerInputs {
     }
 
     pub fn current(&self, now: i64) -> Option<i64> {
+        // an event pinned to a wall-clock end counts to that time whatever time it
+        // was started, so it ignores the elapsed time entirely
+        if self.count_to_end {
+            let time_end = self.time_end?;
+            let clock = time_of_day(now, self.tz_offset);
+            let correct_day = if self.crosses_midnight { MS_PER_DAY } else { 0 };
+            return Some(correct_day - clock + time_end + self.added_time);
+        }
+
         match (self.duration(), self.elapsed(now)) {
             (Some(duration), Some(elapsed)) => Some(duration - elapsed),
             // armed but not started: the full duration is still ahead
@@ -188,9 +212,14 @@ impl TimerInputs {
 
     /// Epoch milliseconds at which the loaded event runs out, if it is running.
     /// Lets the server schedule a single alarm per event instead of ticking.
-    pub fn ends_at(&self) -> Option<i64> {
+    pub fn ends_at(&self, now: i64) -> Option<i64> {
         if !matches!(self.playback, Playback::Play | Playback::Roll) {
             return None;
+        }
+        // a count-to-end event ends at its wall-clock time, not a duration after
+        // whenever it happened to start
+        if self.count_to_end {
+            return Some(now + self.current(now)?);
         }
         Some(self.started_at? + self.duration()? + self.paused_total)
     }
@@ -457,11 +486,13 @@ impl Runtime {
             return false;
         }
 
-        let duration = field(event, "duration").unwrap_or(0) + self.added_time;
-        let Some(elapsed) = self.elapsed(now) else {
+        // "over" is when nothing is left, which for a count-to-end event is a
+        // wall-clock question rather than an elapsed-time one
+        let inputs = self.inputs_for(Some(event), tz_offset);
+        let Some(current) = inputs.current(now) else {
             return false;
         };
-        if elapsed < duration {
+        if current > 0 {
             return false;
         }
 
@@ -513,7 +544,7 @@ impl Runtime {
 
         // running: hand over to the next event once this one is spent
         let event = self.selected_id.as_ref().and_then(|id| rundown.get(id));
-        let inputs = self.inputs_for(event);
+        let inputs = self.inputs_for(event, tz_offset);
         let Some(current) = inputs.current(now) else {
             return false;
         };
@@ -526,16 +557,13 @@ impl Runtime {
         self.roll(rundown, now, tz_offset)
     }
 
-    /// Milliseconds the loaded event has been counting, excluding paused time.
-    fn elapsed(&self, now: i64) -> Option<i64> {
-        self.inputs_for(None).elapsed(now)
-    }
-
     /// Everything needed to compute the timer, decoupled from the rundown.
     ///
     /// The browser recomputes the timer between server packets using exactly this,
     /// so the maths lives in one place rather than being reimplemented in TypeScript.
-    pub fn inputs_for(&self, event: Option<&Value>) -> TimerInputs {
+    pub fn inputs_for(&self, event: Option<&Value>, tz_offset: i64) -> TimerInputs {
+        let time_start = event.and_then(|e| field(e, "timeStart"));
+        let time_end = event.and_then(|e| field(e, "timeEnd"));
         TimerInputs {
             playback: self.playback,
             started_at: self.started_at,
@@ -549,13 +577,20 @@ impl Runtime {
             time_danger: event.and_then(|e| field(e, "timeDanger")).unwrap_or(60_000),
             has_event: event.is_some(),
             secondary_timer: None,
+            count_to_end: event
+                .and_then(|e| e.get("countToEnd"))
+                .and_then(Value::as_bool)
+                .unwrap_or(false),
+            time_end,
+            crosses_midnight: matches!((time_start, time_end), (Some(s), Some(e)) if s > e),
+            tz_offset,
         }
     }
 
     /// The same, with the roll countdown filled in. `now` and `tz_offset` are
     /// needed because the countdown is against the wall clock.
     pub fn inputs_at(&self, event: Option<&Value>, now: i64, tz_offset: i64) -> TimerInputs {
-        let mut inputs = self.inputs_for(event);
+        let mut inputs = self.inputs_for(event, tz_offset);
         if self.playback == Playback::Roll {
             if let Some(target) = self.secondary_target {
                 inputs.secondary_timer = Some(target - time_of_day(now, tz_offset));
@@ -565,6 +600,90 @@ impl Runtime {
     }
 
     // #endregion timer maths =====================================
+
+    /// Walks forward from the loaded event, accumulating the idle time and the
+    /// link-continuity that decide when later events are now expected to start.
+    ///
+    /// Gap and linkage are only counted *after* the loaded event: the loaded one
+    /// is already running, so its own slack is spent.
+    pub fn look_ahead(&self, rundown: &Rundown) -> LookAhead {
+        let mut result = LookAhead::default();
+
+        let events = playable(rundown);
+        let Some(selected) = self.selected_id.as_ref() else {
+            return result;
+        };
+        let Some(current_index) = events.iter().position(|id| id == selected) else {
+            return result;
+        };
+
+        // the last playable event of the group the loaded event belongs to
+        let group_id = rundown
+            .get(selected)
+            .and_then(|e| e.get("parent"))
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        let last_in_group = group_id.as_ref().and_then(|group_id| {
+            rundown
+                .get(group_id)
+                .and_then(|g| g.get("entries"))
+                .and_then(Value::as_array)
+                .and_then(|children| {
+                    children
+                        .iter()
+                        .filter_map(Value::as_str)
+                        .rfind(|id| events.iter().any(|e| e == id))
+                        .map(str::to_string)
+                })
+        });
+
+        let mut accumulated_gap = 0;
+        let mut is_linked_to_loaded = true;
+
+        for (index, id) in events.iter().enumerate().skip(current_index) {
+            let Some(event) = rundown.get(id) else {
+                continue;
+            };
+
+            if index != current_index {
+                accumulated_gap += field(event, "gap").unwrap_or(0);
+                is_linked_to_loaded = is_linked_to_loaded
+                    && event
+                        .get("linkStart")
+                        .and_then(Value::as_bool)
+                        .unwrap_or(false);
+
+                // the loaded event cannot be its own next flag
+                if result.flag.is_none()
+                    && event.get("flag").and_then(Value::as_bool).unwrap_or(false)
+                {
+                    result.flag = Some(LookAheadTarget {
+                        id: id.clone(),
+                        accumulated_gap,
+                        is_linked_to_loaded,
+                    });
+                }
+            }
+
+            if result.group_end.is_none() && last_in_group.as_deref() == Some(id.as_str()) {
+                result.group_end = Some(LookAheadTarget {
+                    id: id.clone(),
+                    accumulated_gap,
+                    is_linked_to_loaded,
+                });
+            }
+        }
+
+        if let Some(last) = events.last() {
+            result.rundown_end = Some(LookAheadTarget {
+                id: last.clone(),
+                accumulated_gap,
+                is_linked_to_loaded,
+            });
+        }
+
+        result
+    }
 
     /// Builds the `runtime-data` payload the client's `RuntimeStore` expects.
     ///
@@ -643,6 +762,41 @@ impl Runtime {
             _ => (0, 0),
         };
 
+        // when the events ahead are now expected to run, given how far the run has
+        // slipped and how much idle time is left to absorb it
+        let ahead = self.look_ahead(rundown);
+        let expected_at = |target: &LookAheadTarget, add_duration: bool| -> Option<i64> {
+            let event = rundown.get(&target.id)?;
+            let start = expected_start(&ExpectedStartInputs {
+                time_start: field(event, "timeStart")?,
+                day_offset: field(event, "dayOffset").unwrap_or(0),
+                delay: field(event, "delay").unwrap_or(0),
+                current_day: self.start_day_offset.unwrap_or(0),
+                total_gap: target.accumulated_gap,
+                is_linked_to_loaded: target.is_linked_to_loaded,
+                offset: absolute,
+                mode: OffsetMode::Absolute,
+                actual_start: self.actual_start.map(|t| time_of_day(t, tz_offset)),
+                planned_start,
+            });
+            let span = if add_duration {
+                field(event, "duration").unwrap_or(0)
+            } else {
+                0
+            };
+            Some(wrap_day(start + span))
+        };
+
+        // a flag marks a point someone is waiting on, so it is the start that matters
+        let expected_flag_start = ahead.flag.as_ref().and_then(|t| expected_at(t, false));
+        // for the ends, it is the last event's start plus how long it runs
+        let expected_group_end = ahead.group_end.as_ref().and_then(|t| expected_at(t, true));
+        let expected_rundown_end = ahead
+            .rundown_end
+            .as_ref()
+            .and_then(|t| expected_at(t, true))
+            .or_else(|| planned_end.map(|end| wrap_day(end + absolute)));
+
         json!({
             "clock": time_of_day(now, tz_offset),
             "timer": inputs.timer_state(now, tz_offset),
@@ -667,15 +821,13 @@ impl Runtime {
                 "absolute": absolute,
                 "relative": relative,
                 "mode": "absolute",
-                // groups and flags need the accumulated-gap walk, which is not
-                // ported yet; null rather than a number that would look authoritative
-                "expectedFlagStart": Value::Null,
-                "expectedGroupEnd": Value::Null,
-                "expectedRundownEnd": planned_end.map(|end| wrap_day(end + absolute)),
+                "expectedFlagStart": expected_flag_start,
+                "expectedGroupEnd": expected_group_end,
+                "expectedRundownEnd": expected_rundown_end,
             },
             "eventNow": event_now,
             "eventNext": event_next,
-            "eventFlag": Value::Null,
+            "eventFlag": ahead.flag.as_ref().and_then(|t| rundown.get(&t.id)),
             "groupNow": event_now
                 .and_then(|e| e.get("parent"))
                 .and_then(Value::as_str)
@@ -685,6 +837,26 @@ impl Runtime {
 }
 
 // #region helpers ================================================
+
+/// A point ahead of the loaded event, with the slack and link-continuity between.
+#[derive(Debug, Clone)]
+pub struct LookAheadTarget {
+    pub id: String,
+    /// Idle time between the loaded event and this one, which can absorb lateness.
+    pub accumulated_gap: i64,
+    /// Whether every event between here and the loaded one starts linked, in
+    /// which case there is no slack to absorb anything.
+    pub is_linked_to_loaded: bool,
+}
+
+/// What lies ahead of the loaded event: the next flag, the end of its group, and
+/// the end of the rundown.
+#[derive(Debug, Clone, Default)]
+pub struct LookAhead {
+    pub flag: Option<LookAheadTarget>,
+    pub group_end: Option<LookAheadTarget>,
+    pub rundown_end: Option<LookAheadTarget>,
+}
 
 /// Rounds an instant to the nearest whole second.
 ///
