@@ -49,7 +49,8 @@ export default function ProtectedEditor() {
       <div className={styles.mainContainer} data-testid='event-editor'>
         <WelcomePlacement />
         <NavigationMenu isOpen={isOpen} onClose={handler.close} />
-        {isSettingsOpen ? <AppSettings /> : <Editor />}
+        <Editor />
+        {isSettingsOpen && <AppSettings />}
         <EditorOverview>
           <IconButton aria-label='Toggle navigation' variant='subtle-white' size='xlarge' onClick={handler.open}>
             <IoApps />
