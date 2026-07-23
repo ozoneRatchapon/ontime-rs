@@ -49,6 +49,9 @@ pub enum Command {
     Reload,
     /// Milliseconds to add to the running event; negative removes time.
     AddTime(i64),
+    /// Hand the rundown to the wall clock: play whatever is due now, and wait
+    /// for whatever is next.
+    Roll,
 }
 
 impl Command {
@@ -80,6 +83,7 @@ impl Command {
             "stop" => Some(Command::Stop),
             "reload" => Some(Command::Reload),
             "addtime" => payload.and_then(Value::as_i64).map(Command::AddTime),
+            "roll" => Some(Command::Roll),
             _ => None,
         }
     }
@@ -103,13 +107,19 @@ pub struct TimerInputs {
     pub time_danger: i64,
     /// False when nothing is loaded, which makes the timer read as empty.
     pub has_event: bool,
+    /// In roll mode, milliseconds until the armed event is due. `None` once it
+    /// is running.
+    #[serde(default)]
+    pub secondary_timer: Option<i64>,
 }
 
 impl TimerInputs {
     pub fn elapsed(&self, now: i64) -> Option<i64> {
         let started_at = self.started_at?;
         match self.playback {
-            Playback::Play => Some(now - started_at - self.paused_total),
+            // roll counts exactly like play once its event is under way; the
+            // difference is only in how the event was chosen
+            Playback::Play | Playback::Roll => Some(now - started_at - self.paused_total),
             Playback::Pause => Some(self.paused_at? - started_at - self.paused_total),
             _ => None,
         }
@@ -134,6 +144,11 @@ impl TimerInputs {
         };
         if !self.has_event {
             return TimerPhase::None;
+        }
+        // waiting for a rolling event to come round is its own phase: the timer
+        // views show the countdown to the start rather than a running timer
+        if self.secondary_timer.is_some() {
+            return TimerPhase::Pending;
         }
         if current < 0 {
             TimerPhase::Overtime
@@ -162,7 +177,7 @@ impl TimerInputs {
             },
             "phase": self.phase(now),
             "playback": self.playback,
-            "secondaryTimer": Value::Null,
+            "secondaryTimer": self.secondary_timer,
             "startedAt": self.started_at.map(|t| time_of_day(t, tz_offset)),
         })
     }
@@ -170,7 +185,7 @@ impl TimerInputs {
     /// Epoch milliseconds at which the loaded event runs out, if it is running.
     /// Lets the server schedule a single alarm per event instead of ticking.
     pub fn ends_at(&self) -> Option<i64> {
-        if self.playback != Playback::Play {
+        if !matches!(self.playback, Playback::Play | Playback::Roll) {
             return None;
         }
         Some(self.started_at? + self.duration()? + self.paused_total)
@@ -197,6 +212,10 @@ pub struct Runtime {
     /// Fixed when the run starts, because everything after is measured from it.
     #[serde(default)]
     pub start_day_offset: Option<i64>,
+    /// In roll mode while waiting: the time of day the loaded event is due to
+    /// start. `None` once it is actually running.
+    #[serde(default)]
+    pub secondary_target: Option<i64>,
 }
 
 impl Runtime {
@@ -226,6 +245,7 @@ impl Runtime {
             Command::Stop => self.stop(),
             Command::Reload => self.reload(rundown, now, tz_offset),
             Command::AddTime(amount) => self.add_time(amount),
+            Command::Roll => self.roll(rundown, now, tz_offset),
         }
     }
 
@@ -341,6 +361,42 @@ impl Runtime {
         self.load(rundown, Some(next))
     }
 
+    /// Hands the rundown to the wall clock.
+    ///
+    /// Finds whichever event should be on air right now and joins it part-way
+    /// through; if nothing is due yet, arms the next one and counts down to it.
+    /// From then on `on_tick` moves from event to event without the operator.
+    fn roll(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
+        let clock = time_of_day(now, tz_offset);
+        let Some(found) = load_roll(rundown, clock) else {
+            return false;
+        };
+
+        self.selected_id = Some(found.id.clone());
+        self.playback = Playback::Roll;
+        self.paused_at = None;
+        self.paused_total = 0;
+        self.added_time = 0;
+
+        if found.is_pending {
+            // nothing is due yet: wait, counting down to the start
+            self.started_at = None;
+            self.secondary_target = Some(normalise_roll_start(found.time_start, clock));
+        } else {
+            // the event is already under way, so back-date the start to join it
+            // at the right point rather than restarting it
+            self.started_at = Some(now - found.elapsed);
+            self.secondary_target = None;
+
+            if self.actual_start.is_none() {
+                self.actual_start = Some(now - found.elapsed);
+                self.start_day_offset = Some(find_day_offset(found.time_start, clock));
+            }
+        }
+
+        true
+    }
+
     fn add_time(&mut self, amount: i64) -> bool {
         if self.selected_id.is_none() {
             return false;
@@ -352,8 +408,10 @@ impl Runtime {
     // #endregion commands ========================================
     // #region timer maths ========================================
 
+    /// Whether the server has to keep waking. Roll counts even while waiting,
+    /// because nothing else will start the event when its time comes.
     pub fn is_running(&self) -> bool {
-        self.playback == Playback::Play
+        matches!(self.playback, Playback::Play | Playback::Roll)
     }
 
     /// Called on each tick. Applies the loaded event's `endAction` once its time
@@ -362,6 +420,10 @@ impl Runtime {
     ///
     /// Returns `true` if the state changed.
     pub fn on_tick(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
+        if self.playback == Playback::Roll {
+            return self.roll_tick(rundown, now, tz_offset);
+        }
+
         if self.playback != Playback::Play {
             return false;
         }
@@ -408,6 +470,42 @@ impl Runtime {
         }
     }
 
+    /// Roll mode advances itself: it starts the armed event when its time comes,
+    /// and moves to the next one when the running event runs out.
+    fn roll_tick(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
+        let clock = time_of_day(now, tz_offset);
+
+        // waiting for an event's time to come round
+        if let Some(target) = self.secondary_target {
+            if target - clock > 0 {
+                return false;
+            }
+            self.started_at = Some(now);
+            self.secondary_target = None;
+            if self.actual_start.is_none() {
+                self.actual_start = Some(now);
+                let event = self.selected_id.as_ref().and_then(|id| rundown.get(id));
+                let time_start = event.and_then(|e| field(e, "timeStart")).unwrap_or(0);
+                self.start_day_offset = Some(find_day_offset(time_start, clock));
+            }
+            return true;
+        }
+
+        // running: hand over to the next event once this one is spent
+        let event = self.selected_id.as_ref().and_then(|id| rundown.get(id));
+        let inputs = self.inputs_for(event);
+        let Some(current) = inputs.current(now) else {
+            return false;
+        };
+        if current > 0 {
+            return false;
+        }
+
+        // re-resolve against the clock rather than simply stepping, so a rundown
+        // with gaps waits rather than running the next event early
+        self.roll(rundown, now, tz_offset)
+    }
+
     /// Milliseconds the loaded event has been counting, excluding paused time.
     fn elapsed(&self, now: i64) -> Option<i64> {
         self.inputs_for(None).elapsed(now)
@@ -430,7 +528,20 @@ impl Runtime {
                 .unwrap_or(120_000),
             time_danger: event.and_then(|e| field(e, "timeDanger")).unwrap_or(60_000),
             has_event: event.is_some(),
+            secondary_timer: None,
         }
+    }
+
+    /// The same, with the roll countdown filled in. `now` and `tz_offset` are
+    /// needed because the countdown is against the wall clock.
+    pub fn inputs_at(&self, event: Option<&Value>, now: i64, tz_offset: i64) -> TimerInputs {
+        let mut inputs = self.inputs_for(event);
+        if self.playback == Playback::Roll {
+            if let Some(target) = self.secondary_target {
+                inputs.secondary_timer = Some(target - time_of_day(now, tz_offset));
+            }
+        }
+        inputs
     }
 
     // #endregion timer maths =====================================
@@ -458,7 +569,7 @@ impl Runtime {
             })
             .and_then(|id| rundown.get(id));
 
-        let inputs = self.inputs_for(event_now);
+        let inputs = self.inputs_at(event_now, now, tz_offset);
 
         let planned_start = events
             .first()
@@ -554,6 +665,135 @@ impl Runtime {
 }
 
 // #region helpers ================================================
+
+/// Which event the wall clock says should be on air, and how far into it we are.
+pub struct RollTarget {
+    pub id: String,
+    pub time_start: i64,
+    /// Milliseconds already elapsed into the event; zero when pending.
+    pub elapsed: i64,
+    /// True when the event has not started yet and we are counting down to it.
+    pub is_pending: bool,
+}
+
+/// An event whose end reads earlier than its start runs through midnight.
+fn normalise_end(start: i64, end: i64) -> i64 {
+    if end < start {
+        end + MS_PER_DAY
+    } else {
+        end
+    }
+}
+
+/// An event due earlier today than the current clock is due tomorrow.
+fn normalise_roll_start(start: i64, clock: i64) -> i64 {
+    if start < clock {
+        start + MS_PER_DAY
+    } else {
+        start
+    }
+}
+
+/// Finds the event a rolling rundown should be playing at `clock`.
+///
+/// Walks the playable events in order, keeping count of how many times the
+/// rundown has gone past midnight, and returns the first one that has not
+/// already finished. Zero-duration events are skipped: rolling into one would
+/// leave playback stuck on it forever.
+pub fn load_roll(rundown: &Rundown, clock: i64) -> Option<RollTarget> {
+    let playable = playable(rundown);
+    let first = playable.first()?;
+
+    let mut day_span = 0;
+
+    for id in &playable {
+        let Some(event) = rundown.get(id) else {
+            continue;
+        };
+        let duration = field(event, "duration").unwrap_or(0);
+        if duration == 0 {
+            continue;
+        }
+
+        let time_start = field(event, "timeStart").unwrap_or(0);
+        let time_end = field(event, "timeEnd").unwrap_or(0);
+
+        let corrected_start = time_start + MS_PER_DAY * day_span;
+        let corrected_end = time_end + MS_PER_DAY * day_span;
+        let normal_end = normalise_end(corrected_start, corrected_end);
+
+        // already over
+        if normal_end <= clock {
+            if time_start > time_end {
+                day_span += 1;
+            }
+            continue;
+        }
+
+        // under way — either normally, or carried over from the day before
+        let is_from_day_before = normal_end > MS_PER_DAY && clock < time_end;
+        if is_from_day_before || clock >= time_start {
+            let elapsed = if is_from_day_before {
+                clock + MS_PER_DAY - time_start
+            } else {
+                clock - time_start
+            };
+            return Some(RollTarget {
+                id: id.clone(),
+                time_start,
+                elapsed,
+                is_pending: false,
+            });
+        }
+
+        // an overnight event later in the rundown may be on air right now
+        for later_id in playable.iter().skip_while(|x| *x != id).skip(1) {
+            let Some(later) = rundown.get(later_id) else {
+                continue;
+            };
+            if field(later, "duration").unwrap_or(0) == 0 {
+                continue;
+            }
+            let later_start = field(later, "timeStart").unwrap_or(0);
+            let later_end = field(later, "timeEnd").unwrap_or(0);
+            if later_start <= later_end {
+                continue;
+            }
+            // it wraps midnight, so it is running if we are past its start or
+            // before its end
+            if clock >= later_start || clock < later_end {
+                let elapsed = if clock >= later_start {
+                    clock - later_start
+                } else {
+                    clock + MS_PER_DAY - later_start
+                };
+                return Some(RollTarget {
+                    id: later_id.clone(),
+                    time_start: later_start,
+                    elapsed,
+                    is_pending: false,
+                });
+            }
+        }
+
+        // still to come
+        return Some(RollTarget {
+            id: id.clone(),
+            time_start,
+            elapsed: 0,
+            is_pending: true,
+        });
+    }
+
+    // everything is behind us: arm the top of the rundown for the next day
+    let event = rundown.get(first)?;
+    Some(RollTarget {
+        id: first.clone(),
+        time_start: field(event, "timeStart").unwrap_or(0),
+        elapsed: 0,
+        is_pending: true,
+    })
+}
 
 /// Ids of the events that playback can select: real events, in order, not skipped.
 fn playable(rundown: &Rundown) -> Vec<String> {

@@ -120,7 +120,7 @@ Three things worth recording:
 The client list lives in the socket's attachment rather than a field, because
 hibernation evicts the object between messages — a field would not survive.
 
-## Phase 2 — timing fidelity — **offset done, roll outstanding**
+## Phase 2 — timing fidelity — **DONE**
 
 `packages/ontime-core/src/offset.rs` ports `getRuntimeOffset` and
 `getExpectedStart` exactly. The figure previously shipped was a single-event
@@ -151,11 +151,30 @@ number that would look authoritative.
 
 23 unit tests on the arithmetic, plus `tests/e2e/offset.mjs` on the wiring.
 
-### Still outstanding in this phase
+### Roll mode
 
-**Roll mode.** The remainder of `runtime-service`: waiting for a wall-clock start,
-rolling between events automatically, and the secondary timer that counts to the
-next event. This is the largest single feature left that Workers *can* host.
+`load_roll` ports the original's search: walk the playable events in order,
+counting midnight crossings, and return the first that has not already finished.
+Zero-duration events are skipped — rolling into one would leave playback stuck on
+it forever. An overnight event later in the rundown is checked too, because at
+00:10 the event that should be on air started yesterday.
+
+Three behaviours worth naming:
+
+- **Rolling mid-event joins it part way** rather than restarting it: the start time
+  is back-dated by how far in we are.
+- **Roll waits through a gap.** When an event ends, the next one is re-resolved
+  against the clock rather than simply stepped, so dead air stays dead air instead
+  of pulling the next event forward.
+- **The server wakes at the exact moment** an armed event is due, not on the next
+  heartbeat — in roll mode nothing else is going to start it.
+
+Making this work exposed that `Playback::Roll` was invisible to the timer maths:
+`elapsed`, `ends_at` and `is_running` all only recognised `Play`, so a rolling event
+showed its full duration and the server would have stopped ticking. Caught by
+asserting the joined event reads 40 minutes remaining rather than a fresh hour.
+
+18 unit tests, plus `tests/e2e/roll.mjs` driving a real rundown against the clock.
 
 ## Phase 3 — the native target, and what it unlocks
 

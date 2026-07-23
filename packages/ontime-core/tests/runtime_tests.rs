@@ -54,9 +54,11 @@ fn parses_the_commands_the_client_sends() {
         Command::parse("addtime", Some(&json!(300_000))),
         Some(Command::AddTime(300_000))
     );
-    // not implemented by this engine
-    assert_eq!(Command::parse("roll", None), None);
+    assert_eq!(Command::parse("roll", None), Some(Command::Roll));
+
+    // handled elsewhere: aux timers and the overlay are not playback commands
     assert_eq!(Command::parse("auxtimer", Some(&json!({}))), None);
+    assert_eq!(Command::parse("message", Some(&json!({}))), None);
 }
 
 #[test]

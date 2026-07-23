@@ -421,14 +421,32 @@ impl OntimeProject {
         let rundown = self.project.current()?;
         let event = runtime.selected_id.as_ref().and_then(|id| rundown.get(id));
         let inputs = runtime.inputs_for(event);
+        let now = now_ms();
 
-        let has_end_action = event
-            .and_then(|e| e.get("endAction"))
-            .and_then(Value::as_str)
-            .is_some_and(|action| action != "none");
+        // In roll mode the server is the only thing that will start the event, so
+        // it wakes at the exact moment rather than waiting for a heartbeat.
+        if let Some(target) = runtime.secondary_target {
+            let clock = (now + self.project.timezone_offset).rem_euclid(86_400_000);
+            let until_due = (target - clock).max(0) as u64;
+            let heartbeat = self.project.heartbeat_ms.max(0) as u64;
+            let delay = if heartbeat > 0 {
+                until_due.min(heartbeat)
+            } else {
+                until_due
+            };
+            return Some(Duration::from_millis(delay.max(50)));
+        }
+
+        // roll hands over to the next event on its own, so it needs the wake even
+        // without an end action
+        let has_end_action = runtime.playback == Playback::Roll
+            || event
+                .and_then(|e| e.get("endAction"))
+                .and_then(Value::as_str)
+                .is_some_and(|action| action != "none");
 
         let until_end = match (has_end_action, inputs.ends_at()) {
-            (true, Some(ends_at)) => Some((ends_at - now_ms()).max(0) as u64),
+            (true, Some(ends_at)) => Some((ends_at - now).max(0) as u64),
             _ => None,
         };
 
