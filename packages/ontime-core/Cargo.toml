@@ -1,0 +1,23 @@
+[package]
+name = "ontime-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ontime Team"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.15", features = ["v7", "serde", "js"] }
+blake3 = "1.5"
+chrono = { version = "0.4", features = ["serde"] }
+calamine = { version = "0.26", optional = true }
+thiserror = "2.0"
+
+[features]
+default = ["spreadsheet"]
+# Pulls in calamine + zip + encoding_rs. Only worth paying for on a host that
+# can actually accept file uploads — a Worker cannot, so it opts out.
+spreadsheet = ["dep:calamine"]
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["full"] }
