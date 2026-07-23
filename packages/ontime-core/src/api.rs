@@ -378,7 +378,14 @@ fn rundowns(
             if !project.rundowns.contains_key(*id) {
                 return ApiResponse::error("Rundown not found", 404);
             }
-            project.loaded = id.to_string();
+            if project.loaded != *id {
+                project.loaded = id.to_string();
+                // Switching rundown always stops playback, as it does upstream.
+                // The loaded event does not exist in the new rundown, so leaving
+                // playback running left it reporting `play` with nothing playing.
+                project.runtime = Default::default();
+                effects.push(Effect::Reschedule);
+            }
             effects.push(Effect::refetch("all", Some(id.to_string())));
             ApiResponse::json(&project.rundown_list())
         }

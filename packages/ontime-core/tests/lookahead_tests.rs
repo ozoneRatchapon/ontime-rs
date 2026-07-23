@@ -219,3 +219,55 @@ fn without_a_flag_or_a_group_those_stay_null() {
     assert!(snapshot["offset"]["expectedGroupEnd"].is_null());
     assert!(snapshot["eventFlag"].is_null());
 }
+
+#[test]
+fn switching_rundown_stops_playback() {
+    use ontime_core::api::{handle, ApiRequest, HttpMethod};
+    use ontime_core::project::Project;
+    use ontime_core::runtime::Playback;
+
+    let mut project = Project::default();
+
+    // a second rundown to switch to
+    let created = handle(
+        &mut project,
+        &ApiRequest {
+            method: HttpMethod::Post,
+            path: "/data/rundowns".into(),
+            body: json!({ "title": "Second" }),
+            token: None,
+            master_token: None,
+        },
+    );
+    let other = created.body.unwrap()["rundowns"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|r| r["title"] == "Second")
+        .unwrap()["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    // start the loaded rundown
+    let rundown = project.current().cloned().unwrap();
+    project
+        .runtime
+        .apply(Command::Start, &rundown, at(10 * HOUR), 0);
+    assert_eq!(project.runtime.playback, Playback::Play);
+
+    handle(
+        &mut project,
+        &ApiRequest {
+            method: HttpMethod::Post,
+            path: format!("/data/rundowns/{other}/load"),
+            body: json!({}),
+            token: None,
+            master_token: None,
+        },
+    );
+
+    // leaving it running would report `play` with nothing playing
+    assert_eq!(project.runtime.playback, Playback::Stop);
+    assert!(project.runtime.selected_id.is_none());
+}
