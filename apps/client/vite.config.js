@@ -75,6 +75,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Rust timer engine compiled to WebAssembly. Built by
+      // packages/ontime-wasm/build.sh; aliased rather than installed so the
+      // vendored client keeps its own dependency list untouched.
+      'ontime-timer-engine': path.resolve(__dirname, '../../packages/ontime-wasm/pkg/ontime_timer.js'),
     },
   },
   css: {

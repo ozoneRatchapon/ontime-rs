@@ -39,6 +39,7 @@ import {
 import { addDialog } from '../stores/dialogStore';
 import { addLog } from '../stores/logger';
 import { patchRuntime, patchRuntimeProperty } from '../stores/runtime';
+import { applyEngineState, initTimerEngine, stopTimerEngine } from './timerEngine';
 
 let websocket: WebSocket | null = null;
 let reconnectTimeout: NodeJS.Timeout | null = null;
@@ -56,6 +57,9 @@ let hasConnected = false;
 let reconnectAttempts = 0;
 
 export const connectSocket = () => {
+  // fire and forget: until it resolves, runtime-data is used as sent
+  void initTimerEngine();
+
   websocket = new WebSocket(websocketUrl);
 
   const preferredClientName = getClientName();
@@ -84,6 +88,8 @@ export const connectSocket = () => {
 
   websocket.onclose = () => {
     console.warn('WebSocket disconnected');
+    // stop advancing a timer we can no longer trust; it resumes on the next packet
+    stopTimerEngine();
     if (reconnectTimeout) {
       clearTimeout(reconnectTimeout);
       reconnectTimeout = null;
@@ -175,6 +181,9 @@ export const connectSocket = () => {
         }
         case MessageTag.RuntimeData: {
           patchRuntime(payload);
+          // the Rust backend attaches the inputs the local engine needs; when it is
+          // absent (or the engine did not load) the values above are used as they came
+          applyEngineState((payload as { _engine?: unknown })._engine);
           updateDevTools(payload);
           break;
         }

@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react';
 
-import { baseURI, serverURL } from '../../externals';
+import { activeRoom, baseURI, clientURL } from '../../externals';
 
 type ElectronWindow = Window & {
   process?: { type?: string };
@@ -24,24 +24,36 @@ export function openLink(url: string) {
 }
 
 /**
- * Handles opening external links
- * serverUrl and baseURI are used for testing
+ * Opens one of our own views in a new window.
+ *
+ * Built from the client origin, not the API origin: every caller passes a view path
+ * (`timer`, `rundown`, a preset alias), and when the client and API are on different
+ * hosts the API serves no HTML. Upstream the two are the same, so this is unchanged
+ * there.
+ *
+ * baseUrl, baseURI and room are parameters so the behaviour can be tested.
  */
 export function handleLinks(
   location: string,
   event?: MouseEvent,
-  externalServerUrl: string = serverURL,
+  externalClientUrl: string = clientURL,
   externalBaseURI: string = baseURI,
+  room: string | null = activeRoom,
 ) {
   // we handle the link manually
   event?.preventDefault();
 
-  const destination = new URL(externalServerUrl);
+  const destination = new URL(externalClientUrl);
   // split off any query string so it is not encoded into the pathname
   const [pathname, search] = location.split('?');
   destination.pathname = externalBaseURI ? `${externalBaseURI}/${pathname}` : pathname;
   if (search) {
     destination.search = search;
+  }
+  // a new window is a fresh page load, so the room has to be in the URL or it
+  // lands in the shared default project
+  if (room && !destination.searchParams.has('room')) {
+    destination.searchParams.set('room', room);
   }
   openLink(destination.toString());
 }

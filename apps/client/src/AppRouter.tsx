@@ -6,6 +6,7 @@ import ViewNavigationMenu from './common/components/navigation-menu/ViewNavigati
 import { PresetContext } from './common/context/PresetContext';
 import useUrlPresets from './common/hooks-query/useUrlPresets';
 import { useClientPath } from './common/hooks/useClientPath';
+import useStickyRoom from './common/hooks/useStickyRoom';
 import { getRouteFromPreset } from './common/utils/urlPresets';
 import { getIsNavigationLocked, sessionScope } from './externals';
 import Log from './features/log/Log';
@@ -36,6 +37,8 @@ const SentryRouter = initializeSentry();
 export default function AppRouter() {
   // handle client path changes
   useClientPath();
+  // keep ?room= in the URL across every navigation, so links stay shareable
+  useStickyRoom();
 
   return (
     <Suspense fallback={<Loader />}>

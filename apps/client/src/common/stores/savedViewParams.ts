@@ -1,7 +1,21 @@
 import { create } from 'zustand';
 
 // params that are auth/preset markers, not user view customisation (see common/utils/urlPresets.ts)
-export const reservedParams = new Set(['token', 'n', 'alias']);
+export const reservedParams = new Set(['token', 'n', 'alias', 'room']);
+
+/**
+ * Reserved params that must survive navigation between views, because they
+ * identify *what* you are looking at rather than *how*.
+ *
+ * `room` is the isolated project: dropping it silently sends the next view to the
+ * shared default room, and — worse — produces a URL that works for whoever is
+ * already in the session but not for anyone they send it to.
+ *
+ * `token` is deliberately excluded. It is held in sessionStorage instead, so it
+ * does not linger in the address bar where a screen share or browser history
+ * would leak it.
+ */
+export const stickyParams = new Set(['room']);
 
 interface SavedViewParamsStore {
   params: Record<string, string>; // view key (e.g. "timer") -> search string without leading "?"
@@ -48,6 +62,24 @@ export function stripReservedParams(search: string): string {
   const sp = new URLSearchParams(search);
   reservedParams.forEach((key) => sp.delete(key));
   return sp.toString();
+}
+
+/**
+ * Merges the sticky params of the current location into a destination search
+ * string. Params already set on the destination win.
+ */
+export function withStickyParams(destinationSearch: string, currentSearch: string): string {
+  const destination = new URLSearchParams(destinationSearch);
+  const current = new URLSearchParams(currentSearch);
+
+  stickyParams.forEach((key) => {
+    const value = current.get(key);
+    if (value !== null && !destination.has(key)) {
+      destination.set(key, value);
+    }
+  });
+
+  return destination.toString();
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   reservedParams,
   stripReservedParams,
   useSavedViewParams,
+  withStickyParams,
 } from '../../../stores/savedViewParams';
 import { handleLinks } from '../../../utils/linkUtils';
 import IconButton from '../../buttons/IconButton';
@@ -69,8 +70,10 @@ function BrowserNavigationItem({ current, to, postAction, children }: PropsWithC
   const resolveDestination = () => {
     const currentView = location.pathname.replace(/^\//, '');
     save(currentView, stripReservedParams(location.search));
-    const restored = savedParams[to];
-    return `${to}${restored ? `?${restored}` : ''}`;
+    // carry the room across, so the destination stays in the same project and the
+    // resulting URL is shareable rather than silently correct only for this session
+    const search = withStickyParams(savedParams[to] ?? '', location.search);
+    return `${to}${search ? `?${search}` : ''}`;
   };
 
   const isCustomised = current ? hasCustomParams(searchParams) : Boolean(savedParams[to]);

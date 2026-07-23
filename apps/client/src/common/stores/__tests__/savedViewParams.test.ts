@@ -1,4 +1,4 @@
-import { hasCustomParams, stripReservedParams, useSavedViewParams } from '../savedViewParams';
+import { hasCustomParams, stripReservedParams, useSavedViewParams, withStickyParams } from '../savedViewParams';
 
 describe('savedViewParams store', () => {
   beforeEach(() => {
@@ -83,5 +83,37 @@ describe('hasCustomParams', () => {
 
   it('is false when there are no params', () => {
     expect(hasCustomParams(new URLSearchParams(''))).toBe(false);
+  });
+});
+
+describe('withStickyParams()', () => {
+  it('carries the room across to a destination that has none', () => {
+    expect(withStickyParams('', '?room=proj-alpha')).toBe('room=proj-alpha');
+  });
+
+  it('keeps the destination view params and adds the room', () => {
+    const result = new URLSearchParams(withStickyParams('size=2&hidenav=true', '?room=proj-alpha'));
+    expect(result.get('size')).toBe('2');
+    expect(result.get('hidenav')).toBe('true');
+    expect(result.get('room')).toBe('proj-alpha');
+  });
+
+  it('does not override a room already set on the destination', () => {
+    expect(withStickyParams('room=explicit', '?room=proj-alpha')).toBe('room=explicit');
+  });
+
+  it('does nothing when the current location has no room', () => {
+    expect(withStickyParams('size=2', '?foo=bar')).toBe('size=2');
+    expect(withStickyParams('', '')).toBe('');
+  });
+
+  it('does not carry the token, which lives in sessionStorage instead', () => {
+    // a token in the address bar leaks through screen shares and history
+    expect(withStickyParams('', '?room=proj-alpha&token=secret')).toBe('room=proj-alpha');
+  });
+
+  it('does not carry per-view reserved params', () => {
+    const result = withStickyParams('', '?room=proj-alpha&n=1&alias=stage');
+    expect(result).toBe('room=proj-alpha');
   });
 });

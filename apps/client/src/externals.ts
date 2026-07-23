@@ -37,21 +37,90 @@ export const supportsFullscreen = document.fullscreenEnabled;
  * @example '/client-hash' for cloud
  */
 export const baseURI = resolveBaseURI();
+
+/**
+ * The room this session booted with, captured once.
+ *
+ * Read at module load rather than on demand: navigation can drop `?room=` from the
+ * address bar, and everything downstream still has to keep talking to the same
+ * project. `useStickyRoom` puts it back in the URL.
+ */
+export const activeRoom = getRoom();
 export const serverURL = getBaseServerUrl();
+
+/**
+ * Where the *client* is served from.
+ *
+ * Upstream this is the same host as the API, so the two are interchangeable. Here
+ * the client is on Pages and the backend on Workers, so a link to a view has to be
+ * built from this and never from `serverURL` — the worker serves no HTML.
+ */
+export const clientURL = window.location.origin;
 export const websocketUrl = resolveUrl('ws', 'ws');
+
+/**
+ * Reads `?room=` and validates it the same way the worker does.
+ * A room is one isolated project; without one the shared default room is used.
+ */
+export function getRoom(): string | null {
+  const room = new URLSearchParams(window.location.search).get('room');
+  if (!room || room.length > 64 || !/^[A-Za-z0-9_-]+$/.test(room)) {
+    return null;
+  }
+  return room;
+}
+
+/**
+ * The bearer token for a protected room.
+ *
+ * Read from `?token=` once and kept in sessionStorage keyed by room, so the token
+ * does not have to stay in the address bar (where it would leak through screen
+ * shares and browser history) and so each room keeps its own.
+ */
+export function getToken(): string | null {
+  const room = activeRoom ?? getRoom() ?? 'default';
+  const storageKey = `ontime.token.${room}`;
+
+  const fromUrl = new URLSearchParams(window.location.search).get('token');
+  if (fromUrl) {
+    try {
+      sessionStorage.setItem(storageKey, fromUrl);
+    } catch {
+      // private browsing can refuse storage; the token still works for this load
+    }
+    return fromUrl;
+  }
+
+  try {
+    return sessionStorage.getItem(storageKey);
+  } catch {
+    return null;
+  }
+}
 
 function getBaseServerUrl() {
   const customWorkerUrl = import.meta.env.VITE_WORKER_URL;
-  if (customWorkerUrl) {
-    return customWorkerUrl.replace(/\/+$/, '');
-  }
-  return window.location.origin;
+  const origin = customWorkerUrl ? customWorkerUrl.replace(/\/+$/, '') : window.location.origin;
+
+  // REST paths are composed by appending to this URL, so the room has to live in
+  // the path — a query string would end up in the middle of the composed path.
+  // The websocket cannot do this (it has no path to spare) and uses ?room= instead.
+  const room = getRoom();
+  return room ? `${origin}/r/${room}` : origin;
 }
 
 function resolveUrl(protocol: 'http' | 'ws', path: string) {
-  const params = new URLSearchParams(window.location.search);
-  const roomParam = params.get('room');
-  const querySuffix = roomParam ? `?room=${encodeURIComponent(roomParam)}` : '';
+  const query = new URLSearchParams();
+  const roomParam = getRoom();
+  if (roomParam) {
+    query.set('room', roomParam);
+  }
+  // a websocket handshake cannot carry an Authorization header
+  const token = getToken();
+  if (token) {
+    query.set('token', token);
+  }
+  const querySuffix = query.toString() ? `?${query.toString()}` : '';
 
   const customWorkerUrl = import.meta.env.VITE_WORKER_URL;
   if (customWorkerUrl) {
