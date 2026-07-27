@@ -321,7 +321,7 @@ async fn rest_handler(
     };
 
     let (response, _) = with_room(&state, &room_name, |room| {
-        let response = api::handle(&mut room.project, &request);
+        let response = api::handle(&mut room.project, &request, now_ms());
 
         let mut persist = false;
         let mut refetched = false;

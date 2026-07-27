@@ -239,6 +239,7 @@ fn switching_rundown_stops_playback() {
             master_token: None,
             room_is_new: false,
         },
+        0,
     );
     let other = created.body.unwrap()["rundowns"]
         .as_array()
@@ -267,6 +268,7 @@ fn switching_rundown_stops_playback() {
             master_token: None,
             room_is_new: false,
         },
+        0,
     );
 
     // leaving it running would report `play` with nothing playing
@@ -416,6 +418,7 @@ fn a_custom_field_is_keyed_the_way_the_client_expects() {
                 master_token: None,
                 room_is_new: false,
             },
+            0,
         )
     };
 

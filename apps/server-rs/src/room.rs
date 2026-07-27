@@ -424,7 +424,7 @@ impl OntimeProject {
             return Ok(upgraded);
         }
 
-        let response = api::handle(&mut self.project, &api_request);
+        let response = api::handle(&mut self.project, &api_request, now_ms());
 
         let mut should_persist = false;
         let mut refetches = Vec::new();

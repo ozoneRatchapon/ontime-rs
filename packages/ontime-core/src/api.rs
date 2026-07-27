@@ -210,7 +210,7 @@ fn shallow_merge(target: &mut Value, patch: &Value) {
     }
 }
 
-pub fn handle(project: &mut Project, req: &ApiRequest) -> ApiResponse {
+pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse {
     let mut effects: Vec<Effect> = Vec::new();
     let path = req
         .path
@@ -245,7 +245,7 @@ pub fn handle(project: &mut Project, req: &ApiRequest) -> ApiResponse {
     }
 
     let mut response = match segments.as_slice() {
-        ["data", "rundowns", rest @ ..] => rundowns(project, req, rest, &mut effects),
+        ["data", "rundowns", rest @ ..] => rundowns(project, req, rest, &mut effects, now),
         ["data", "project", rest @ ..] => project_data(project, req, rest, &mut effects),
         ["data", "settings", rest @ ..] => settings(project, req, rest, &mut effects),
         ["data", "view-settings"] => view_settings(project, req, &mut effects),
@@ -260,6 +260,23 @@ pub fn handle(project: &mut Project, req: &ApiRequest) -> ApiResponse {
             ApiResponse::error("Automations are not supported on the cloud backend", 501)
         }
         ["data", "custom-views", ..] => ApiResponse::json(&json!({ "views": [] })),
+        // permanent history — never overwritten, readable for analysis/export
+        ["data", "report", "archive"] if req.method == HttpMethod::Get => {
+            ApiResponse::json(&project.report_archive.runs())
+        }
+        ["data", "report", "archive"] if req.method == HttpMethod::Post => {
+            // snapshot the currently-loaded rundown's run on demand — used before
+            // re-running the same rundown, which would otherwise overwrite it
+            let loaded = project.loaded.clone();
+            let archived = project.archive_run(&loaded, now);
+            if archived {
+                effects.push(Effect::refetch("report", None));
+            }
+            ApiResponse::json(&json!({
+                "archived": archived,
+                "runs": project.report_archive.len(),
+            }))
+        }
         ["data", "report"] if req.method == HttpMethod::Get => ApiResponse::json(&project.report),
         ["data", "report", "all"] if req.method == HttpMethod::Delete => {
             project.report.clear_all();
@@ -365,6 +382,7 @@ fn rundowns(
     req: &ApiRequest,
     rest: &[&str],
     effects: &mut Vec<Effect>,
+    now: i64,
 ) -> ApiResponse {
     match (&req.method, rest) {
         // --- project rundowns ---
@@ -426,6 +444,11 @@ fn rundowns(
                 return ApiResponse::error("Rundown not found", 404);
             }
             if project.loaded != *id {
+                // preserve the run we are leaving before its report can be
+                // overwritten by the rundown we are switching to
+                let outgoing = project.loaded.clone();
+                project.archive_run(&outgoing, now);
+
                 project.loaded = id.to_string();
                 // Switching rundown always stops playback, as it does upstream.
                 // The loaded event does not exist in the new rundown, so leaving

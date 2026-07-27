@@ -83,6 +83,62 @@ pub struct Report {
     entries: BTreeMap<String, ReportEntry>,
 }
 
+/// One event as it actually ran, with its planned title and duration copied in.
+///
+/// The live report holds only ids, which become meaningless once a rundown is
+/// edited or deleted. An archive is a permanent record, so it denormalises the
+/// title, cue and planned duration — it must stay analysable years later even if
+/// the rundown it came from is long gone.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchivedRunEvent {
+    pub id: String,
+    pub cue: String,
+    pub title: String,
+    /// Planned duration, milliseconds.
+    pub planned_duration: i64,
+    /// Time of day the event actually started and ended.
+    pub started_at: Option<i64>,
+    pub ended_at: Option<i64>,
+}
+
+/// A completed run of one rundown, preserved for later analysis.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchivedRun {
+    pub rundown_id: String,
+    pub rundown_title: String,
+    /// Epoch milliseconds the snapshot was taken.
+    pub archived_at: i64,
+    pub events: Vec<ArchivedRunEvent>,
+}
+
+/// Append-only history of completed runs. Never overwritten and never
+/// auto-deleted — that is the whole point.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ReportArchive {
+    runs: Vec<ArchivedRun>,
+}
+
+impl ReportArchive {
+    pub fn push(&mut self, run: ArchivedRun) {
+        self.runs.push(run);
+    }
+
+    pub fn runs(&self) -> &[ArchivedRun] {
+        &self.runs
+    }
+
+    pub fn len(&self) -> usize {
+        self.runs.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.runs.is_empty()
+    }
+}
+
 impl Report {
     /// Records the moment an event began. Restarting an event replaces its entry
     /// rather than keeping the first attempt, matching the original.

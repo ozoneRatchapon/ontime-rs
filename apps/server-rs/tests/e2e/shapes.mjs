@@ -26,7 +26,8 @@ const contracts = [
   ['/data/rundowns/current', { id: 'string', order: 'array', flatOrder: 'array', entries: 'object', revision: 'number' }],
   ['/data/automations', { enabledAutomations: 'boolean', triggers: 'array', automations: 'object' }],
   ['/data/url-presets', null], // a bare array
-  ['/data/report', null], // a bare record
+  ['/data/report', null],
+  ['/data/report/archive', null], // append-only run history — a bare array // a bare record
   ['/user/translations/translations.json', null],
 ];
 

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::aux_timer::AuxTimers;
-use crate::message::{MessageState, Report};
+use crate::message::{ArchivedRun, ArchivedRunEvent, MessageState, Report, ReportArchive};
 use crate::rundown::Rundown;
 use crate::runtime::Runtime;
 
@@ -94,9 +94,12 @@ pub struct Project {
     /// The operator's overlay on the timer views.
     #[serde(default)]
     pub message: MessageState,
-    /// When each event actually ran.
+    /// When each event actually ran — the live, overwritable record.
     #[serde(default)]
     pub report: Report,
+    /// Permanent history of completed runs, never overwritten.
+    #[serde(default)]
+    pub report_archive: ReportArchive,
     /// Milliseconds to add to UTC to get the operator's wall clock. A Worker has
     /// no local timezone, so without this every displayed time-of-day is UTC.
     #[serde(default)]
@@ -166,6 +169,7 @@ impl Default for Project {
             aux_timers: AuxTimers::default(),
             message: MessageState::default(),
             report: Report::default(),
+            report_archive: ReportArchive::default(),
             timezone_offset: 0,
             heartbeat_ms: default_heartbeat_ms(),
             password_hash: None,
@@ -201,6 +205,71 @@ impl Project {
             "loaded": loaded,
             "rundowns": self.rundowns.values().map(Rundown::summary).collect::<Vec<_>>(),
         })
+    }
+
+    /// Snapshots a rundown's completed run into the permanent archive, then clears
+    /// those entries from the live report.
+    ///
+    /// Titles, cues and planned durations are copied in so the record survives the
+    /// rundown being edited or deleted. Only events that actually started are
+    /// included; returns whether anything was archived (nothing ran = no-op, so
+    /// switching between rundowns that were never played does not litter the
+    /// archive with empty runs).
+    pub fn archive_run(&mut self, rundown_id: &str, archived_at: i64) -> bool {
+        let Some(rundown) = self.rundowns.get(rundown_id) else {
+            return false;
+        };
+
+        let mut events = Vec::new();
+        let mut ran_ids = Vec::new();
+        for id in &rundown.flat_order {
+            let Some(entry) = rundown.get(id) else {
+                continue;
+            };
+            if entry.get("type").and_then(|v| v.as_str()) != Some("event") {
+                continue;
+            }
+            let Some(record) = self.report.get(id) else {
+                continue;
+            };
+            // an event only counts as having run if it actually started
+            if record.started_at.is_none() {
+                continue;
+            }
+            events.push(ArchivedRunEvent {
+                id: id.clone(),
+                cue: entry
+                    .get("cue")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                title: entry
+                    .get("title")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                planned_duration: entry.get("duration").and_then(|v| v.as_i64()).unwrap_or(0),
+                started_at: record.started_at,
+                ended_at: record.ended_at,
+            });
+            ran_ids.push(id.clone());
+        }
+
+        if events.is_empty() {
+            return false;
+        }
+
+        let rundown_title = rundown.title.clone();
+        self.report_archive.push(ArchivedRun {
+            rundown_id: rundown_id.to_string(),
+            rundown_title,
+            archived_at,
+            events,
+        });
+        for id in ran_ids {
+            self.report.clear_one(&id);
+        }
+        true
     }
 
     /// Ensures at least one rundown exists and that `loaded` points at a real one.

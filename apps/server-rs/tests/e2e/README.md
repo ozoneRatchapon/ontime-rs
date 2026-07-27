@@ -70,3 +70,11 @@ inconclusive and re-run; treat a repeated one as real.
 - Tolerances in `engine.mjs` distinguish two things: same-instant agreement between
   server and browser (must be exact) and the gap a client accumulates between
   packets (network jitter, not drift).
+
+
+## Testing against a gated deployment
+
+Once `SESSION_PASSWORD` is set on a deployment, these suites cannot run against
+it: they create throwaway rooms, and room creation is gated. Run them against a
+local `wrangler dev` (which has no secret), a staging worker, or pass the master
+token. This is the gate working as intended, not a regression.
