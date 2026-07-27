@@ -16,6 +16,12 @@
 #   ./deploy-cloud.sh --worker     # worker only
 #   ./deploy-cloud.sh --client     # client only
 #   ./deploy-cloud.sh --dry-run    # build everything, deploy nothing
+#
+# Troubleshooting: if `worker-build` fails with a wasm-bindgen "schema version"
+# mismatch, worker-build's cached CLI got overwritten by a `cargo install
+# wasm-bindgen-cli` of a different version (the ontime-wasm build pins its own).
+# Fix: rm -rf ~/Library/Caches/worker-build/wasm-bindgen-* and rebuild — it
+# re-fetches the version matching apps/server-rs's pin.
 set -euo pipefail
 
 WORKER_URL="${VITE_WORKER_URL:-https://ontime-server-rs.example.workers.dev}"
