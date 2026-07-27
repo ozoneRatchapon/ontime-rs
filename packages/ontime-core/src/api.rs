@@ -245,7 +245,7 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
     }
 
     let mut response = match segments.as_slice() {
-        ["data", "rundowns", rest @ ..] => rundowns(project, req, rest, &mut effects, now),
+        ["data", "rundowns", rest @ ..] => rundowns(project, req, rest, &mut effects),
         ["data", "project", rest @ ..] => project_data(project, req, rest, &mut effects),
         ["data", "settings", rest @ ..] => settings(project, req, rest, &mut effects),
         ["data", "view-settings"] => view_settings(project, req, &mut effects),
@@ -382,7 +382,6 @@ fn rundowns(
     req: &ApiRequest,
     rest: &[&str],
     effects: &mut Vec<Effect>,
-    now: i64,
 ) -> ApiResponse {
     match (&req.method, rest) {
         // --- project rundowns ---
@@ -444,15 +443,17 @@ fn rundowns(
                 return ApiResponse::error("Rundown not found", 404);
             }
             if project.loaded != *id {
-                // preserve the run we are leaving before its report can be
-                // overwritten by the rundown we are switching to
-                let outgoing = project.loaded.clone();
-                project.archive_run(&outgoing, now);
-
                 project.loaded = id.to_string();
-                // Switching rundown always stops playback, as it does upstream.
-                // The loaded event does not exist in the new rundown, so leaving
-                // playback running left it reporting `play` with nothing playing.
+                // Switching stops playback — the loaded event does not exist in
+                // the new rundown, and you cannot run two at once (upstream does
+                // the same). But it deliberately does NOT touch the report:
+                // switching can be an accidental tap or just a peek at another
+                // day while a show is still running, and clearing the report
+                // there would split the run in two and lose the operator's place.
+                // Preserving a finished run to the permanent archive is an
+                // explicit action — POST /data/report/archive — not a side
+                // effect of switching. Coming back and pressing play continues
+                // the same live report, uninterrupted.
                 project.runtime = Default::default();
                 effects.push(Effect::Reschedule);
             }

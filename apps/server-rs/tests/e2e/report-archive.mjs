@@ -42,16 +42,25 @@ check('day 1 recorded a run', Object.keys(rep).length >= 1, true);
 console.log('== archive starts empty ==');
 check('no runs yet', (await api('GET', '/data/report/archive')).length, 0);
 
-console.log('== switching to day 2 preserves day 1 automatically ==');
+console.log('== switching mid-run does NOT archive or lose the report ==');
 send('stop', undefined);
 await wait(300);
-await api('POST', `/data/rundowns/${d2}/load`);
-await wait(500);
+await api('POST', `/data/rundowns/${d2}/load`); // peek at day 2
+await wait(400);
+await api('POST', `/data/rundowns/${d1}/load`); // come back to day 1
+await wait(400);
+check('nothing archived by switching', (await api('GET', '/data/report/archive')).length, 0);
+check('day 1 report still intact', Object.keys(await api('GET', '/data/report')).length >= 1, true);
+
+console.log('== explicit snapshot preserves the run and clears live ==');
+const snap = await api('POST', '/data/report/archive');
+check('snapshot saved', snap.archived, true);
 const arch = await api('GET', '/data/report/archive');
 check('one run archived', arch.length, 1);
 check('it is day 1', arch[0]?.rundownTitle, 'DAY_ONE');
-check('with the event title baked in', arch[0]?.events?.[0]?.title, 'opening');
-check('and a real start time', typeof arch[0]?.events?.[0]?.startedAt, 'number');
+check('event title baked in', arch[0]?.events?.[0]?.title, 'opening');
+check('real start time', typeof arch[0]?.events?.[0]?.startedAt, 'number');
+check('live report cleared after save', Object.keys(await api('GET', '/data/report')).length, 0);
 
 console.log('== the archived run survives day 1 being deleted ==');
 await api('DELETE', `/data/rundowns/${d1}`);
@@ -59,16 +68,6 @@ const arch2 = await api('GET', '/data/report/archive');
 check('still there after delete', arch2.length, 1);
 check('title still analysable', arch2[0]?.events?.[0]?.title, 'opening');
 check('planned duration preserved', arch2[0]?.events?.[0]?.plannedDuration, 4000);
-
-console.log('== manual snapshot before re-running the same rundown ==');
-send('start', undefined); // running day 2 now
-await wait(1500);
-const snap = await api('POST', '/data/report/archive');
-check('manual snapshot saved day 2', snap.archived, true);
-check('now two runs', (await api('GET', '/data/report/archive')).length, 2);
-
-send('stop', undefined);
-await wait(300);
 ws.close();
 await api('POST', '/data/rundowns/default/load');
 await api('DELETE', `/data/rundowns/${d2}`);
