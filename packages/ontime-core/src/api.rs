@@ -432,7 +432,12 @@ fn rundowns(
             if project.rundowns.len() <= 1 {
                 return ApiResponse::error("Cannot delete the only rundown", 400);
             }
-            project.rundowns.remove(*id);
+            if let Some(removed) = project.rundowns.remove(*id) {
+                // the report is room-wide; drop the gone rundown's records with it
+                for entry_id in removed.entries.keys() {
+                    project.report.clear_one(entry_id);
+                }
+            }
             project.ensure_consistent();
             effects.push(Effect::refetch("project-rundowns", None));
             ApiResponse::json(&project.rundown_list())
@@ -519,7 +524,9 @@ fn rundowns(
             let Some(rundown) = project.get_mut(id) else {
                 return ApiResponse::error("Rundown not found", 404);
             };
+            let was: Vec<String> = rundown.entries.keys().cloned().collect();
             rundown.delete_entries(&ids);
+            project.prune_report(&was, id);
             respond_with_rundown(project, id, effects)
         }
 
@@ -527,7 +534,9 @@ fn rundowns(
             let Some(rundown) = project.get_mut(id) else {
                 return ApiResponse::error("Rundown not found", 404);
             };
+            let was: Vec<String> = rundown.entries.keys().cloned().collect();
             rundown.delete_all();
+            project.prune_report(&was, id);
             respond_with_rundown(project, id, effects)
         }
 

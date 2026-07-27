@@ -284,4 +284,22 @@ impl Project {
             }
         }
     }
+
+    /// Clears live report records whose entries no longer exist in `rundown_id`,
+    /// given the ids that were present before a delete. The report is keyed by
+    /// entry id, so a deleted entry would otherwise leave a record pointing at
+    /// nothing — never viewable, never clearable through the UI. The permanent
+    /// archive is untouched: a run you want to keep is snapshotted before editing.
+    pub(crate) fn prune_report(&mut self, was: &[String], rundown_id: &str) {
+        let still: std::collections::HashSet<&str> = self
+            .rundowns
+            .get(rundown_id)
+            .map(|r| r.entries.keys().map(String::as_str).collect())
+            .unwrap_or_default();
+        for id in was {
+            if !still.contains(id.as_str()) {
+                self.report.clear_one(id);
+            }
+        }
+    }
 }

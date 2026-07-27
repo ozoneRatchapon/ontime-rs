@@ -361,3 +361,58 @@ fn the_archive_survives_a_serialisation_round_trip() {
     assert_eq!(restored.report_archive.len(), 1);
     assert_eq!(restored.report_archive.runs()[0].events[0].title, "opening");
 }
+
+#[test]
+fn deleting_an_entry_clears_its_orphaned_report_record() {
+    let (mut project, day1, _day2) = two_day_project();
+    let entry = project.rundowns[&day1].flat_order[0].clone();
+    record_run(
+        &mut project,
+        &day1,
+        0,
+        9 * 3_600_000,
+        9 * 3_600_000 + 55_000,
+    );
+    assert_eq!(live_report_len(&project), 1);
+
+    handle(
+        &mut project,
+        &req(
+            HttpMethod::Delete,
+            &format!("/data/rundowns/{day1}/entries"),
+            json!({ "ids": [entry] }),
+        ),
+        T0,
+    );
+
+    // the entry is gone and its now-meaningless report record goes with it,
+    // instead of lingering under an id that points at nothing
+    assert_eq!(live_report_len(&project), 0);
+    assert_eq!(project.report_archive.len(), 0);
+}
+
+#[test]
+fn deleting_a_rundown_clears_its_report_records() {
+    let (mut project, day1, _day2) = two_day_project();
+    record_run(
+        &mut project,
+        &day1,
+        0,
+        9 * 3_600_000,
+        9 * 3_600_000 + 55_000,
+    );
+    assert_eq!(live_report_len(&project), 1);
+
+    handle(
+        &mut project,
+        &req(
+            HttpMethod::Delete,
+            &format!("/data/rundowns/{day1}"),
+            json!({}),
+        ),
+        T0,
+    );
+
+    assert!(!project.rundowns.contains_key(&day1));
+    assert_eq!(live_report_len(&project), 0);
+}
