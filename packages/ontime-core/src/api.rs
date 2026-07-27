@@ -462,14 +462,11 @@ fn rundowns(
         }
 
         (HttpMethod::Post, [id, "duplicate"]) => {
-            let Some(source) = project.rundowns.get(*id).cloned() else {
+            let Some(source) = project.rundowns.get(*id) else {
                 return ApiResponse::error("Rundown not found", 404);
             };
-            let new_id = uuid::Uuid::now_v7().to_string();
-            let mut copy = source;
-            copy.id = new_id.clone();
-            copy.title = format!("{} (copy)", copy.title);
-            project.rundowns.insert(new_id, copy);
+            let copy = source.duplicate(format!("{} (copy)", source.title));
+            project.rundowns.insert(copy.id.clone(), copy);
             effects.push(Effect::refetch("project-rundowns", None));
             ApiResponse::json(&project.rundown_list())
         }

@@ -310,6 +310,96 @@ fn a_rundown_survives_a_serialisation_round_trip() {
     assert!(value["revision"].is_number());
 }
 
+// --- duplicating a whole rundown -------------------------------------------
+
+#[test]
+fn duplicate_preserves_the_schedule_but_regenerates_ids() {
+    let mut source = empty();
+    let a = add(&mut source, "A", 1000);
+    let b = add(&mut source, "B", 2000);
+
+    let copy = source.duplicate("Next year".into());
+
+    assert_eq!(copy.title, "Next year");
+    assert_ne!(copy.id, source.id);
+
+    // same running order, titles and timing
+    let seen: Vec<(String, i64)> = copy
+        .flat_order
+        .iter()
+        .map(|id| {
+            let e = copy.get(id).unwrap();
+            (
+                e["title"].as_str().unwrap().to_string(),
+                e["duration"].as_i64().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(seen, vec![("A".to_string(), 1000), ("B".to_string(), 2000)]);
+
+    // ...but under entirely new ids
+    assert!(copy.get(&a).is_none());
+    assert!(copy.get(&b).is_none());
+}
+
+#[test]
+fn duplicating_a_group_remaps_its_parent_and_child_references() {
+    let mut source = empty();
+    let a = add(&mut source, "A", 1000);
+    let b = add(&mut source, "B", 1000);
+    let group = source.group_entries(&[a.clone(), b.clone()]).unwrap();
+    let group_id = group["id"].as_str().unwrap().to_string();
+
+    let copy = source.duplicate("Copy".into());
+
+    let copy_group_id = copy.order[0].clone();
+    assert_eq!(field(&copy, &copy_group_id, "type"), "group");
+    assert_ne!(copy_group_id, group_id);
+
+    let children: Vec<String> = copy.get(&copy_group_id).unwrap()["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(children.len(), 2);
+    for child in &children {
+        // the child exists in the copy, points back at the copy's group (not the
+        // source's), and is not a recycled source id
+        assert!(copy.get(child).is_some());
+        assert_eq!(field(&copy, child, "parent"), copy_group_id.as_str());
+        assert_ne!(child, &a);
+        assert_ne!(child, &b);
+    }
+
+    // flat_order expands the group exactly as it does for the original
+    let mut expected = vec![copy_group_id];
+    expected.extend(children);
+    assert_eq!(copy.flat_order, expected);
+}
+
+#[test]
+fn a_duplicate_shares_no_entry_ids_with_its_source() {
+    // entry ids are the room-wide report's keys; a shared id would let the copy's
+    // run overwrite the original's recorded times. This is the guarantee that a
+    // duplicated day cannot clobber last year's archived-then-cleared run.
+    let mut source = empty();
+    add(&mut source, "A", 1000);
+    let b = add(&mut source, "B", 1000);
+    source.group_entries(&[b]).unwrap(); // a group id is an entry id too
+
+    let copy = source.duplicate("Copy".into());
+
+    let source_ids: std::collections::HashSet<String> = source.entries.keys().cloned().collect();
+    for id in copy.entries.keys() {
+        assert!(
+            !source_ids.contains(id),
+            "copy shares entry id {id} with its source"
+        );
+    }
+    assert_eq!(copy.entries.len(), source.entries.len());
+}
+
 // --- room password hashing -------------------------------------------------
 
 #[test]

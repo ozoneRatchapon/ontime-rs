@@ -252,6 +252,58 @@ impl Rundown {
         Some(self.add_entry(&source, at))
     }
 
+    /// A deep copy under a fresh rundown id, with a fresh id for every entry too.
+    ///
+    /// Entry ids are the keys of the room-wide report, so a copy that kept the
+    /// originals' ids would share their report slots: running the copy would
+    /// overwrite the original's recorded times, and the copy would appear to have
+    /// already run. Regenerating every id — and rewriting the group `parent` and
+    /// child references that point at them — keeps the copy fully independent,
+    /// which is what makes "duplicate last year's day and adjust" safe.
+    pub fn duplicate(&self, new_title: String) -> Rundown {
+        use std::collections::HashMap;
+
+        let id_map: HashMap<String, String> = self
+            .entries
+            .keys()
+            .map(|old| (old.clone(), new_id()))
+            .collect();
+        let remap = |id: &str| id_map.get(id).cloned();
+
+        let mut entries = Entries::new();
+        for (old_id, entry) in &self.entries {
+            let new_entry_id = id_map[old_id].clone();
+            let mut copy = entry.clone();
+            if let Some(obj) = copy.as_object_mut() {
+                obj.insert("id".into(), json!(new_entry_id));
+                // a group child points back at its group
+                if let Some(mapped) = obj.get("parent").and_then(Value::as_str).and_then(remap) {
+                    obj.insert("parent".into(), json!(mapped));
+                }
+                // a group lists its children
+                if let Some(children) = obj.get_mut("entries").and_then(Value::as_array_mut) {
+                    for child in children.iter_mut() {
+                        if let Some(mapped) = child.as_str().and_then(remap) {
+                            *child = json!(mapped);
+                        }
+                    }
+                }
+            }
+            entries.insert(new_entry_id, copy);
+        }
+
+        let mut copy = Rundown {
+            id: new_id(),
+            title: new_title,
+            order: self.order.iter().filter_map(|id| remap(id)).collect(),
+            flat_order: Vec::new(),
+            entries,
+            revision: 0,
+        };
+        copy.recompute(); // rebuilds flat_order and times from the remapped ids
+        copy
+    }
+
     /// Renumbers cues sequentially from `start_at`, stepping by `increment`.
     pub fn renumber(&mut self, start_at: f64, increment: f64) {
         let mut value = start_at;
