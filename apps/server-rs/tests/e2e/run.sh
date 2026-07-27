@@ -63,6 +63,7 @@ fi
 
 suites=(
   "rest.sh:bash"      # CRUD round trips through storage
+  "duplicate.mjs:node" # a duplicated rundown is a fully independent copy
   "shapes.mjs:node"   # response shapes against the client's types
   "ws.mjs:node"       # websocket handshake and refetch broadcast
   "timer.mjs:node"    # playback over the websocket
