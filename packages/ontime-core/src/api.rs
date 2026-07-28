@@ -174,6 +174,76 @@ pub fn may_create_room(req: &ApiRequest) -> bool {
         .is_some_and(|presented| token_matches(master, presented))
 }
 
+/// The scheme+host+port of a URL, dropping any path — the equivalent of reading
+/// `.origin` off a `URL`. The client sends its own origin as `baseUrl`.
+fn origin_of(base_url: &str) -> &str {
+    match base_url.find("://") {
+        Some(scheme) => {
+            let after = scheme + 3;
+            match base_url[after..].find('/') {
+                Some(slash) => &base_url[..after + slash],
+                None => base_url.trim_end_matches('/'),
+            }
+        }
+        None => base_url.trim_end_matches('/'),
+    }
+}
+
+/// Builds a pre-authenticated share URL, ported from the original server's
+/// `generateShareUrl`. The client supplies its own origin as `baseUrl` and the
+/// target view as `path`; a locked preset masks the path, `lockNav` adds `n=1`,
+/// and `authenticate` injects the room token (which is the password hash).
+///
+/// Returns `None` when `baseUrl` is missing.
+pub fn generate_share_url(body: &Value, room_hash: Option<&str>) -> Option<String> {
+    let base_url = body.get("baseUrl").and_then(Value::as_str)?;
+    let canonical_path = body.get("path").and_then(Value::as_str).unwrap_or("");
+    let flag = |key: &str| body.get(key).and_then(Value::as_bool).unwrap_or(false);
+    let str_opt = |key: &str| {
+        body.get(key)
+            .and_then(Value::as_str)
+            .filter(|value| !value.is_empty())
+    };
+
+    let preset = str_opt("preset");
+    let prefix = str_opt("prefix");
+    let hash = str_opt("hash").or(room_hash);
+
+    let mut query: Vec<String> = Vec::new();
+    let path = if canonical_path == "<<companion>>" {
+        // companion links point to the root
+        String::new()
+    } else {
+        // a locked preset hides the real path behind `preset/<name>`
+        let should_mask = preset.is_some() && (canonical_path == "cuesheet" || flag("lockConfig"));
+        let target = if should_mask {
+            format!("preset/{}", preset.unwrap())
+        } else {
+            preset.unwrap_or(canonical_path).to_string()
+        };
+        if flag("lockNav") {
+            query.push("n=1".to_string());
+        }
+        match prefix {
+            Some(prefix) => format!("{prefix}/{target}"),
+            None => target,
+        }
+    };
+
+    if flag("authenticate") {
+        if let Some(hash) = hash {
+            query.push(format!("token={hash}"));
+        }
+    }
+
+    let suffix = if query.is_empty() {
+        String::new()
+    } else {
+        format!("?{}", query.join("&"))
+    };
+    Some(format!("{}/{}{}", origin_of(base_url), path, suffix))
+}
+
 /// The key a custom field is stored under, matching the original's
 /// `customFieldLabelToKey`.
 fn custom_field_key(label: &str) -> String {
@@ -318,10 +388,13 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             // lets the client show whether this room is locked without a failed request
             "protected": project.password_hash.is_some(),
         })),
-        // share links are built from the client's own origin, which a Worker
-        // serving no HTML cannot know
+        // the client passes its own origin as `baseUrl`, so the URL can be built
+        // here without the Worker ever needing to serve HTML
         ["data", "session", "url"] => {
-            ApiResponse::error("Share links are not supported on the cloud backend", 501)
+            match generate_share_url(&req.body, project.password_hash.as_deref()) {
+                Some(url) => ApiResponse::json(&json!({ "url": url })),
+                None => ApiResponse::error("Missing baseUrl", 400),
+            }
         }
         ["data", "session", ..] => ApiResponse::json(&json!({ "clients": {} })),
         ["data", "assets", "css"] if req.method == HttpMethod::Get => {
