@@ -20,6 +20,7 @@ export const VIEW_SETTINGS = ['viewSettings'];
 export const CSS_OVERRIDE = ['cssOverride'];
 export const CLIENT_LIST = ['clientList'];
 export const REPORT = ['report'];
+export const REPORT_ARCHIVE = ['report-archive'];
 export const TRANSLATION = ['translation'];
 
 // API URLs

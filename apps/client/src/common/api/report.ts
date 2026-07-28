@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { OntimeReport } from 'ontime-types';
+import { ArchivedRun, OntimeReport } from 'ontime-types';
 
 import { ontimeQueryClient } from '../../common/queryClient';
 import { REPORT, apiEntryUrl } from './constants';
@@ -12,6 +12,14 @@ export const reportUrl = `${apiEntryUrl}/report`;
  */
 export async function fetchReport(options?: RequestOptions): Promise<OntimeReport> {
   const res = await axios.get(reportUrl, { signal: options?.signal });
+  return res.data;
+}
+
+/**
+ * HTTP request to fetch the permanent run archive
+ */
+export async function fetchReportArchive(options?: RequestOptions): Promise<ArchivedRun[]> {
+  const res = await axios.get(`${reportUrl}/archive`, { signal: options?.signal });
   return res.data;
 }
 

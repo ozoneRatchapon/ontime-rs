@@ -4,6 +4,7 @@ import GenerateLinkFormExport from '../../../sharing/GenerateLinkFormExport';
 import type { PanelBaseProps } from '../../panel-list/PanelList';
 import * as Panel from '../../panel-utils/PanelUtils';
 import InfoNif from '../network-panel/NetworkInterfaces';
+import ReportArchive from './ReportArchive';
 import ReportSettings from './ReportSettings';
 import URLPresets from './URLPresets';
 
@@ -35,6 +36,7 @@ export default function FeaturePanel({ location }: PanelBaseProps) {
       </div>
       <div ref={reportRef}>
         <ReportSettings />
+        <ReportArchive />
       </div>
     </>
   );
