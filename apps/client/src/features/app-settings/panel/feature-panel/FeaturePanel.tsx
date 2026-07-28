@@ -12,6 +12,7 @@ export default function FeaturePanel({ location }: PanelBaseProps) {
   const presetsRef = useScrollIntoView<HTMLDivElement>('presets', location);
   const linkRef = useScrollIntoView<HTMLDivElement>('link', location);
   const reportRef = useScrollIntoView<HTMLDivElement>('report', location);
+  const archiveRef = useScrollIntoView<HTMLDivElement>('archive', location);
 
   return (
     <>
@@ -36,6 +37,8 @@ export default function FeaturePanel({ location }: PanelBaseProps) {
       </div>
       <div ref={reportRef}>
         <ReportSettings />
+      </div>
+      <div ref={archiveRef}>
         <ReportArchive />
       </div>
     </>

@@ -61,6 +61,7 @@ const staticOptions = [
         label: 'Share link',
       },
       { id: 'sharing__report', label: 'Runtime report' },
+      { id: 'sharing__archive', label: 'Run archive' },
     ],
   },
   {
