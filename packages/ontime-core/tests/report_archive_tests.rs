@@ -416,3 +416,38 @@ fn deleting_a_rundown_clears_its_report_records() {
     assert!(!project.rundowns.contains_key(&day1));
     assert_eq!(live_report_len(&project), 0);
 }
+
+#[test]
+fn a_backup_download_includes_the_archive_but_not_the_password() {
+    let (mut project, day1, _day2) = two_day_project();
+    record_run(
+        &mut project,
+        &day1,
+        0,
+        9 * 3_600_000,
+        9 * 3_600_000 + 55_000,
+    );
+    handle(
+        &mut project,
+        &req(HttpMethod::Post, "/data/report/archive", json!({})),
+        T0,
+    );
+
+    // lock the room, then download the backup with the room token
+    project.password_hash = Some("room-token".to_string());
+    let mut download = req(HttpMethod::Post, "/data/db/download", json!({}));
+    download.token = Some("room-token".to_string());
+    let resp = handle(&mut project, &download, T0);
+    assert_eq!(resp.status, 200);
+
+    let body = resp.body.unwrap();
+    // the run history and the schedule are in the backup...
+    assert_eq!(body["reportArchive"].as_array().unwrap().len(), 1);
+    assert!(body["rundowns"].is_object());
+    assert!(body["project"].is_object());
+    // ...but the access token never is
+    assert!(
+        body.get("passwordHash").is_none(),
+        "a downloadable backup must not carry the room's access token"
+    );
+}

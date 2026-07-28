@@ -426,6 +426,17 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             "lastLoadedProject": "",
         })),
 
+        // export the whole room as a downloadable backup — schedule, settings and
+        // the permanent report archive. The password hash, which doubles as the
+        // room's access token, is deliberately left out of the file.
+        ["data", "db", "download"] if req.method == HttpMethod::Post => {
+            let mut snapshot = serde_json::to_value(&*project).unwrap_or(Value::Null);
+            if let Some(object) = snapshot.as_object_mut() {
+                object.remove("passwordHash");
+            }
+            ApiResponse::json(&snapshot)
+        }
+
         ["user", "translations", "translations.json"] => ApiResponse::json(&json!({})),
 
         // modules that depend on the filesystem, long-lived sockets or OAuth,
