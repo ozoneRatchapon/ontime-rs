@@ -62,3 +62,5 @@ ontime-data/
 target/
 apps/server-rs/build/
 apps/server-rs/.wrangler/
+deploy.env
+archives/
