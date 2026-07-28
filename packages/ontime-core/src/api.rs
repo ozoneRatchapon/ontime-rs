@@ -437,6 +437,25 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             ApiResponse::json(&snapshot)
         }
 
+        // restore a room from a downloaded backup. The room keeps its current
+        // password (the backup never carried one), and playback starts stopped
+        // rather than resuming from whenever the snapshot was taken.
+        ["data", "db", "restore"] if req.method == HttpMethod::Post => {
+            match serde_json::from_value::<Project>(req.body.clone()) {
+                Ok(mut restored) => {
+                    restored.password_hash = project.password_hash.clone();
+                    restored.runtime = Default::default();
+                    *project = restored;
+                    project.ensure_consistent();
+                    effects.push(Effect::Persist);
+                    effects.push(Effect::refetch("all", None));
+                    effects.push(Effect::Reschedule);
+                    ApiResponse::json(&json!({ "restored": true }))
+                }
+                Err(error) => ApiResponse::error(format!("Invalid backup file: {error}"), 400),
+            }
+        }
+
         ["user", "translations", "translations.json"] => ApiResponse::json(&json!({})),
 
         // modules that depend on the filesystem, long-lived sockets or OAuth,

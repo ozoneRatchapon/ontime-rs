@@ -451,3 +451,45 @@ fn a_backup_download_includes_the_archive_but_not_the_password() {
         "a downloadable backup must not carry the room's access token"
     );
 }
+
+#[test]
+fn a_backup_round_trips_through_download_and_restore() {
+    let (mut project, day1, _day2) = two_day_project();
+    record_run(
+        &mut project,
+        &day1,
+        0,
+        9 * 3_600_000,
+        9 * 3_600_000 + 55_000,
+    );
+    handle(
+        &mut project,
+        &req(HttpMethod::Post, "/data/report/archive", json!({})),
+        T0,
+    );
+
+    let backup = handle(
+        &mut project,
+        &req(HttpMethod::Post, "/data/db/download", json!({})),
+        T0,
+    )
+    .body
+    .unwrap();
+
+    // restore into a different, password-protected room
+    let mut fresh = Project {
+        password_hash: Some("its-own-password".to_string()),
+        ..Default::default()
+    };
+    let mut restore = req(HttpMethod::Post, "/data/db/restore", backup);
+    restore.token = Some("its-own-password".to_string());
+    let resp = handle(&mut fresh, &restore, T0);
+    assert_eq!(resp.body.unwrap()["restored"], true);
+
+    // the schedule and the archive came back...
+    assert!(fresh.rundowns.contains_key(&day1));
+    assert_eq!(fresh.report_archive.len(), 1);
+    assert_eq!(fresh.report_archive.runs()[0].events[0].title, "opening");
+    // ...and the room kept its own password, not the backup's (which had none)
+    assert_eq!(fresh.password_hash.as_deref(), Some("its-own-password"));
+}
