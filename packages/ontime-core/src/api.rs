@@ -315,6 +315,8 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             "version": project.settings.version,
             "serverPort": 443,
             "publicDir": "",
+            // lets the client show whether this room is locked without a failed request
+            "protected": project.password_hash.is_some(),
         })),
         // share links are built from the client's own origin, which a Worker
         // serving no HTML cannot know

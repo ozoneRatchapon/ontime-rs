@@ -27,6 +27,8 @@ export interface GetInfo {
   version: string;
   serverPort: number;
   publicDir: string;
+  /** Whether the current room requires a token. Absent on older backends. */
+  protected?: boolean;
 }
 
 export interface GetUrl {

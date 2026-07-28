@@ -9,6 +9,7 @@ import type { PanelBaseProps } from '../../panel-list/PanelList';
 import * as Panel from '../../panel-utils/PanelUtils';
 import ClientControlPanel from './client-control/ClientControlPanel';
 import LogExport from './NetworkLogExport';
+import RoomAccess from './RoomAccess';
 
 export default function NetworkLogPanel({ location }: PanelBaseProps) {
   const clientsRef = useScrollIntoView<HTMLDivElement>('clients', location);
@@ -17,6 +18,7 @@ export default function NetworkLogPanel({ location }: PanelBaseProps) {
   return (
     <>
       <Panel.Header>Network</Panel.Header>
+      <RoomAccess />
       {isDocker && (
         <Panel.Section>
           <OntimeCloudStats />

@@ -21,3 +21,15 @@ export async function generateUrl(options: LinkOptions & { baseUrl: string; path
   const res = await axios.post(`${sessionPath}/url`, options);
   return res.data.url;
 }
+
+/**
+ * Sets or clears this room's password. Passing null reopens the room.
+ *
+ * When a password is set the response carries the bearer token once — it is the
+ * hash of the password and cannot be recovered later, so the caller must keep it
+ * (we store it so the current session stays authorised).
+ */
+export async function setRoomPassword(password: string | null): Promise<{ protected: boolean; token?: string }> {
+  const res = await axios.post(`${sessionPath}/password`, { password });
+  return res.data;
+}

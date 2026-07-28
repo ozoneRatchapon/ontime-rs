@@ -98,6 +98,19 @@ export function getToken(): string | null {
   }
 }
 
+/**
+ * Stores the bearer token for the current room, so a password just set from the
+ * settings keeps this session authorised for its next request.
+ */
+export function setToken(token: string): void {
+  const room = activeRoom ?? getRoom() ?? 'default';
+  try {
+    sessionStorage.setItem(`ontime.token.${room}`, token);
+  } catch {
+    // private browsing can refuse storage; the shareable URL still carries it
+  }
+}
+
 function getBaseServerUrl() {
   const customWorkerUrl = import.meta.env.VITE_WORKER_URL;
   const origin = customWorkerUrl ? customWorkerUrl.replace(/\/+$/, '') : window.location.origin;
