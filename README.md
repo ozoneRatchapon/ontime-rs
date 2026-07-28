@@ -1,137 +1,93 @@
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/cpvalente/ontime/total)
-![Docker Pulls](https://img.shields.io/docker/pulls/getontime/ontime)
-![NPM Downloads](https://img.shields.io/npm/dy/%40getontime%2Fcli)
-![Homebrew Cask Version](https://img.shields.io/homebrew/cask/v/ontime)
-[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/cpvalente)
-[![](https://img.shields.io/static/v1?label=Buy%20me%20a%20coffee&message=%E2%9D%A4&logo=buymeacoffee&color=%23fe8e86)](https://www.buymeacoffee.com/cpvalente)
+# ontime-rs
 
-## Download the latest release
+A Rust reimplementation of [Ontime](https://github.com/cpvalente/ontime) — the open-source live-event rundown and timer manager — rebuilt so it runs on **Cloudflare's free tier at zero cost**.
 
-<a href="https://www.buymeacoffee.com/cpvalente" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="32"></a>
+Upstream Ontime's backend is ~20,000 lines of TypeScript/Node. This fork ports its engine to a **single ~4,100-line Rust core** that compiles to three targets from one source:
 
-- Download for <a href="https://github.com/cpvalente/ontime/releases/latest/download/ontime-win64.exe">Windows</a>
-- Download for <a href="https://github.com/cpvalente/ontime/releases/latest/download/ontime-macOS-arm64.dmg">macOS (Apple Silicon)</a>
-- Download for <a href="https://github.com/cpvalente/ontime/releases/latest/download/ontime-macOS-x64.dmg">macOS (Intel)</a>
-- Download AppImage for <a href="https://github.com/cpvalente/ontime/releases/latest/download/ontime-linux-x86_64.AppImage">Linux (Intel / AMD 64-bit)</a>
-- Download AppImage for <a href="https://github.com/cpvalente/ontime/releases/latest/download/ontime-linux-arm64.AppImage">Linux (ARM 64-bit, Raspberry Pi 4+)</a>
-- Download AppImage for <a href="https://github.com/cpvalente/ontime/releases/latest/download/ontime-linux-armv7l.AppImage">Linux (ARM 32-bit, older Raspberry Pi)</a>
+- a **Cloudflare Worker** backed by a SQLite Durable Object — the 0-baht deployment,
+- a **native `axum` server** — for everything a Worker structurally can't do,
+- a **browser WASM module** — the timer engine runs client-side, drift-free.
 
-... or
+One engine, every host.
 
-- Get from <a href="https://hub.docker.com/r/getontime/ontime">Docker hub</a>
-- Install from <a href="https://www.npmjs.com/package/@getontime/cli">NPM</a>
-- Install from <a href="https://formulae.brew.sh/cask/ontime">Homebrew</a>
+> ### Credit & scope
+> Ontime is designed and built by **[Carlos Valente](https://github.com/cpvalente) and contributors** ([GPLv3](https://www.gnu.org/licenses/gpl-3.0)). This repository is an **independent reimplementation of its backend** — not an official release and not affiliated with the project. Upstream's original README is preserved at **[README-upstream.md](README-upstream.md)**.
+>
+> The React client (`apps/client`) is upstream's, carried with ~190 lines of local patches. The reimplementation is the Rust backend and the shared timer engine.
 
-## Need help?
+## Why
 
-We do our best to have most topics covered by the documentation. However, if your question is not covered, you are welcome to [fill in a bug report in an issue](https://github.com/cpvalente/ontime/issues), [ask a question in GitHub discussions](https://github.com/cpvalente/ontime/discussions) or hop in the [discord server](https://discord.com/invite/eje3CSUEXm) for a chat.
+- **0 baht to run.** Cloudflare Workers + Durable Objects have a genuine free tier: an idle Durable Object costs nothing and its storage survives code deploys. A whole live-event backend, hosted for free.
+- **One core, many hosts.** All the scheduling and timer logic lives in `ontime-core` and is transport-agnostic — it takes a request and a project and returns a response plus a list of *effects*. The Worker and the native server are thin adapters that carry those effects out. Workers-vs-VM becomes a per-deployment choice, not a rewrite.
+- **The timer runs in the browser too.** The same Rust engine is compiled to WASM and shipped to the client, which advances the countdown locally between server packets. The server sends only on change or heartbeat — and because both sides run identical code, they compute identical numbers. Zero drift.
 
-## Using Ontime?
+## Architecture
 
-Let us know!
-Ontime improves from the collaboration with its users. We would like to understand how you use Ontime and appreciate your feedback.
+```mermaid
+flowchart TD
+    core["<b>ontime-core</b> (Rust)<br/>rundown · timer · offset · roll · report<br/>transport-agnostic: request → response + effects"]
+    core -->|"wasm32"| worker["<b>apps/server-rs</b><br/>Cloudflare Worker + Durable Object<br/>free-tier production"]
+    core -->|"native"| native["<b>apps/server-native</b><br/>axum server<br/>OSC / Excel / Sheets — a VM's job"]
+    core -->|"wasm32"| wasm["<b>packages/ontime-wasm</b><br/>browser timer engine"]
+    wasm --> client["<b>apps/client</b><br/>upstream React UI (+~190-line patches)"]
+    worker <-->|"REST + WebSocket"| client
+```
 
-# Ontime
+The seam is an **`Effect`** enum: the core returns *what must happen* — persist, tell clients, reschedule — and each host decides *how*, because a Durable Object alarm and a `tokio` interval have nothing in common. Whenever behaviour lived in a host instead of the core, the other host silently lacked it — so the routing, the auth rule, the wake policy and the socket handling all moved into `ontime-core`, and the e2e suites run against **both** hosts to keep them in step.
 
-Ontime is a browser-based application that manages event rundowns, scheduling, and cueing.
+## What works
 
-With Ontime, you can plan, track your schedule, manage automation and cross-department show information all in one place.
+Live on Cloudflare (Worker + Pages):
 
-Ontime is made by entertainment and broadcast engineers and used by
+- **Rundowns** — CRUD with real timing: `linkStart`, `timeStrategy`, gaps, day offsets, delays; groups, clone, reorder, swap, renumber, batch edit; and **duplicate a whole rundown** with fresh ids, safe to reuse season over season.
+- **Playback** — start / pause / stop / reload / load / add-time, end actions, and a **roll mode** that follows the wall clock (waits through gaps, joins an in-progress event part-way).
+- **A shared WASM timer engine** — browser and server agree to the millisecond.
+- **Runtime offset** — a full rundown-wide port of "ahead/behind schedule", not a single-event approximation.
+- **Rooms** — one isolated project per room (`/r/<room>`), with **per-room password auth** over REST and WebSocket, settable from the UI, plus a room-creation gate.
+- **A never-overwritten report archive** — once a show has actually run, its per-section timing is snapshotted permanently and denormalised, so it survives the rundown being edited or deleted, for year-over-year analysis.
+- Project data, settings, view settings, custom fields, URL presets, CSS overrides.
 
-- Conference organisers
-- Touring shows and receiving venues
-- Broadcasters and streamers
-- Theatres and opera houses
-- Houses of worship
+## Repo layout
 
-## Main features
+| Path | What it is |
+|---|---|
+| `packages/ontime-core` | **the reimplementation** — the portable Rust engine (~4,100 lines) |
+| `apps/server-rs` | Cloudflare Worker adapter (~670 lines) — the 0-baht host |
+| `apps/server-native` | `axum` adapter (~680 lines) — the native host |
+| `packages/ontime-wasm` | browser bindings for the timer engine |
+| `apps/client` | upstream's React UI + minimal patches for rooms and tokens |
+| `apps/server`, `cli`, `electron`, … | upstream's original apps, kept as the porting reference |
+| `.handovers/` | dated notes on each step, ending in [`011_roadmap.md`](.handovers/011_roadmap.md) |
 
-- **Multiplatform**: Available as a Cloud service and for Windows, macOS, Linux, or self-hosted via Docker.
-- **In any device**: Ontime is available to any device with a browser, eg: tablets, mobile phones, laptops, signage, media servers...
-- **Team Collaboration**: Dedicated views for directors, operators, backstage, and signage.
-- **Real-Time Updates**: Manage and communicate runtime delays effortlessly.
-- **Automatable**: Ontime can be fully or partially controlled by an operator, or run standalone with the system clock
-- **Flexible Integrations**: Use one of the APIs provided (OSC, HTTP, Websocket) or the available [Companion module](https://bitfocus.io/connections/getontime-ontime) to integrate into your workflow (vMix, disguise, Qlab, OBS)
+## Testing
 
-... and a lot more ...
+The port is pinned by **160 Rust unit tests** plus **13 end-to-end suites** (`apps/server-rs/tests/e2e`) that drive the real HTTP and WebSocket surface the client uses. Each suite was written in response to a real bug — a `200` with the wrong body, rooms leaking into each other, a timer that stopped ticking — and they run against both the Worker and the native server.
 
-### For live environments
+```bash
+# unit tests
+cargo test --manifest-path packages/ontime-core/Cargo.toml
 
-Ontime is designed for use in live environments. \
-This guides the application into being flexible and efficiently integrating into different workflows.
+# end-to-end against a local `wrangler dev`
+apps/server-rs/tests/e2e/run.sh --start
+```
 
-### For teams
+## Build & deploy
 
-All information added in Ontime is shared with the production team and other software / hardware in your workflow. \
-Ontime also improves team collaboration with dedicated views for cuesheets and operators, and for public and production
-signage.
+```bash
+./deploy-cloud.sh            # build + deploy the Worker and the client
+./deploy-cloud.sh --worker   # Worker only
+./deploy-cloud.sh --dry-run  # build everything, deploy nothing
+```
 
-### Simple infrastructure
+One Rust core, compiled per target; the client is built with the Worker URL baked in via `VITE_WORKER_URL`. The script encodes the build order (the WASM engine must be built before the client) and guards against the mistakes that produce a silently broken deploy.
 
-All the data is distributed over the network, making its distribution and infrastructure flexible and cheap. \
-With the availability of the docker image, you can also leverage IT infrastructure to make Ontime available online for
-your team and clients.
+## Status
 
-Ontime is made by video engineers and entertainment technicians.
+The [roadmap](.handovers/011_roadmap.md) tracks this in phases, grounded in measured cost rather than vibes. **Phases 0–3 are done** — a real show can be run from this without the desktop app. Remaining, in order of value:
 
-![App Window](https://github.com/cpvalente/ontime/blob/master/.github/aux-images/editor.png)
-
-![Views](https://github.com/cpvalente/ontime/blob/master/.github/aux-images/ontime-overview.webp)
-
-[Read the docs to learn more](https://docs.getontime.no)
-
-## Using Ontime
-
-### Getting started
-
-The easiest way to start with Ontime is by leveraging our [Cloud service](https://getontime.no). \
-This will give you immediate access to running instances of Ontime which are available to share with anyone with an internet connection.
-
-Alternatively, you can run Ontime locally for free by downloading the latest release for your platform or using the docker image, available at [Docker Hub](https://hub.docker.com/r/getontime/ontime)
-
-Once installed and running, any device that shares the same network as Ontime will have access to Ontime.
-
-More information is available [in our docs](https://docs.getontime.no)
-
-## Continued development
-
-Ontime is under active development. We continue adding and improving features in collaboration with users.
-
-Have an idea? Reach out via [email](mail@getontime.no)
-or [open an issue](https://github.com/cpvalente/ontime/issues/new)
-
-## Issues
-
-We use Github's issue tracking for bug reporting and feature requests. \
-Found a bug? [Open an issue](https://github.com/cpvalente/ontime/issues/new).
-
-## Contributing
-
-Looking to contribute? All types of help are appreciated, from coding to testing and feature specification.
-
-If you are a developer and would like to contribute with code, please open an issue to discuss before opening a Pull Request.
-
-Information about the project setup can be found in the [development documentation](./DEVELOPMENT.md)
-
-## Links
-
-- [Ontime website](https://getontime.no)
-- [Documentation](https://docs.getontime.no)
-- [Video tutorials](https://www.youtube.com/@ontimeapp)
-- [Ontime discord server](https://discord.com/invite/eje3CSUEXm)
+1. **Custom views** — still a stub.
+2. **The features a Worker structurally can't host** — OSC/automation, Excel, Google Sheets, project files (~4,500 lines that need a filesystem and open sockets). Unblocked by the native target; not yet built.
 
 ## License
 
-This project is licensed under the terms of the GNU GPL v3
-
-## Sponsor
-
-You can help the development of this project or say thank you with a one time donation. \
-See [the terms of donations](https://github.com/cpvalente/ontime/blob/master/.github/FUNDING.md).
-
-<p align="center">
-<br>
-<a href="https://www.buymeacoffee.com/cpvalente" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="200"></a>
-</p>
+GPLv3, inherited from [upstream Ontime](https://github.com/cpvalente/ontime). See [LICENSE](LICENSE).
