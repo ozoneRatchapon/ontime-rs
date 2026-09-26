@@ -4,6 +4,7 @@ import { Navigate, Route, useLocation, useNavigate, useParams } from 'react-rout
 
 import ViewNavigationMenu from './common/components/navigation-menu/ViewNavigationMenu';
 import { PresetContext } from './common/context/PresetContext';
+import { RundownScopeProvider } from './common/context/RundownScopeContext';
 import useUrlPresets from './common/hooks-query/useUrlPresets';
 import { useClientPath } from './common/hooks/useClientPath';
 import useStickyRoom from './common/hooks/useStickyRoom';
@@ -123,7 +124,9 @@ export default function AppRouter() {
           path='rundown'
           element={
             <EditorFeatureWrapper>
-              <RundownPanel />
+              <RundownScopeProvider rundownId={null}>
+                <RundownPanel />
+              </RundownScopeProvider>
             </EditorFeatureWrapper>
           }
         />
