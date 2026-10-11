@@ -235,7 +235,6 @@ export const useTimerSocket = createSelector((state: RuntimeStore) => ({
   eventNow: state.eventNow,
   message: state.message,
   time: state.timer,
-  clock: state.clock,
   timerTypeNow: state.eventNow?.timerType ?? TimerType.CountDown,
   countToEndNow: state.eventNow?.countToEnd ?? false,
   auxTimer: {
