@@ -1,7 +1,7 @@
 import { Day, OffsetMode } from 'ontime-types';
 
 import { MILLIS_PER_HOUR, dayInMs } from './conversionUtils';
-import { getExpectedStart } from './getExpectedStart';
+import { getExpectedEnd, getExpectedStart } from './getExpectedStart';
 
 describe('getExpectedStart()', () => {
   describe('Absolute offset mode', () => {
@@ -313,5 +313,22 @@ describe('getExpectedStart()', () => {
     };
     expect(getExpectedStart(testEvent, { ...testState })).toBe(23 * MILLIS_PER_HOUR + 5 + dayInMs);
     expect(getExpectedStart(testEvent, { ...testState, currentDay: 0 })).toBe(23 * MILLIS_PER_HOUR + 5);
+  });
+});
+
+describe('getExpectedEnd()', () => {
+  const event = { timeStart: 1000, dayOffset: 0, duration: 500, countToEnd: false };
+
+  it('is the expected start plus the duration', () => {
+    expect(getExpectedEnd(event, 2000, 0)).toBe(2500);
+  });
+
+  it('a count to end event ends at its planned end, or at its start when that is later', () => {
+    expect(getExpectedEnd({ ...event, countToEnd: true }, 1200, 0)).toBe(1500);
+    expect(getExpectedEnd({ ...event, countToEnd: true }, 1800, 0)).toBe(1800);
+  });
+
+  it('a count to end event on the next day ends a day later', () => {
+    expect(getExpectedEnd({ ...event, countToEnd: true, dayOffset: 1 }, 0, 0)).toBe(1500 + 86400000);
   });
 });

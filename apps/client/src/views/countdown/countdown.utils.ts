@@ -12,7 +12,7 @@ import {
   isOntimeGroup,
   isPlayableEvent,
 } from 'ontime-types';
-import { MILLIS_PER_MINUTE, getExpectedStart, millisToString, removeLeadingZero } from 'ontime-utils';
+import { MILLIS_PER_MINUTE, getExpectedEnd, getExpectedStart, millisToString, removeLeadingZero } from 'ontime-utils';
 
 import { useCountdownSocket } from '../../common/hooks/useSocket';
 import { ExtendedEntry } from '../../common/utils/rundownMetadata';
@@ -36,10 +36,11 @@ export function getIsLive(currentId: EntryId, selectedId: EntryId | null, playba
   return currentId === selectedId && playback !== Playback.Armed;
 }
 
-export type ProgressStatus = 'future' | 'due' | 'live' | 'done' | 'pending' | 'loaded';
+export type ProgressStatus = 'future' | 'due' | 'live' | 'done' | 'pending' | 'loaded' | 'skipped';
 type TimerMessage = Record<ProgressStatus, TranslationKey>;
 
 export const timerProgress: TimerMessage = {
+  skipped: 'countdown.skipped',
   future: 'countdown.to_start',
   due: 'timeline.due',
   live: 'countdown.running',
@@ -57,6 +58,10 @@ export function useSubscriptionDisplayData(
 ): { status: ProgressStatus; statusDisplay: string; timeDisplay: string } {
   const { playback, current, clock } = useCountdownSocket();
   const { getLocalizedString } = useTranslation();
+
+  if (subscribedEvent.skip) {
+    return { status: 'skipped', statusDisplay: getLocalizedString(timerProgress['skipped']), timeDisplay: '' };
+  }
 
   const bigDuration = (value: number) => {
     if (value <= 0) return getLocalizedString('countdown.overtime').toUpperCase();
@@ -144,6 +149,19 @@ export function makeSubscriptionsUrl(urlRef: string, subscriptions: EntryId[]) {
   return url;
 }
 
+/** Events remain subscribable when skipped; groups still need a playable countdown target. */
+export function getCountdownCandidates(
+  rundown: ExtendedEntry<OntimeEntry>[],
+): ExtendedEntry<OntimeEvent | OntimeGroup>[] {
+  return rundown.filter((entry): entry is ExtendedEntry<OntimeEvent | OntimeGroup> => {
+    if (isOntimeEvent(entry)) return true;
+    return (
+      isOntimeGroup(entry) &&
+      rundown.some((child) => isOntimeEvent(child) && isPlayableEvent(child) && child.parent === entry.id)
+    );
+  });
+}
+
 /**
  * Returns an array of events subscribed events ordered by scheduled
  * Since the original array is already ordered, we simply filter out the events
@@ -197,7 +215,7 @@ export type CountdownTarget = ExtendedEntry<OntimeEvent> & {
   liveEntry?: ExtendedEntry<OntimeEvent> | null; // the running child while a group is live
 };
 
-export type CountdownEvent = CountdownTarget & { expectedStart: number; endedAt: MaybeNumber };
+export type CountdownEvent = CountdownTarget & { expectedStart: number; endedAt: MaybeNumber; expectedEnd: number };
 
 /**
  * Resolves a subscription (event or group) into an event-shaped countdown target.
@@ -297,6 +315,10 @@ export function extendEventData(
   mode: OffsetMode,
   reportData: OntimeReport,
 ): CountdownEvent {
+  if (event.skip) {
+    return { ...event, expectedStart: event.timeStart, expectedEnd: event.timeEnd, endedAt: null };
+  }
+
   const { totalGap, isLinkedToLoaded } = event;
   const expectedStart = getExpectedStart(event, {
     currentDay,
@@ -307,6 +329,7 @@ export function extendEventData(
     offset,
     mode,
   });
+  const expectedEnd = getExpectedEnd(event, expectedStart, currentDay);
   const { endedAt } = reportData[event.reportId ?? event.id] ?? { endedAt: null };
-  return { ...event, expectedStart, endedAt };
+  return { ...event, expectedStart, endedAt, expectedEnd };
 }

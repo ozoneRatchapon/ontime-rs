@@ -60,3 +60,29 @@ export function getExpectedStart(
   const offsetStartTimeBufferedByGaps = offsetStartTime - totalGap;
   return offsetStartTimeBufferedByGaps;
 }
+
+/**
+ * When an event is expected to end, given when it is expected to start.
+ * Ported from upstream getExpected.ts (needed by 759ea78e, countdown with skipped events).
+ */
+export function getExpectedEnd(
+  event: Pick<OntimeEvent, 'timeStart' | 'dayOffset' | 'duration' | 'countToEnd'>,
+  expectedStart: number,
+  currentRuntimeDay: number,
+): number {
+  /**
+   * Count to end events are a special case
+   * - the end time is always the wall clock
+   */
+  if (event.countToEnd) {
+    // account for day offset
+    const relativeDayOffset = event.dayOffset - currentRuntimeDay;
+    const plannedEnd = event.timeStart + event.duration + relativeDayOffset * dayInMs;
+
+    // count to end should finish on the planned time or on start
+    return Math.max(expectedStart, plannedEnd);
+  }
+
+  // for normal events, the expected end is when we would start + its duration
+  return expectedStart + event.duration;
+}
