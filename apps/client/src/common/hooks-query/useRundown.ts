@@ -2,7 +2,7 @@ import { EntryId, OntimeEntry } from 'ontime-types';
 
 import { useRundownScope } from '../context/RundownScopeContext';
 import { useSelectedEventId } from '../hooks/useSocket';
-import { useFlatEntries, useFlatRundownMetadata, useRundownById, useRundownMetadata } from './useRundownById';
+import { useFlatEntries, useRundownById, useRundownMetadata } from './useRundownById';
 
 /**
  * Normalised rundown data for the rundown of the enclosing scope
