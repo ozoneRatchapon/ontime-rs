@@ -13,6 +13,15 @@ const TimerControl = lazy(() => import('../../features/control/playback/TimerCon
 const MessageControl = lazy(() => import('../../features/control/message/MessageControlExport'));
 
 export default function Editor() {
+  return (
+    // the titles and the rundown share a scope, so they follow one cursor, which survives a layout change
+    <RundownScopeProvider rundownId={null}>
+      <EditorLayout />
+    </RundownScopeProvider>
+  );
+}
+
+function EditorLayout() {
   const { layoutMode } = useEditorLayout();
 
   if (layoutMode === EditorLayoutMode.CONTROL) {
