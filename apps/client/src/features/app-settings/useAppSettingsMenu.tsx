@@ -19,6 +19,7 @@ const staticOptions = [
       { id: 'settings__general', label: 'General settings' },
       { id: 'settings__aux-timers', label: 'Aux timers' },
       { id: 'settings__view', label: 'View settings' },
+      { id: 'settings__teleprompter', label: 'Teleprompter' },
       { id: 'settings__custom-views', label: 'Custom views' },
       { id: 'settings__mcp', label: 'MCP Server' },
       ...(isDocker ? [] : [{ id: 'settings__port', label: 'Server port' }]),

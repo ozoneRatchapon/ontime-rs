@@ -42,7 +42,22 @@ export function handleLinks(
 ) {
   // we handle the link manually
   event?.preventDefault();
+  openLink(getAppUrl(location, externalClientUrl, externalBaseURI, room));
+}
 
+/**
+ * The full URL of a page of this Ontime app, respecting Ontime Clouds base URL
+ * Built on the client's origin, which serves the pages here, and carrying the
+ * room, since a new window is a fresh page load that would otherwise land in
+ * the shared default project
+ * externalClientUrl, externalBaseURI and room are parameters for testing
+ */
+export function getAppUrl(
+  location: string,
+  externalClientUrl: string = clientURL,
+  externalBaseURI: string = baseURI,
+  room: string | null = activeRoom,
+): string {
   const destination = new URL(externalClientUrl);
   // split off any query string so it is not encoded into the pathname
   const [pathname, search] = location.split('?');
@@ -50,12 +65,10 @@ export function handleLinks(
   if (search) {
     destination.search = search;
   }
-  // a new window is a fresh page load, so the room has to be in the URL or it
-  // lands in the shared default project
   if (room && !destination.searchParams.has('room')) {
     destination.searchParams.set('room', room);
   }
-  openLink(destination.toString());
+  return destination.toString();
 }
 
 export function linkToOtherHost(
