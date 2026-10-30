@@ -19,6 +19,7 @@ function DelayRow({ duration, injectedStyles, hasCursor, ...virtuosoProps }: Del
       <tr
         className={`${style.delayRow} ${style.delayRowHidden}`}
         data-testid='cuesheet-delay-hidden'
+        data-hidden-delay
         style={injectedStyles}
         {...virtuosoProps}
       >
