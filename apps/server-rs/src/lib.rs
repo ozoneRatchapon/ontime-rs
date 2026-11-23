@@ -1,11 +1,18 @@
+mod admin;
+mod presence;
+mod registry_host;
 mod room;
 
 use worker::*;
 
+use ontime_core::registry::{is_valid_room, DEFAULT_ROOM};
+
 pub use room::OntimeProject;
 
-/// Every room is a Durable Object instance; a single project lives in one room.
-const DEFAULT_ROOM: &str = "default_room";
+/// Tells a room which name it was addressed by. Set here on every forwarded
+/// request, and refused on the one kind passed through untouched, so a room can
+/// trust it.
+pub(crate) const ROOM_HEADER: &str = "X-Ontime-Room";
 
 /// Rebuilds the response with CORS headers.
 ///
@@ -35,15 +42,6 @@ async fn with_cors(mut res: Response) -> Result<Response> {
         .with_status(status)
         .with_headers(headers)
         .fixed(body))
-}
-
-/// A room name has to be safe to put in a URL and stable as a Durable Object key.
-fn is_valid_room(name: &str) -> bool {
-    !name.is_empty()
-        && name.len() <= 64
-        && name
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
 }
 
 /// Where a request's room came from, and what is left of the path.
@@ -102,9 +100,17 @@ async fn forward(mut req: Request, env: &Env, routed: &Routed) -> Result<Respons
         .get_stub()?;
 
     let original = req.url()?;
-    if original.path() == routed.path {
-        // nothing to rewrite — notably the websocket upgrade, which must be passed
-        // through untouched for the runtime to recognise it
+    let is_upgrade = req
+        .headers()
+        .get("Upgrade")?
+        .is_some_and(|value| value.eq_ignore_ascii_case("websocket"));
+    if original.path() == routed.path && is_upgrade {
+        // nothing to rewrite, and a websocket upgrade is passed through untouched
+        // for the runtime to recognise it. Its room is in `?room=`, so the room
+        // reads it from there — a caller-supplied room header would be a lie.
+        if req.headers().get(ROOM_HEADER)?.is_some() {
+            return Response::error("Bad request", 400);
+        }
         return stub.fetch_with_request(req).await;
     }
 
@@ -112,7 +118,9 @@ async fn forward(mut req: Request, env: &Env, routed: &Routed) -> Result<Respons
     url.set_path(&routed.path);
 
     let method = req.method();
-    let headers = req.headers().clone();
+    let mut headers = req.headers().clone();
+    // overwrites anything the caller sent under the same name
+    headers.set(ROOM_HEADER, &routed.room)?;
     let body = match method {
         Method::Get | Method::Head | Method::Options => None,
         // the body cannot be moved across a rebuilt request as a stream
@@ -148,6 +156,8 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
     let result = match routed.path.as_str() {
         "/" | "/api/health" => Response::ok("ontime-server-rs online"),
+        // the room list is not inside any room, so it is matched on the raw path
+        _ if path == "/admin" || path.starts_with("/admin/") => admin::handle(req, &env, &path).await,
         // everything the client talks to is project state, so it all goes to the DO
         p if p == "/ws" || p.starts_with("/data/") || p.starts_with("/user/") => {
             forward(req, &env, &routed).await

@@ -75,6 +75,7 @@ suites=(
   "roll.mjs:node"     # the rundown following the wall clock
   "report-archive.mjs:node" # runs preserved permanently
   "rooms-cost.mjs:node" # what an unwatched room costs, and who may create one
+  "admin.mjs:node"    # room list, owners, live clients (needs ADMIN_PASSWORD)
 )
 
 echo

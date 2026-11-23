@@ -5,8 +5,11 @@ use std::time::Duration;
 
 use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
 use ontime_core::project::{hash_password, Project};
+use ontime_core::registry::{should_report, RoomReport};
 
 use serde::{Deserialize, Serialize};
+
+use crate::{presence, registry_host};
 
 /// Per-connection metadata, stored on the socket itself.
 ///
@@ -65,6 +68,9 @@ pub struct OntimeProject {
     /// True when storage held nothing, meaning this room is being used for the
     /// first time.
     is_new: bool,
+    /// When this instance last reported to the registry, and what it said. Lost
+    /// on eviction, which only means the next use reports again.
+    last_report: Option<(i64, RoomReport)>,
 }
 
 #[durable_object]
@@ -77,10 +83,16 @@ impl DurableObject for OntimeProject {
             project: Project::default(),
             loaded: false,
             is_new: false,
+            last_report: None,
         }
     }
 
     async fn fetch(&mut self, mut req: Request) -> Result<Response> {
+        // the registry instance is the same class but holds no project; the
+        // Worker never routes these paths to a room, only to `@registry`
+        if req.path().starts_with(registry_host::REGISTRY_PATH) {
+            return registry_host::serve(&self.state, req).await;
+        }
         if let Err(e) = self.hydrate().await {
             return Response::error(format!("ROOM_LOAD_ERR: {e}"), 500);
         }
@@ -271,6 +283,15 @@ impl OntimeProject {
     /// `get_websockets()` while `websocket_close` runs, so it has to be excluded
     /// explicitly or a disconnect never shows up.
     fn broadcast_client_list(&self, leaving: Option<&str>) {
+        let clients = self.client_map(leaving);
+        let packet = json!({ "tag": "client-list", "payload": clients }).to_string();
+        for socket in self.state.get_websockets() {
+            let _ = socket.send_with_str(&packet);
+        }
+    }
+
+    /// Every connected client keyed by id, without the one that is `leaving`.
+    fn client_map(&self, leaving: Option<&str>) -> serde_json::Map<String, Value> {
         let mut clients = serde_json::Map::new();
         for socket in self.state.get_websockets() {
             if let Ok(Some(info)) = socket.deserialize_attachment::<ClientInfo>() {
@@ -280,11 +301,39 @@ impl OntimeProject {
                 clients.insert(info.id.clone(), info.to_client());
             }
         }
+        clients
+    }
 
-        let packet = json!({ "tag": "client-list", "payload": clients }).to_string();
-        for socket in self.state.get_websockets() {
-            let _ = socket.send_with_str(&packet);
+    fn client_list(&self, leaving: Option<&str>) -> Vec<Value> {
+        self.client_map(leaving).into_values().collect()
+    }
+
+    /// Tells the registry this room exists and is in use — when something it
+    /// lists has changed, otherwise at most once per `REPORT_INTERVAL_MS`. A room
+    /// that was never created does not report, so a refused request for a
+    /// made-up name never lands in the list.
+    ///
+    /// Best effort: the registry being unreachable must never fail the room's
+    /// own request.
+    async fn report_if_due(&mut self, room_name: &str) {
+        if self.is_new {
+            return;
         }
+        let now = now_ms();
+        let report = RoomReport {
+            room: room_name.to_string(),
+            title: self.project.project.title.clone(),
+            protected: self.project.password_hash.is_some(),
+            rundowns: self.project.rundowns.len(),
+        };
+        if !should_report(self.last_report.as_ref(), &report, now) {
+            return;
+        }
+        if let Err(e) = registry_host::report(&self._env, &report).await {
+            console_warn!("could not report {room_name} to the registry: {e}");
+            return;
+        }
+        self.last_report = Some((now, report));
     }
 
     /// The whole `runtime-data` payload: playback, aux timers and the overlay all
@@ -394,6 +443,7 @@ impl OntimeProject {
     async fn handle(&mut self, req: &mut Request) -> Result<Response> {
         let path = req.path();
         let is_upgrade = path.contains("/ws") && !path.contains("/data/");
+        let room_name = presence::room_name(req);
 
         let api_request = ApiRequest {
             method: HttpMethod::parse(req.method().as_ref()),
@@ -421,7 +471,20 @@ impl OntimeProject {
             // there is somebody to broadcast to again, so the heartbeat that was
             // stood down when the last client left has to come back
             self.sync_alarm().await?;
+            self.report_if_due(&room_name).await;
             return Ok(upgraded);
+        }
+
+        // who is looking at this room right now, for the admin page. Host-side
+        // because the sockets belong to the host, not to the shared routing.
+        if req.method() == Method::Get && api_request.path.ends_with("/data/clients") {
+            if !api::is_authorised(&self.project, &api_request) {
+                return Response::error("Unauthorized", 401);
+            }
+            if self.is_new {
+                return Response::error("This room does not exist", 404);
+            }
+            return Response::from_json(&json!({ "clients": self.client_list(None) }));
         }
 
         let response = api::handle(&mut self.project, &api_request, now_ms());
@@ -452,6 +515,9 @@ impl OntimeProject {
         }
         if reschedule || !refetches.is_empty() {
             self.sync_alarm().await?;
+        }
+        if response.status < 400 {
+            self.report_if_due(&room_name).await;
         }
 
         let mut worker_response = match (&response.body, &response.text) {

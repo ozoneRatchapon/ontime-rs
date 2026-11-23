@@ -6,6 +6,7 @@ pub mod offset;
 #[cfg(feature = "spreadsheet")]
 pub mod parser;
 pub mod project;
+pub mod registry;
 pub mod rundown;
 pub mod runtime;
 pub mod types;
