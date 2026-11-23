@@ -1,0 +1,35 @@
+{
+  "room": "example-room",
+  "owner": "Who looks after this room",
+  "note": "Optional note for the room list",
+  "project": {
+    "title": "Example Event",
+    "description": "Copy this file to schedules/<room>.json and edit it"
+  },
+  "rundown": "Day 1",
+  "template": "exam-slot",
+  "parts": [
+    { "label": "นำเสนอผลงาน (Presentation)", "minutes": 7, "colour": "#f4a582" },
+    { "label": "ถาม-ตอบ & ข้อเสนอแนะจากผู้ทรงคุณวุฒิ", "minutes": 10, "colour": "#92c5de" }
+  ],
+  "fields": [
+    { "label": "Student ID", "colour": "#64748b" },
+    { "label": "Advisor", "colour": "#0ea5e9" }
+  ],
+  "rows": [
+    {
+      "start": "09:00",
+      "end": "09:30",
+      "title": "Student A",
+      "note": "Research topic A",
+      "custom": { "Student ID": "0000001", "Advisor": "Advisor A" }
+    },
+    {
+      "start": "09:30",
+      "end": "10:00",
+      "title": "Student B",
+      "note": "Research topic B",
+      "custom": { "Student ID": "0000002", "Advisor": "Advisor B" }
+    }
+  ]
+}

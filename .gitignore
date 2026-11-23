@@ -64,3 +64,8 @@ apps/server-rs/build/
 apps/server-rs/.wrangler/
 deploy.env
 archives/
+
+# event schedules hold real names / student IDs — keep them out of git
+schedules/*
+!schedules/example.json
+!schedules/README.md
