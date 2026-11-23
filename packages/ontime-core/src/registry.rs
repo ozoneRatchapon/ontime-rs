@@ -57,6 +57,10 @@ pub struct RoomRecord {
     pub owner: String,
     /// The people who own the room — see `identity`.
     pub owners: Vec<Uuid>,
+    /// People an owner (or the admin) let run the room.
+    pub operators: Vec<Uuid>,
+    /// Only members, the room password or the master password may control it.
+    pub members_only: bool,
     pub note: String,
     pub protected: bool,
     pub rundowns: usize,
@@ -75,6 +79,34 @@ pub struct RoomReport {
     pub title: String,
     pub protected: bool,
     pub rundowns: usize,
+    pub members_only: bool,
+}
+
+/// What a signed-in person is to a room.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Role {
+    Owner,
+    Operator,
+}
+
+/// A room as one of its members sees it.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct MemberRoom<'a> {
+    #[serde(flatten)]
+    pub room: &'a RoomRecord,
+    pub role: Role,
+}
+
+impl RoomRecord {
+    /// Owner wins when someone is listed as both.
+    pub fn role_of(&self, person: &Uuid) -> Option<Role> {
+        match () {
+            _ if self.owners.contains(person) => Some(Role::Owner),
+            _ if self.operators.contains(person) => Some(Role::Operator),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -111,6 +143,7 @@ impl Registry {
         record.title = report.title.clone();
         record.protected = report.protected;
         record.rundowns = report.rundowns;
+        record.members_only = report.members_only;
         record.last_seen = now;
         true
     }
@@ -131,27 +164,39 @@ impl Registry {
         Some(record)
     }
 
-    /// Replaces a room's owners, registering the room if it is not known yet.
-    /// The caller has already checked that every id is a real person.
-    pub fn set_owners(&mut self, name: &str, owners: Vec<Uuid>, now: i64) -> Option<&RoomRecord> {
+    /// Replaces a room's owners or operators, registering the room if it is
+    /// not known yet. The caller has already checked every id is a real person.
+    pub fn set_members(&mut self, name: &str, role: Role, people: Vec<Uuid>, now: i64) -> Option<&RoomRecord> {
         if !is_valid_room(name) {
             return None;
         }
         let record = self.entry(name, now);
-        record.owners = owners;
+        match role {
+            Role::Owner => record.owners = people,
+            Role::Operator => record.operators = people,
+        }
         Some(record)
     }
 
-    /// Takes a person off every room they own.
-    pub fn drop_owner(&mut self, person: &Uuid) {
+    /// Takes a person off every room.
+    pub fn drop_person(&mut self, person: &Uuid) {
         for record in self.rooms.values_mut() {
             record.owners.retain(|owner| owner != person);
+            record.operators.retain(|operator| operator != person);
         }
     }
 
-    /// The rooms a person owns, in list order.
-    pub fn owned_by(&self, person: &Uuid) -> Vec<&RoomRecord> {
-        self.list().into_iter().filter(|record| record.owners.contains(person)).collect()
+    /// Every room a person belongs to, in list order.
+    pub fn rooms_of(&self, person: &Uuid) -> Vec<MemberRoom<'_>> {
+        self.list()
+            .into_iter()
+            .filter_map(|room| room.role_of(person).map(|role| MemberRoom { room, role }))
+            .collect()
+    }
+
+    /// What a person is to a named room.
+    pub fn role_in(&self, name: &str, person: &Uuid) -> Option<Role> {
+        self.rooms.get(name)?.role_of(person)
     }
 
     /// Drops a room from the list. Its data is untouched — the next report

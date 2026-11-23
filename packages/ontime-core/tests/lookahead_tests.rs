@@ -238,6 +238,7 @@ fn switching_rundown_stops_playback() {
             token: None,
             master_token: None,
             room_is_new: false,
+            member: None,
         },
         0,
     );
@@ -267,6 +268,7 @@ fn switching_rundown_stops_playback() {
             token: None,
             master_token: None,
             room_is_new: false,
+            member: None,
         },
         0,
     );
@@ -370,6 +372,7 @@ fn any_room_may_be_created_when_no_master_password_is_configured() {
         token: None,
         master_token: None,
         room_is_new: true,
+        member: None,
     };
     // a single operator, or a LAN install, should not need ceremony
     assert!(may_create_room(&request));
@@ -388,6 +391,7 @@ fn creating_a_room_needs_the_master_password_once_one_is_configured() {
         token: token.map(str::to_string),
         master_token: Some(master.clone()),
         room_is_new,
+        member: None,
     };
 
     assert!(!may_create_room(&request(None, true)));
@@ -417,6 +421,7 @@ fn a_custom_field_is_keyed_the_way_the_client_expects() {
                 token: None,
                 master_token: None,
                 room_is_new: false,
+                member: None,
             },
             0,
         )

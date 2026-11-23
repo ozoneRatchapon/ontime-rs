@@ -9,6 +9,7 @@ fn report(room: &str, title: &str) -> RoomReport {
         title: title.to_string(),
         protected: false,
         rundowns: 1,
+        members_only: false,
     }
 }
 

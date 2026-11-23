@@ -129,7 +129,7 @@ function RoomList({ onSignOut }: { onSignOut: () => void }) {
             {rooms.map((room) => (
               <RoomRow
                 // remount when the stored labels change, so the inputs show them
-                key={`${room.name}:${room.owner}:${room.note}:${room.owners.join(',')}`}
+                key={`${room.name}:${room.owner}:${room.note}:${room.owners.join(',')}:${room.operators.join(',')}`}
                 room={room}
                 clients={clients[room.name] ?? null}
                 people={people}

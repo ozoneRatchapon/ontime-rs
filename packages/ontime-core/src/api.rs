@@ -8,6 +8,7 @@
 use serde_json::{json, Value};
 
 use crate::project::{hash_password, token_matches, Project};
+use crate::registry::Role;
 use crate::rundown::Insert;
 use crate::Rundown;
 
@@ -51,6 +52,9 @@ pub struct ApiRequest {
     /// rooms accumulate. When a master token is configured, creating one is
     /// gated behind it; with no master configured nothing changes.
     pub room_is_new: bool,
+    /// What the signed-in person presenting a session is to this room, as the
+    /// host looked it up. `None` for anyone not signed in or not a member.
+    pub member: Option<Role>,
 }
 
 /// Something the host must do once a request has been handled.
@@ -141,6 +145,10 @@ impl ApiResponse {
 /// Public because a websocket upgrade never reaches [`handle`] — the host owns
 /// the socket — but must be gated by exactly the same rule.
 pub fn is_authorised(project: &Project, req: &ApiRequest) -> bool {
+    // a member is let in without knowing the room password
+    if req.member.is_some() {
+        return true;
+    }
     let Some(room_hash) = project.password_hash.as_deref() else {
         return true;
     };
@@ -155,6 +163,38 @@ pub fn is_authorised(project: &Project, req: &ApiRequest) -> bool {
         None => false,
     }
 }
+
+/// Whether the caller holds more than a link: a membership, the room
+/// password, or the master password.
+pub fn is_privileged(project: &Project, req: &ApiRequest) -> bool {
+    if req.member.is_some() {
+        return true;
+    }
+    let Some(presented) = req.token.as_deref() else {
+        return false;
+    };
+    let room = project.password_hash.as_deref().is_some_and(|hash| token_matches(hash, presented));
+    let master = req.master_token.as_deref().is_some_and(|master| token_matches(master, presented));
+    room || master
+}
+
+/// Whether the caller may change the room — edit it, or drive its timers.
+/// Only a members-only room asks for more than being let in.
+pub fn may_control(project: &Project, req: &ApiRequest) -> bool {
+    !project.members_only || is_privileged(project, req)
+}
+
+/// Turning members-only on or off is for an owner or the admin — not an
+/// operator, and not the room password, which members-only is there to replace.
+fn may_switch_members_only(req: &ApiRequest) -> bool {
+    let master = match (req.master_token.as_deref(), req.token.as_deref()) {
+        (Some(master), Some(presented)) => token_matches(master, presented),
+        _ => false,
+    };
+    master || req.member == Some(Role::Owner)
+}
+
+pub const NEEDS_SIGN_IN: &str = "This room needs sign-in to edit. Ask its owner for an invite link.";
 
 /// Whether a request is allowed to bring a new room into existence.
 ///
@@ -314,6 +354,11 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
         );
     }
 
+    // reading is decided above; anything else changes the room
+    if req.method != HttpMethod::Get && !may_control(project, req) {
+        return ApiResponse::error(NEEDS_SIGN_IN, 403);
+    }
+
     let mut response = match segments.as_slice() {
         ["data", "rundowns", rest @ ..] => rundowns(project, req, rest, &mut effects),
         ["data", "project", rest @ ..] => project_data(project, req, rest, &mut effects),
@@ -359,6 +404,22 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             ApiResponse::json(&project.report)
         }
         ["data", "report", ..] => ApiResponse::json(&project.report),
+        ["data", "members-only"] if req.method == HttpMethod::Get => {
+            ApiResponse::json(&json!({ "membersOnly": project.members_only }))
+        }
+        ["data", "members-only"] => {
+            if !may_switch_members_only(req) {
+                return ApiResponse::error("Only an owner of this room can change who may edit it", 403);
+            }
+            match req.body.get("on").and_then(Value::as_bool) {
+                Some(on) => {
+                    project.members_only = on;
+                    effects.push(Effect::Persist);
+                    ApiResponse::json(&json!({ "membersOnly": on }))
+                }
+                None => ApiResponse::error("Missing on", 400),
+            }
+        }
         ["data", "session", "password"] => {
             let body = req.body.clone();
             match body.get("password").and_then(Value::as_str) {
@@ -387,6 +448,10 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             "publicDir": "",
             // lets the client show whether this room is locked without a failed request
             "protected": project.password_hash.is_some(),
+            "membersOnly": project.members_only,
+            // whether this caller may change the room, so the editor can say so
+            // up front instead of failing on the first click
+            "canEdit": may_control(project, req),
         })),
         // the client passes its own origin as `baseUrl`, so the URL can be built
         // here without the Worker ever needing to serve HTML

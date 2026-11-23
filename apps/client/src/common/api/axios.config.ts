@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { getToken, serverURL } from '../../externals';
+import { getPersonSession, getToken, serverURL } from '../../externals';
 import { axiosConfig } from './requestTimeouts';
 
 axios.defaults.validateStatus = (status) => {
@@ -15,15 +15,20 @@ axios.defaults.timeout = axiosConfig.shortTimeout;
  * also talks to (the GitHub releases endpoint, for one).
  */
 axios.interceptors.request.use((config) => {
-  const token = getToken();
-  if (!token) {
+  const url = config.url ?? '';
+  const isOurBackend = url.startsWith(serverURL) || url.startsWith('/');
+  if (!isOurBackend) {
     return config;
   }
 
-  const url = config.url ?? '';
-  const isOurBackend = url.startsWith(serverURL) || url.startsWith('/');
-  if (isOurBackend) {
+  const token = getToken();
+  if (token) {
     config.headers.set('Authorization', `Bearer ${token}`);
+  }
+  // a signed-in member reaches their rooms without the room password
+  const session = getPersonSession();
+  if (session) {
+    config.headers.set('X-Ontime-Session', session);
   }
 
   return config;

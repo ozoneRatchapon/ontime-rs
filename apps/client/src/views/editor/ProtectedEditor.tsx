@@ -12,6 +12,7 @@ import useAppSettingsNavigation from '../../features/app-settings/useAppSettings
 import EditorOverview from '../../features/overview/EditorOverview';
 import Editor from './Editor';
 import EditorLayoutOptions from './EditorLayoutOptions';
+import MembersOnlyNotice from './MembersOnlyNotice';
 import WelcomePlacement from './welcome/WelcomePlacement';
 
 import styles from './ProtectedEditor.module.scss';
@@ -48,6 +49,7 @@ export default function ProtectedEditor() {
     <ProtectRoute permission='editor'>
       <div className={styles.mainContainer} data-testid='event-editor'>
         <WelcomePlacement />
+        <MembersOnlyNotice />
         <NavigationMenu isOpen={isOpen} onClose={handler.close} />
         <Editor />
         {isSettingsOpen && <AppSettings />}

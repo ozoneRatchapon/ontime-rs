@@ -21,6 +21,7 @@ fn req(method: HttpMethod, path: &str, body: Value) -> ApiRequest {
         token: None,
         master_token: None,
         room_is_new: false,
+        member: None,
     }
 }
 

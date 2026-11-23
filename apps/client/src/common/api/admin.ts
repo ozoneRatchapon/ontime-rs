@@ -14,6 +14,10 @@ export interface RoomRecord {
   owner: string;
   /** ids of the people who own the room */
   owners: string[];
+  /** ids of the people who may run the room */
+  operators: string[];
+  /** only members (or the room/master password) may edit or drive it */
+  membersOnly: boolean;
   note: string;
   protected: boolean;
   rundowns: number;
@@ -26,6 +30,15 @@ export interface Person {
   id: string;
   name: string;
   createdAt: number;
+  /** the owner who invited them; null when the admin did */
+  invitedBy: string | null;
+}
+
+export type Role = 'owner' | 'operator';
+
+/** A room as one of its members sees it. */
+export interface MemberRoom extends RoomRecord {
+  role: Role;
 }
 
 export interface PersonSummary extends Person {
@@ -116,11 +129,11 @@ export function saveRoomLabels(name: string, labels: { owner?: string; note?: st
   });
 }
 
-/** Replaces who owns a room. */
-export function saveRoomOwners(name: string, owners: string[]): Promise<RoomRecord> {
+/** Replaces who owns, or who runs, a room. */
+export function saveRoomMembers(name: string, members: { owners?: string[]; operators?: string[] }): Promise<RoomRecord> {
   return request<RoomRecord>(`/admin/rooms/${encodeURIComponent(name)}`, {
     method: 'PUT',
-    body: JSON.stringify({ owners }),
+    body: JSON.stringify(members),
   });
 }
 
@@ -139,8 +152,12 @@ export async function createInvite(id: string): Promise<{ link: string; expiresA
     `/admin/people/${encodeURIComponent(id)}/invite`,
     { method: 'POST' },
   );
-  // the code rides in the fragment, which never reaches a server log
-  return { link: `${window.location.origin}/join#code=${code}`, expiresAt };
+  return { link: inviteLink(code), expiresAt };
+}
+
+/** The code rides in the fragment, which never reaches a server log. */
+export function inviteLink(code: string): string {
+  return `${window.location.origin}/join#code=${code}`;
 }
 
 /** Signs a person out of every device and cancels their invite link. */

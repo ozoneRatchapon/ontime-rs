@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
-import { IoLockClosed } from 'react-icons/io5';
+import { Fragment, useCallback, useEffect, useState } from 'react';
+import { IoLockClosed, IoPeople } from 'react-icons/io5';
 
-import { Person, RoomRecord } from '../../common/api/admin';
+import { MemberRoom, Person } from '../../common/api/admin';
 import { signOut, whoAmI } from '../../common/api/personSession';
 import Button from '../../common/components/buttons/Button';
 import { formatDate, formatLastSeen, roomLink } from '../admin/adminUtils';
+
+import TeamPanel from './TeamPanel';
 
 import style from '../admin/Admin.module.scss';
 
@@ -14,11 +16,13 @@ type State =
   | { kind: 'loading' }
   | { kind: 'signed-out' }
   | { kind: 'error'; message: string }
-  | { kind: 'ready'; person: Person; rooms: RoomRecord[] };
+  | { kind: 'ready'; person: Person; rooms: MemberRoom[] };
 
 /** The rooms the person signed in on this device owns. */
 export default function MyRooms() {
   const [state, setState] = useState<State>({ kind: 'loading' });
+  // the room whose team is open, one at a time
+  const [open, setOpen] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -77,6 +81,7 @@ export default function MyRooms() {
             <thead>
               <tr>
                 <th>Room</th>
+                <th>You are</th>
                 <th>Note</th>
                 <th>Last used</th>
                 <th>Open</th>
@@ -84,13 +89,25 @@ export default function MyRooms() {
             </thead>
             <tbody>
               {state.rooms.map((room) => (
-                <tr key={room.name}>
+                <Fragment key={room.name}>
+                <tr>
                   <td>
                     <a href={roomLink(room.name, 'editor')} className={style.roomName}>
                       {room.name}
                     </a>
                     {room.protected && <IoLockClosed className={style.lock} title='Has a room password' />}
+                    {room.membersOnly && <IoPeople className={style.lock} title='Editing needs sign-in' />}
                     <div className={style.muted}>{room.title}</div>
+                  </td>
+                  <td>
+                    {room.role}
+                    {room.role === 'owner' && (
+                      <div>
+                        <Button size='small' variant='ghosted' onClick={() => setOpen(open === room.name ? null : room.name)}>
+                          {open === room.name ? 'Hide team' : 'Team'}
+                        </Button>
+                      </div>
+                    )}
                   </td>
                   <td>{room.note}</td>
                   <td title={formatDate(room.lastSeen)}>{formatLastSeen(room.lastSeen)}</td>
@@ -102,11 +119,19 @@ export default function MyRooms() {
                     ))}
                   </td>
                 </tr>
+                {open === room.name && (
+                  <tr>
+                    <td colSpan={5}>
+                      <TeamPanel room={room} onChanged={load} />
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
               {state.rooms.length === 0 && (
                 <tr>
-                  <td colSpan={4} className={style.muted}>
-                    No rooms yet. The admin assigns rooms to you.
+                  <td colSpan={5} className={style.muted}>
+                    No rooms yet. An admin or a room owner adds you to a room.
                   </td>
                 </tr>
               )}

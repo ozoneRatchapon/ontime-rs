@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { IoLockClosed } from 'react-icons/io5';
+import { IoLockClosed, IoPeople } from 'react-icons/io5';
 
-import { Person, RoomClient, RoomRecord, forgetRoom, saveRoomLabels, saveRoomOwners } from '../../common/api/admin';
+import { Person, RoomClient, RoomRecord, forgetRoom, saveRoomLabels, saveRoomMembers } from '../../common/api/admin';
 import Button from '../../common/components/buttons/Button';
 import Input from '../../common/components/input/input/Input';
 
@@ -36,12 +36,12 @@ export default function RoomRow({ room, clients, people, onChanged, onError }: R
     }
   };
 
-  const saveOwners = async (owners: string[]) => {
+  const saveMembers = async (members: { owners?: string[]; operators?: string[] }) => {
     try {
-      await saveRoomOwners(room.name, owners);
+      await saveRoomMembers(room.name, members);
       onChanged();
     } catch (err) {
-      onError(`Could not save the owners of ${room.name}. ${err}`);
+      onError(`Could not save who looks after ${room.name}. ${err}`);
     }
   };
 
@@ -65,10 +65,20 @@ export default function RoomRow({ room, clients, people, onChanged, onError }: R
           {room.name}
         </a>
         {room.protected && <IoLockClosed className={style.lock} title='Has a room password' />}
+        {room.membersOnly && <IoPeople className={style.lock} title='Editing needs sign-in' />}
         <div className={style.muted}>{room.title}</div>
       </td>
       <td>
-        <OwnerPicker owners={room.owners} people={people} onChange={saveOwners} />
+        <OwnerPicker owners={room.owners} people={people} onChange={(owners) => saveMembers({ owners })} />
+        <div className={style.operators}>
+          <span className={style.muted}>operators</span>
+          <OwnerPicker
+            owners={room.operators}
+            people={people}
+            label='operator'
+            onChange={(operators) => saveMembers({ operators })}
+          />
+        </div>
         {/* the free-text owner from before people existed, until it is cleared */}
         {room.owner && (
           <Input

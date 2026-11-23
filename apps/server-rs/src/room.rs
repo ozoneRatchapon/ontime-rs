@@ -1,11 +1,12 @@
 use serde_json::{json, Value};
 use worker::*;
 
+use std::collections::HashMap;
 use std::time::Duration;
 
 use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
 use ontime_core::project::{hash_password, Project};
-use ontime_core::registry::{should_report, RoomReport};
+use ontime_core::registry::{should_report, Role, RoomReport};
 
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +30,15 @@ struct ClientInfo {
     origin: String,
     #[serde(default)]
     path: String,
+    /// Connected with a membership, the room password or the master password,
+    /// so it may drive a members-only room. Decided once, at connect.
+    #[serde(default)]
+    privileged: bool,
 }
+
+/// How long a room trusts what the registry said about a session. Removing
+/// someone takes effect within this long, without asking on every request.
+const MEMBER_CACHE_MS: i64 = 60_000;
 
 fn unknown_type() -> String {
     "ontime".to_string()
@@ -71,6 +80,9 @@ pub struct OntimeProject {
     /// When this instance last reported to the registry, and what it said. Lost
     /// on eviction, which only means the next use reports again.
     last_report: Option<(i64, RoomReport)>,
+    /// Session token -> (when asked, what they are here). Refusals are kept too,
+    /// so a bad token cannot make the room ask the registry on every request.
+    members: HashMap<String, (i64, Option<Role>)>,
 }
 
 #[durable_object]
@@ -84,6 +96,7 @@ impl DurableObject for OntimeProject {
             loaded: false,
             is_new: false,
             last_report: None,
+            members: HashMap::new(),
         }
     }
 
@@ -156,6 +169,30 @@ impl DurableObject for OntimeProject {
                 self.broadcast_client_list(None);
             }
             return Ok(());
+        }
+
+        // a viewer's screen in a members-only room may watch, never drive
+        if self.project.members_only {
+            let privileged = ws
+                .deserialize_attachment::<ClientInfo>()
+                .ok()
+                .flatten()
+                .is_some_and(|info| info.privileged);
+            if !privileged {
+                // sent as a log line, which the editor already shows
+                let refusal = json!({
+                    "tag": "log",
+                    "payload": {
+                        "id": uuid::Uuid::now_v7().to_string(),
+                        "origin": "SERVER",
+                        "time": "",
+                        "level": "ERROR",
+                        "text": api::NEEDS_SIGN_IN,
+                    }
+                });
+                let _ = ws.send_with_str(refusal.to_string());
+                return Ok(());
+            }
         }
 
         let now = now_ms();
@@ -325,6 +362,7 @@ impl OntimeProject {
             title: self.project.project.title.clone(),
             protected: self.project.password_hash.is_some(),
             rundowns: self.project.rundowns.len(),
+            members_only: self.project.members_only,
         };
         if !should_report(self.last_report.as_ref(), &report, now) {
             return;
@@ -435,6 +473,42 @@ impl OntimeProject {
         None
     }
 
+    /// A person's session, if the request carries one: a header for REST, the
+    /// query string for a websocket, which cannot set headers.
+    fn presented_session(req: &Request) -> Option<String> {
+        if let Ok(Some(session)) = req.headers().get(registry_host::SESSION_HEADER) {
+            return Some(session.trim().to_string()).filter(|s| !s.is_empty());
+        }
+        req.url()
+            .ok()?
+            .query_pairs()
+            .find(|(key, _)| key == "session")
+            .map(|(_, session)| session.to_string())
+            .filter(|s| !s.is_empty())
+    }
+
+    /// What the person behind a session is to this room, asking the registry at
+    /// most once a minute per session.
+    async fn member(&mut self, session: Option<String>, room_name: &str) -> Option<Role> {
+        let session = session?;
+        let now = now_ms();
+        self.members.retain(|_, (asked, _)| now - *asked < MEMBER_CACHE_MS);
+        if let Some((_, role)) = self.members.get(&session) {
+            return *role;
+        }
+        match registry_host::check(&self._env, &session, room_name).await {
+            Ok(role) => {
+                self.members.insert(session, (now, role));
+                role
+            }
+            // the registry being unreachable is not an answer worth keeping
+            Err(e) => {
+                console_warn!("could not check a session for {room_name}: {e}");
+                None
+            }
+        }
+    }
+
     /// Translates the Worker's request into the transport-agnostic one, hands it
     /// to the shared routing in `ontime-core`, and carries out what comes back.
     ///
@@ -444,6 +518,7 @@ impl OntimeProject {
         let path = req.path();
         let is_upgrade = path.contains("/ws") && !path.contains("/data/");
         let room_name = presence::room_name(req);
+        let member = self.member(Self::presented_session(req), &room_name).await;
 
         let api_request = ApiRequest {
             method: HttpMethod::parse(req.method().as_ref()),
@@ -456,6 +531,7 @@ impl OntimeProject {
                 .ok()
                 .map(|secret| hash_password(&secret.to_string())),
             room_is_new: self.is_new,
+            member,
         };
 
         // an upgrade never reaches the shared routing, because the socket belongs
@@ -467,7 +543,7 @@ impl OntimeProject {
             if !api::may_create_room(&api_request) {
                 return Response::error("This room does not exist", 403);
             }
-            let upgraded = self.open_websocket()?;
+            let upgraded = self.open_websocket(api::is_privileged(&self.project, &api_request))?;
             // there is somebody to broadcast to again, so the heartbeat that was
             // stood down when the last client left has to come back
             self.sync_alarm().await?;
@@ -529,7 +605,7 @@ impl OntimeProject {
         Ok(worker_response)
     }
 
-    fn open_websocket(&mut self) -> Result<Response> {
+    fn open_websocket(&mut self, privileged: bool) -> Result<Response> {
         let pair = WebSocketPair::new()?;
         self.state.accept_web_socket(&pair.server);
 
@@ -542,6 +618,7 @@ impl OntimeProject {
             identify: false,
             origin: String::new(),
             path: String::new(),
+            privileged,
         };
         let _ = pair.server.serialize_attachment(&info);
 

@@ -1,0 +1,16 @@
+@use '@/theme/viewerDefs' as *;
+
+.notice {
+  position: fixed;
+  top: 0.5rem;
+  left: 50%;
+  z-index: 10;
+  max-width: min(90vw, 40rem);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background-color: $gray-1100;
+  border: 1px solid $error-red;
+  color: $ui-white;
+  font-size: calc(1rem - 2px);
+  transform: translateX(-50%);
+}

@@ -111,6 +111,21 @@ export function setToken(token: string): void {
   }
 }
 
+/** Where a person's sign-in on this device is kept; see common/api/personSession. */
+export const PERSON_SESSION_KEY = 'ontime.session';
+
+/**
+ * The signed-in person's session, if this device opened an invite link. Sent
+ * next to the room token, never instead of it, so both can apply at once.
+ */
+export function getPersonSession(): string | null {
+  try {
+    return localStorage.getItem(PERSON_SESSION_KEY);
+  } catch {
+    return null;
+  }
+}
+
 /** The worker's origin with no room in it — for what lives outside rooms, like /admin. */
 export function getWorkerOrigin(): string {
   const customWorkerUrl = import.meta.env.VITE_WORKER_URL;
@@ -137,6 +152,11 @@ function resolveUrl(protocol: 'http' | 'ws', path: string) {
   const token = getToken();
   if (token) {
     query.set('token', token);
+  }
+  // only the socket needs it in the URL; REST sends it as a header
+  const session = protocol === 'ws' ? getPersonSession() : null;
+  if (session) {
+    query.set('session', session);
   }
   const querySuffix = query.toString() ? `?${query.toString()}` : '';
 

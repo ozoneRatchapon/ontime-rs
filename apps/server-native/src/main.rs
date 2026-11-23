@@ -318,6 +318,7 @@ async fn rest_handler(
         token: token_from(&headers, &query),
         master_token: state.master_token.clone(),
         room_is_new,
+        member: None,
     };
 
     let (response, _) = with_room(&state, &room_name, |room| {
@@ -403,6 +404,7 @@ async fn upgrade_socket(
         token: token_from(&headers, &query),
         master_token: state.master_token.clone(),
         room_is_new,
+        member: None,
     };
 
     // an upgrade never reaches the shared routing, so it is gated here by the

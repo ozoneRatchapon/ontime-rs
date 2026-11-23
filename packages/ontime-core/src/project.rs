@@ -113,6 +113,11 @@ pub struct Project {
     /// the original server's behaviour when `SESSION_PASSWORD` is unset.
     #[serde(default)]
     pub password_hash: Option<String>,
+    /// Only members, the room password or the master password may control the
+    /// room; anyone allowed in may still watch. Off by default, so a room
+    /// behaves as it always has until its owner turns it on.
+    #[serde(default)]
+    pub members_only: bool,
 }
 
 /// Hashes a room password. The resulting digest doubles as the bearer token, the
@@ -173,6 +178,7 @@ impl Default for Project {
             timezone_offset: 0,
             heartbeat_ms: default_heartbeat_ms(),
             password_hash: None,
+            members_only: false,
         }
     }
 }

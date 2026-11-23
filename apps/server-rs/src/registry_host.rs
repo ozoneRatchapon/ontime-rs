@@ -12,9 +12,13 @@ use serde_json::Value;
 use worker::*;
 
 use ontime_core::directory::{self, Directory};
-use ontime_core::registry::{Registry, RoomReport, REGISTRY_NAME};
+use ontime_core::registry::{Registry, Role, RoomReport, REGISTRY_NAME};
 use ontime_core::identity::Identity;
 use uuid::Uuid;
+
+/// Carries a person's session token — from the browser to the Worker, and from
+/// the Worker on to the registry, where it is moved into the body.
+pub const SESSION_HEADER: &str = "X-Ontime-Session";
 
 /// The path prefix the registry instance answers under.
 pub const REGISTRY_PATH: &str = "/registry/";
@@ -63,10 +67,17 @@ pub async fn serve(state: &State, mut req: Request) -> Result<Response> {
         .collect();
 
     let method = req.method();
-    let body = match method {
+    let mut body = match method {
         Method::Get | Method::Head | Method::Delete => Value::Null,
         _ => req.json::<Value>().await.unwrap_or(Value::Null),
     };
+    // a GET or DELETE cannot carry a body, so a session comes as a header
+    if let Ok(Some(session)) = req.headers().get(SESSION_HEADER) {
+        if !body.is_object() {
+            body = Value::Object(Default::default());
+        }
+        body["token"] = Value::String(session);
+    }
 
     let response = directory::handle(&mut document, method.as_ref(), &segments, &body, now_ms(), &mut fresh_secret);
 
@@ -89,8 +100,22 @@ fn registry_stub(env: &Env) -> Result<Stub> {
 
 /// Passes a request to the registry, at `/registry/<rest>`.
 pub async fn forward(env: &Env, method: Method, rest: &str, body: Option<String>) -> Result<Response> {
+    forward_as(env, method, rest, body, None).await
+}
+
+/// Like [`forward`], on behalf of a signed-in person.
+pub async fn forward_as(
+    env: &Env,
+    method: Method,
+    rest: &str,
+    body: Option<String>,
+    session: Option<&str>,
+) -> Result<Response> {
     let mut headers = Headers::new();
     headers.set("content-type", "application/json")?;
+    if let Some(session) = session {
+        headers.set(SESSION_HEADER, session)?;
+    }
     let request = Request::new_with_init(
         &format!("https://registry.internal{REGISTRY_PATH}{}", rest.trim_start_matches('/')),
         &RequestInit {
@@ -109,4 +134,19 @@ pub async fn report(env: &Env, report: &RoomReport) -> Result<()> {
         .map_err(|e| Error::RustError(format!("Could not serialise the report: {e}")))?;
     forward(env, Method::Post, "report", Some(body)).await?;
     Ok(())
+}
+
+/// What a session's person is to a room: `Ok(None)` for a valid answer of
+/// "nobody here", `Err` when the registry could not be asked.
+pub async fn check(env: &Env, session: &str, room: &str) -> Result<Option<Role>> {
+    let body = serde_json::json!({ "token": session, "room": room }).to_string();
+    let mut response = forward(env, Method::Post, "auth/check", Some(body)).await?;
+    if response.status_code() != 200 {
+        return Ok(None);
+    }
+    let answer: Value = response.json().await?;
+    Ok(answer
+        .get("role")
+        .cloned()
+        .and_then(|role| serde_json::from_value(role).ok()))
 }

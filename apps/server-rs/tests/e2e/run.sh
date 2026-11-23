@@ -77,6 +77,7 @@ suites=(
   "rooms-cost.mjs:node" # what an unwatched room costs, and who may create one
   "admin.mjs:node"    # room list, owners, live clients (needs ADMIN_PASSWORD)
   "people.mjs:node"   # people, invite links, room owners (needs ADMIN_PASSWORD)
+  "members.mjs:node"  # operators, members-only rooms (needs ADMIN_PASSWORD, ~1 min)
 )
 
 echo

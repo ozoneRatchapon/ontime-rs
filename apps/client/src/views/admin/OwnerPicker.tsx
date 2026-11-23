@@ -7,11 +7,13 @@ import style from './Admin.module.scss';
 interface OwnerPickerProps {
   owners: string[];
   people: Person[];
+  /** what one of them is called, for the add list */
+  label?: string;
   onChange: (owners: string[]) => void;
 }
 
 /** The people who own a room, as removable chips plus a list to add one. */
-export default function OwnerPicker({ owners, people, onChange }: OwnerPickerProps) {
+export default function OwnerPicker({ owners, people, label = 'owner', onChange }: OwnerPickerProps) {
   const named = new Map(people.map((person) => [person.id, person.name]));
   const addable = people.filter((person) => !owners.includes(person.id));
 
@@ -23,7 +25,7 @@ export default function OwnerPicker({ owners, people, onChange }: OwnerPickerPro
           <button
             type='button'
             className={style.chipRemove}
-            aria-label={`Remove ${named.get(id) ?? 'owner'}`}
+            aria-label={`Remove ${named.get(id) ?? label}`}
             onClick={() => onChange(owners.filter((owner) => owner !== id))}
           >
             <IoClose />
@@ -34,10 +36,10 @@ export default function OwnerPicker({ owners, people, onChange }: OwnerPickerPro
         <select
           className={style.addOwner}
           value=''
-          aria-label='Add an owner'
+          aria-label={`Add an ${label}`}
           onChange={(event) => event.target.value && onChange([...owners, event.target.value])}
         >
-          <option value=''>+ owner</option>
+          <option value=''>+ {label}</option>
           {addable.map((person) => (
             <option key={person.id} value={person.id}>
               {person.name}

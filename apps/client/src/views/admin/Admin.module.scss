@@ -174,3 +174,28 @@
   margin-top: 0.35rem;
   color: $label-gray;
 }
+
+.operators {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+
+  > .muted {
+    margin: 0;
+  }
+}
+
+.team {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid $gray-1000;
+  border-radius: 4px;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}

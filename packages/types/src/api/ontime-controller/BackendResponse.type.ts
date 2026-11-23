@@ -29,6 +29,10 @@ export interface GetInfo {
   publicDir: string;
   /** Whether the current room requires a token. Absent on older backends. */
   protected?: boolean;
+  /** Whether only members may edit this room. Absent on older backends. */
+  membersOnly?: boolean;
+  /** Whether this caller may edit the room. Absent on older backends. */
+  canEdit?: boolean;
 }
 
 export interface GetUrl {

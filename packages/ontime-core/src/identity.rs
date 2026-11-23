@@ -54,6 +54,10 @@ pub struct Person {
     pub id: Uuid,
     pub name: String,
     pub created_at: i64,
+    /// The owner who invited them; `None` when the admin did. An owner may only
+    /// make new links for people they invited, or they could sign in as anyone.
+    #[serde(default)]
+    pub invited_by: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -106,12 +110,24 @@ pub struct Identity {
 
 impl Identity {
     pub fn create_person(&mut self, name: &str, now: i64) -> Result<&Person, IdentityError> {
+        self.create_person_by(name, None, now)
+    }
+
+    pub fn create_person_by(&mut self, name: &str, invited_by: Option<Uuid>, now: i64) -> Result<&Person, IdentityError> {
         let name: String = name.trim().chars().take(MAX_NAME_CHARS).collect();
         if name.is_empty() {
             return Err(IdentityError::InvalidName);
         }
         let id = Uuid::now_v7();
-        self.people.insert(id, Person { id, name, created_at: now });
+        self.people.insert(
+            id,
+            Person {
+                id,
+                name,
+                created_at: now,
+                invited_by,
+            },
+        );
         Ok(&self.people[&id])
     }
 
