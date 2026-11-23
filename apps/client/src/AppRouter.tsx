@@ -25,6 +25,7 @@ const ProjectInfo = lazy(() => import('./views/project-info/ProjectInfo'));
 const Editor = lazy(() => import('./views/editor/ProtectedEditor'));
 const Cuesheet = lazy(() => import('./views/cuesheet/ProtectedCuesheet'));
 const Operator = lazy(() => import('./features/operator/OperatorExport'));
+const Admin = lazy(() => import('./views/admin/Admin'));
 
 const EditorFeatureWrapper = lazy(() => import('./features/EditorFeatureWrapper'));
 const RundownPanel = lazy(() => import('./features/rundown/RundownExport'));
@@ -100,6 +101,8 @@ export default function AppRouter() {
         />
         {/*/!* Protected Routes *!/*/}
         <Route path='editor' element={<Editor />} />
+        {/* every room on the Worker — outside any room, behind the master password */}
+        <Route path='admin' element={<Admin />} />
         <Route path='cuesheet' element={<Cuesheet />} />
         <Route
           path='op'

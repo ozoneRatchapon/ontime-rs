@@ -15,7 +15,11 @@ import { baseURI } from './externals';
 import KeepAwake from './features/keep-awake/KeepAwake';
 import { TranslationProvider } from './translation/TranslationProvider';
 
-connectSocket();
+// the admin page belongs to no room; connecting would count it as a viewer of
+// the default room (and, on a gated Worker, knock on a room that may not exist)
+if (!/\/admin\/?$/.test(window.location.pathname)) {
+  connectSocket();
+}
 
 function App() {
   return (

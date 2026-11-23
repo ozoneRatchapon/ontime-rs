@@ -111,9 +111,14 @@ export function setToken(token: string): void {
   }
 }
 
-function getBaseServerUrl() {
+/** The worker's origin with no room in it — for what lives outside rooms, like /admin. */
+export function getWorkerOrigin(): string {
   const customWorkerUrl = import.meta.env.VITE_WORKER_URL;
-  const origin = customWorkerUrl ? customWorkerUrl.replace(/\/+$/, '') : window.location.origin;
+  return customWorkerUrl ? customWorkerUrl.replace(/\/+$/, '') : window.location.origin;
+}
+
+function getBaseServerUrl() {
+  const origin = getWorkerOrigin();
 
   // REST paths are composed by appending to this URL, so the room has to live in
   // the path — a query string would end up in the middle of the composed path.
