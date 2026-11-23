@@ -1,4 +1,5 @@
 mod admin;
+mod auth;
 mod presence;
 mod registry_host;
 mod room;
@@ -13,6 +14,13 @@ pub use room::OntimeProject;
 /// request, and refused on the one kind passed through untouched, so a room can
 /// trust it.
 pub(crate) const ROOM_HEADER: &str = "X-Ontime-Room";
+
+/// The token in an `Authorization: Bearer …` header.
+pub(crate) fn bearer_token(req: &Request) -> Option<String> {
+    let header = req.headers().get("Authorization").ok().flatten()?;
+    let token = header.strip_prefix("Bearer ")?.trim();
+    (!token.is_empty()).then(|| token.to_string())
+}
 
 /// Rebuilds the response with CORS headers.
 ///
@@ -158,6 +166,7 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         "/" | "/api/health" => Response::ok("ontime-server-rs online"),
         // the room list is not inside any room, so it is matched on the raw path
         _ if path == "/admin" || path.starts_with("/admin/") => admin::handle(req, &env, &path).await,
+        _ if path.starts_with("/auth/") => auth::handle(req, &env, &path).await,
         // everything the client talks to is project state, so it all goes to the DO
         p if p == "/ws" || p.starts_with("/data/") || p.starts_with("/user/") => {
             forward(req, &env, &routed).await

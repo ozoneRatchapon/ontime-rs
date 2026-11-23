@@ -5,32 +5,55 @@
 //! consistent and needs no extra binding — the room logic simply never runs
 //! for it, because its requests are recognised before a project is loaded.
 //!
-//! The rules live in `ontime_core::registry`; this only loads, stores and
+//! The rules live in `ontime_core::directory`; this only loads, stores and
 //! carries requests.
 
 use serde_json::Value;
 use worker::*;
 
-use ontime_core::registry::{self, Registry, RoomReport, REGISTRY_NAME};
+use ontime_core::directory::{self, Directory};
+use ontime_core::registry::{Registry, RoomReport, REGISTRY_NAME};
+use ontime_core::identity::Identity;
+use uuid::Uuid;
 
 /// The path prefix the registry instance answers under.
 pub const REGISTRY_PATH: &str = "/registry/";
 
-const STORAGE_KEY: &str = "registry_v1";
+const ROOMS_KEY: &str = "registry_v1";
+const IDENTITY_KEY: &str = "identity_v1";
 
 fn now_ms() -> i64 {
     Date::now().as_millis() as i64
 }
 
-/// Serves a registry request inside the registry's own Durable Object.
-pub async fn serve(state: &State, mut req: Request) -> Result<Response> {
-    let mut storage = state.storage();
-    let mut document: Registry = storage
-        .get::<String>(STORAGE_KEY)
+/// 244 bits from the platform's crypto RNG (`crypto.getRandomValues`).
+fn fresh_secret() -> String {
+    format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple())
+}
+
+async fn load<T: serde::de::DeserializeOwned + Default>(storage: &Storage, key: &str) -> T {
+    storage
+        .get::<String>(key)
         .await
         .ok()
         .and_then(|raw| serde_json::from_str(&raw).ok())
-        .unwrap_or_default();
+        .unwrap_or_default()
+}
+
+async fn store<T: serde::Serialize>(storage: &mut Storage, key: &str, value: &T) -> Result<()> {
+    let raw = serde_json::to_string(value)
+        .map_err(|e| Error::RustError(format!("Could not serialise {key}: {e}")))?;
+    storage.put(key, raw).await
+}
+
+/// Serves a registry request inside the registry's own Durable Object.
+pub async fn serve(state: &State, mut req: Request) -> Result<Response> {
+    let mut storage = state.storage();
+    let mut document = Directory {
+        rooms: load::<Registry>(&storage, ROOMS_KEY).await,
+        identity: load::<Identity>(&storage, IDENTITY_KEY).await,
+    };
+    let before = document.clone();
 
     let path = req.path();
     let segments: Vec<&str> = path
@@ -45,12 +68,14 @@ pub async fn serve(state: &State, mut req: Request) -> Result<Response> {
         _ => req.json::<Value>().await.unwrap_or(Value::Null),
     };
 
-    let response = registry::handle(&mut document, method.as_ref(), &segments, &body, now_ms());
+    let response = directory::handle(&mut document, method.as_ref(), &segments, &body, now_ms(), &mut fresh_secret);
 
-    if response.changed {
-        let raw = serde_json::to_string(&document)
-            .map_err(|e| Error::RustError(format!("Could not serialise the registry: {e}")))?;
-        storage.put(STORAGE_KEY, raw).await?;
+    // each document is written only when it actually moved
+    if response.changed && document.rooms != before.rooms {
+        store(&mut storage, ROOMS_KEY, &document.rooms).await?;
+    }
+    if response.changed && document.identity != before.identity {
+        store(&mut storage, IDENTITY_KEY, &document.identity).await?;
     }
 
     Ok(Response::from_json(&response.body)?.with_status(response.status))

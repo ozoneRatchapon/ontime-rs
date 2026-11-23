@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use uuid::Uuid;
 
 /// The Durable Object name the registry lives under. `@` is not allowed in a
 /// room name, so no room can ever collide with it.
@@ -51,8 +52,11 @@ pub struct RoomRecord {
     pub name: String,
     /// The project title the room last reported.
     pub title: String,
-    /// Who looks after the room — set by an operator, never by the room.
+    /// A free-text owner label from before people existed. Kept, and shown,
+    /// until an operator clears it, so no label is lost.
     pub owner: String,
+    /// The people who own the room — see `identity`.
+    pub owners: Vec<Uuid>,
     pub note: String,
     pub protected: bool,
     pub rundowns: usize,
@@ -87,20 +91,23 @@ fn label(value: &Value, key: &str) -> Option<String> {
 }
 
 impl Registry {
+    /// The record for a room, registering it if it is not known yet — that is
+    /// how a room older than the registry is added.
+    fn entry(&mut self, name: &str, now: i64) -> &mut RoomRecord {
+        self.rooms.entry(name.to_string()).or_insert_with(|| RoomRecord {
+            name: name.to_string(),
+            first_seen: now,
+            ..RoomRecord::default()
+        })
+    }
+
     /// Records a room's own report. Owner and note are left alone — the room
     /// does not know them.
     pub fn apply_report(&mut self, report: &RoomReport, now: i64) -> bool {
         if !is_valid_room(&report.room) {
             return false;
         }
-        let record = self
-            .rooms
-            .entry(report.room.clone())
-            .or_insert_with(|| RoomRecord {
-                name: report.room.clone(),
-                first_seen: now,
-                ..RoomRecord::default()
-            });
+        let record = self.entry(&report.room, now);
         record.title = report.title.clone();
         record.protected = report.protected;
         record.rundowns = report.rundowns;
@@ -114,11 +121,7 @@ impl Registry {
         if !is_valid_room(name) {
             return None;
         }
-        let record = self.rooms.entry(name.to_string()).or_insert_with(|| RoomRecord {
-            name: name.to_string(),
-            first_seen: now,
-            ..RoomRecord::default()
-        });
+        let record = self.entry(name, now);
         if let Some(owner) = label(body, "owner") {
             record.owner = owner;
         }
@@ -126,6 +129,29 @@ impl Registry {
             record.note = note;
         }
         Some(record)
+    }
+
+    /// Replaces a room's owners, registering the room if it is not known yet.
+    /// The caller has already checked that every id is a real person.
+    pub fn set_owners(&mut self, name: &str, owners: Vec<Uuid>, now: i64) -> Option<&RoomRecord> {
+        if !is_valid_room(name) {
+            return None;
+        }
+        let record = self.entry(name, now);
+        record.owners = owners;
+        Some(record)
+    }
+
+    /// Takes a person off every room they own.
+    pub fn drop_owner(&mut self, person: &Uuid) {
+        for record in self.rooms.values_mut() {
+            record.owners.retain(|owner| owner != person);
+        }
+    }
+
+    /// The rooms a person owns, in list order.
+    pub fn owned_by(&self, person: &Uuid) -> Vec<&RoomRecord> {
+        self.list().into_iter().filter(|record| record.owners.contains(person)).collect()
     }
 
     /// Drops a room from the list. Its data is untouched — the next report
@@ -152,11 +178,11 @@ pub struct RegistryResponse {
 }
 
 impl RegistryResponse {
-    fn ok(body: Value, changed: bool) -> Self {
+    pub fn ok(body: Value, changed: bool) -> Self {
         Self { status: 200, body, changed }
     }
 
-    fn error(status: u16, message: &str) -> Self {
+    pub fn error(status: u16, message: &str) -> Self {
         Self {
             status,
             body: json!({ "message": message }),

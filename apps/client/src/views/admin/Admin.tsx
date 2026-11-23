@@ -2,10 +2,12 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 
 import {
   AdminError,
+  PersonSummary,
   RoomClient,
   RoomRecord,
   clearAdminToken,
   getAdminToken,
+  listPeople,
   listRooms,
   roomClients,
   saveRoomLabels,
@@ -14,6 +16,7 @@ import Button from '../../common/components/buttons/Button';
 import Input from '../../common/components/input/input/Input';
 
 import AdminLogin from './AdminLogin';
+import PeoplePanel from './PeoplePanel';
 import RoomRow from './RoomRow';
 
 import style from './Admin.module.scss';
@@ -50,6 +53,7 @@ export default function Admin() {
 
 function RoomList({ onSignOut }: { onSignOut: () => void }) {
   const [rooms, setRooms] = useState<RoomRecord[] | null>(null);
+  const [people, setPeople] = useState<PersonSummary[]>([]);
   const [clients, setClients] = useState<Record<string, RoomClient[] | null>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,8 +61,9 @@ function RoomList({ onSignOut }: { onSignOut: () => void }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const listed = await listRooms();
+      const [listed, everyone] = await Promise.all([listRooms(), listPeople()]);
       setRooms(listed);
+      setPeople(everyone);
       setError(null);
       // each room answers for its own screens; one failing must not blank the rest
       const entries = await Promise.all(
@@ -124,9 +129,10 @@ function RoomList({ onSignOut }: { onSignOut: () => void }) {
             {rooms.map((room) => (
               <RoomRow
                 // remount when the stored labels change, so the inputs show them
-                key={`${room.name}:${room.owner}:${room.note}`}
+                key={`${room.name}:${room.owner}:${room.note}:${room.owners.join(',')}`}
                 room={room}
                 clients={clients[room.name] ?? null}
+                people={people}
                 onChanged={load}
                 onError={setError}
               />
@@ -142,6 +148,8 @@ function RoomList({ onSignOut }: { onSignOut: () => void }) {
         </table>
       )}
 
+      <PeoplePanel people={people} onChanged={load} onError={setError} />
+
       <AddRoom onAdded={load} onError={setError} />
     </div>
   );
@@ -150,16 +158,14 @@ function RoomList({ onSignOut }: { onSignOut: () => void }) {
 /** For a room that already existed before this list did. */
 function AddRoom({ onAdded, onError }: { onAdded: () => void; onError: (message: string) => void }) {
   const [name, setName] = useState('');
-  const [owner, setOwner] = useState('');
   const valid = /^[A-Za-z0-9_-]{1,64}$/.test(name);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!valid) return;
     try {
-      await saveRoomLabels(name, { owner });
+      await saveRoomLabels(name, {});
       setName('');
-      setOwner('');
       onAdded();
     } catch (err) {
       onError(`Could not add ${name}. ${err}`);
@@ -174,7 +180,6 @@ function AddRoom({ onAdded, onError }: { onAdded: () => void; onError: (message:
       </p>
       <div className={style.addRow}>
         <Input placeholder='room-name' value={name} onChange={(event) => setName(event.target.value.trim())} />
-        <Input placeholder='Owner' value={owner} onChange={(event) => setOwner(event.target.value)} />
         <Button type='submit' variant='primary' disabled={!valid}>
           Add
         </Button>

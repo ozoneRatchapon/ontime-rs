@@ -10,13 +10,30 @@ import { getWorkerOrigin } from '../../externals';
 export interface RoomRecord {
   name: string;
   title: string;
+  /** free-text label from before people existed; shown until cleared */
   owner: string;
+  /** ids of the people who own the room */
+  owners: string[];
   note: string;
   protected: boolean;
   rundowns: number;
   firstSeen: number;
   /** 0 when only registered by hand and not used since */
   lastSeen: number;
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
+export interface PersonSummary extends Person {
+  /** one label per signed-in device, e.g. "iPhone Safari" */
+  devices: string[];
+  lastSeen: number;
+  /** set while an invite link is waiting to be opened */
+  inviteExpiresAt: number | null;
 }
 
 export interface RoomClient {
@@ -52,7 +69,8 @@ export class AdminError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}, token = getAdminToken()): Promise<T> {
+/** A JSON call to the Worker with the given bearer token. */
+export async function workerRequest<T>(path: string, init: RequestInit = {}, token: string | null): Promise<T> {
   const response = await fetch(`${getWorkerOrigin()}${path}`, {
     ...init,
     headers: {
@@ -67,9 +85,13 @@ async function request<T>(path: string, init: RequestInit = {}, token = getAdmin
   return response.json() as Promise<T>;
 }
 
+function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return workerRequest<T>(path, init, getAdminToken());
+}
+
 /** Exchanges the master password for the master token and keeps it for this tab. */
 export async function adminLogin(password: string): Promise<void> {
-  const { token } = await request<{ token: string }>(
+  const { token } = await workerRequest<{ token: string }>(
     '/admin/login',
     { method: 'POST', body: JSON.stringify({ password }) },
     null,
@@ -92,6 +114,43 @@ export function saveRoomLabels(name: string, labels: { owner?: string; note?: st
     method: 'PUT',
     body: JSON.stringify(labels),
   });
+}
+
+/** Replaces who owns a room. */
+export function saveRoomOwners(name: string, owners: string[]): Promise<RoomRecord> {
+  return request<RoomRecord>(`/admin/rooms/${encodeURIComponent(name)}`, {
+    method: 'PUT',
+    body: JSON.stringify({ owners }),
+  });
+}
+
+export async function listPeople(): Promise<PersonSummary[]> {
+  const { people } = await request<{ people: PersonSummary[] }>('/admin/people');
+  return people;
+}
+
+export function addPerson(name: string): Promise<Person> {
+  return request<Person>('/admin/people', { method: 'POST', body: JSON.stringify({ name }) });
+}
+
+/** A fresh invite link for a person; any unused earlier link stops working. */
+export async function createInvite(id: string): Promise<{ link: string; expiresAt: number }> {
+  const { code, expiresAt } = await request<{ code: string; expiresAt: number }>(
+    `/admin/people/${encodeURIComponent(id)}/invite`,
+    { method: 'POST' },
+  );
+  // the code rides in the fragment, which never reaches a server log
+  return { link: `${window.location.origin}/join#code=${code}`, expiresAt };
+}
+
+/** Signs a person out of every device and cancels their invite link. */
+export function signOutPerson(id: string): Promise<unknown> {
+  return request(`/admin/people/${encodeURIComponent(id)}/sessions`, { method: 'DELETE' });
+}
+
+/** Removes a person, and takes them off every room they own. */
+export function removePerson(id: string): Promise<unknown> {
+  return request(`/admin/people/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 /** Removes a room from the list only — its data is kept, and using it lists it again. */

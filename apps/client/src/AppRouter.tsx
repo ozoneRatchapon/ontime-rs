@@ -26,6 +26,8 @@ const Editor = lazy(() => import('./views/editor/ProtectedEditor'));
 const Cuesheet = lazy(() => import('./views/cuesheet/ProtectedCuesheet'));
 const Operator = lazy(() => import('./features/operator/OperatorExport'));
 const Admin = lazy(() => import('./views/admin/Admin'));
+const Join = lazy(() => import('./views/people/Join'));
+const MyRooms = lazy(() => import('./views/people/MyRooms'));
 
 const EditorFeatureWrapper = lazy(() => import('./features/EditorFeatureWrapper'));
 const RundownPanel = lazy(() => import('./features/rundown/RundownExport'));
@@ -103,6 +105,9 @@ export default function AppRouter() {
         <Route path='editor' element={<Editor />} />
         {/* every room on the Worker — outside any room, behind the master password */}
         <Route path='admin' element={<Admin />} />
+        {/* a person signing in with an invite link, and the rooms they own */}
+        <Route path='join' element={<Join />} />
+        <Route path='my-rooms' element={<MyRooms />} />
         <Route path='cuesheet' element={<Cuesheet />} />
         <Route
           path='op'

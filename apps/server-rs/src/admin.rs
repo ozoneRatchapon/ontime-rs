@@ -3,7 +3,13 @@
 //! - `POST   /admin/login`         `{ password }` -> `{ token }` (the master token)
 //! - `GET    /admin/rooms`         every room the registry knows
 //! - `PUT    /admin/rooms/<name>`  `{ owner?, note? }`
+//! - `PUT    /admin/rooms/<name>`  also `{ owners: [personId] }`
 //! - `DELETE /admin/rooms/<name>`  forget a room (its data stays)
+//! - `GET    /admin/people`        people, their devices and pending invites
+//! - `POST   /admin/people`        `{ name }`
+//! - `POST   /admin/people/<id>/invite`    a new invite code
+//! - `DELETE /admin/people/<id>/sessions`  sign them out everywhere
+//! - `DELETE /admin/people/<id>`           remove them
 //!
 //! With no `SESSION_PASSWORD` configured the admin surface is closed rather than
 //! open: unlike creating a room, listing every room is never a default.
@@ -13,7 +19,7 @@ use worker::*;
 
 use ontime_core::project::{hash_password, token_matches};
 
-use crate::registry_host;
+use crate::{bearer_token, registry_host};
 
 fn master_token(env: &Env) -> Option<String> {
     env.secret("SESSION_PASSWORD")
@@ -22,10 +28,8 @@ fn master_token(env: &Env) -> Option<String> {
 }
 
 fn presented_token(req: &Request) -> Option<String> {
-    if let Ok(Some(auth)) = req.headers().get("Authorization") {
-        if let Some(token) = auth.strip_prefix("Bearer ") {
-            return Some(token.trim().to_string());
-        }
+    if let Some(token) = bearer_token(req) {
+        return Some(token);
     }
     req.url()
         .ok()?
@@ -59,8 +63,10 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
         return Response::error("Unauthorized", 401);
     }
 
-    // only the room list is reachable from outside; `report` is for rooms
-    if !(rest == "rooms" || rest.starts_with("rooms/")) {
+    // only the room list and people are reachable from here; `report` is for
+    // rooms and `auth` has its own front door
+    let first = rest.split('/').next().unwrap_or_default();
+    if !matches!(first, "rooms" | "people") {
         return Response::error("Not found", 404);
     }
 

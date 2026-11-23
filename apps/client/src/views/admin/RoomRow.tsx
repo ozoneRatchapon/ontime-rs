@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { IoLockClosed } from 'react-icons/io5';
 
-import { RoomClient, RoomRecord, forgetRoom, saveRoomLabels } from '../../common/api/admin';
+import { Person, RoomClient, RoomRecord, forgetRoom, saveRoomLabels, saveRoomOwners } from '../../common/api/admin';
 import Button from '../../common/components/buttons/Button';
 import Input from '../../common/components/input/input/Input';
 
 import { formatDate, formatLastSeen, roomLink, summariseClients } from './adminUtils';
+import OwnerPicker from './OwnerPicker';
 
 import style from './Admin.module.scss';
 
@@ -13,13 +14,14 @@ interface RoomRowProps {
   room: RoomRecord;
   /** null while loading or when the room could not be asked */
   clients: RoomClient[] | null;
+  people: Person[];
   onChanged: () => void;
   onError: (message: string) => void;
 }
 
 const VIEWS = ['editor', 'cuesheet', 'timer', 'backstage'];
 
-export default function RoomRow({ room, clients, onChanged, onError }: RoomRowProps) {
+export default function RoomRow({ room, clients, people, onChanged, onError }: RoomRowProps) {
   const [owner, setOwner] = useState(room.owner);
   const [note, setNote] = useState(room.note);
 
@@ -31,6 +33,15 @@ export default function RoomRow({ room, clients, onChanged, onError }: RoomRowPr
       onChanged();
     } catch (err) {
       onError(`Could not save ${field} of ${room.name}. ${err}`);
+    }
+  };
+
+  const saveOwners = async (owners: string[]) => {
+    try {
+      await saveRoomOwners(room.name, owners);
+      onChanged();
+    } catch (err) {
+      onError(`Could not save the owners of ${room.name}. ${err}`);
     }
   };
 
@@ -57,13 +68,18 @@ export default function RoomRow({ room, clients, onChanged, onError }: RoomRowPr
         <div className={style.muted}>{room.title}</div>
       </td>
       <td>
-        <Input
-          value={owner}
-          placeholder='Who looks after it'
-          onChange={(event) => setOwner(event.target.value)}
-          onBlur={() => save('owner', owner)}
-          fluid
-        />
+        <OwnerPicker owners={room.owners} people={people} onChange={saveOwners} />
+        {/* the free-text owner from before people existed, until it is cleared */}
+        {room.owner && (
+          <Input
+            className={style.legacyOwner}
+            value={owner}
+            title='Old free-text owner — clear it once the real owner is set'
+            onChange={(event) => setOwner(event.target.value)}
+            onBlur={() => save('owner', owner)}
+            fluid
+          />
+        )}
       </td>
       <td>
         <Input

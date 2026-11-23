@@ -109,3 +109,68 @@
   display: flex;
   gap: 0.5rem;
 }
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 2.5rem;
+}
+
+.invite {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid $action-blue;
+  border-radius: 4px;
+}
+
+.inviteLink {
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.owners {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.25rem 0.15rem 0.5rem;
+  border-radius: 1rem;
+  background-color: $gray-1000;
+  white-space: nowrap;
+}
+
+.chipRemove {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: none;
+  color: $label-gray;
+  cursor: pointer;
+
+  &:hover {
+    color: $ui-white;
+  }
+}
+
+.addOwner {
+  padding: 0.15rem 0.35rem;
+  border: 1px solid $gray-1000;
+  border-radius: 1rem;
+  background-color: transparent;
+  color: $label-gray;
+  cursor: pointer;
+}
+
+.legacyOwner {
+  margin-top: 0.35rem;
+  color: $label-gray;
+}
