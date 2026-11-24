@@ -25,15 +25,20 @@ for arg in "$@"; do
   esac
 done
 
+# shellcheck source=../ports.sh
+. "$here/../ports.sh"
+
 wrangler_pid=""
 cleanup() {
   if [ -n "$wrangler_pid" ]; then
     kill "$wrangler_pid" 2>/dev/null || true
+    stop_port 8787
   fi
 }
 trap cleanup EXIT
 
 if [ "$start_server" = true ]; then
+  require_free_port 8787
   echo "==> building the worker"
   (cd "$server_dir" && worker-build --release >/dev/null)
 

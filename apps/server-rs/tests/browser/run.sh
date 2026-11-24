@@ -15,8 +15,18 @@ export ADMIN_PASSWORD="${ADMIN_PASSWORD:-admin-e2e}"
 export BROWSER_API="${BROWSER_API:-http://127.0.0.1:8788}"
 export BROWSER_APP="${BROWSER_APP:-http://localhost:4199}"
 
+# shellcheck source=../ports.sh
+. "$here/../ports.sh"
+
 pids=()
-cleanup() { for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done; }
+started=false
+cleanup() {
+  for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done
+  if [ "$started" = true ]; then
+    stop_port 8788
+    stop_port 4199
+  fi
+}
 trap cleanup EXIT
 
 # any HTTP answer means it is up; a new room on a worker with a password answers 403
@@ -30,6 +40,9 @@ wait_for() {
 }
 
 if [ "${1:-}" = "--start" ]; then
+  require_free_port 8788
+  require_free_port 4199
+  started=true
   # a fresh, empty state every run, as on CI: rooms left by earlier runs would
   # hide whatever only happens on a new deployment
   state="$(mktemp -d)"

@@ -7,7 +7,10 @@ const base = process.argv[2] ?? 'http://127.0.0.1:8787';
 // start in the same second, and the room still holds the previous run's rundown
 const room = 'tmr-' + Math.random().toString(36).slice(2, 10);
 const prefixed = `${base}/r/${room}`;
-const wsUrl = base.replace(/^http/, 'ws') + `/ws?room=${room}`;
+// the master token, so the suite can create its throwaway room on a gated
+// deployment (see README); without it the suite runs against wrangler dev
+const token = process.env.ONTIME_TOKEN;
+const wsUrl = `${base.replace(/^http/, 'ws')}/ws?${new URLSearchParams({ room, ...(token ? { token } : {}) })}`;
 
 let failed = false;
 const check = (label, actual, expected) => {
@@ -33,7 +36,7 @@ const near = (label, actual, expected, tolerance) => {
 const api = (method, path, body) =>
   fetch(`${prefixed}${path}`, {
     method,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   }).then((r) => (r.status === 204 ? null : r.json()));
 
@@ -156,18 +159,25 @@ send('start', undefined);
 const resumed = await until((p) => p.timer.playback === 'play', 'the resume to apply');
 check('playback is play', resumed.timer.playback, 'play');
 // resuming re-anchors to a whole second so the countdown stays in step with the
-// wall clock, which can move the value by up to half a second
+// wall clock, which can move the value by up to half a second. The anchor is
+// the start plus the time paused, so startedAt itself stays the real start.
 near('resumes close to where it paused', resumed.timer.current, atPause, 500);
-check('anchored to a whole second', resumed._engine.inputs.startedAt % 1000, 0);
+const { startedAt, pausedTotal } = resumed._engine.inputs;
+check('anchored to a whole second', (startedAt + pausedTotal) % 1000, 0);
+check('startedAt is still the real start', resumed.timer.startedAt, paused.timer.startedAt);
 
 console.log('== addtime ==');
 assertSocketAlive('addtime');
+const beforeAdding = latest().timer;
 send('addtime', 30000);
 // await the packet the command caused, as for stop below: a fixed sleep read a
 // stale packet on a slow runner
 const added = await until((p) => p.timer.addedTime === 30000, 'the added time to apply');
 check('addedTime recorded', added.timer.addedTime, 30000);
-check('duration extended', added.timer.duration, 36000);
+// duration is the plan, as upstream reports it: the client adds addedTime
+// itself (getTotalTime), so the time lands in current, not in duration
+check('duration is still the plan', added.timer.duration, beforeAdding.duration);
+near('current gained the added time', added.timer.current, beforeAdding.current + 30000, 1500);
 
 console.log('== load next ==');
 assertSocketAlive('load next');
@@ -195,6 +205,10 @@ check('no ticks while stopped', runtime.length, idle);
 ws.close();
 await api('POST', '/data/rundowns/default/load');
 await api('DELETE', `/data/rundowns/${rid}`);
+if (token) {
+  // take it off the admin room list again
+  await fetch(`${base}/admin/rooms/${room}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+}
 
 console.log(failed ? '\nSOME CHECKS FAILED' : '\nALL CHECKS PASSED');
 process.exit(failed ? 1 : 0);
