@@ -2,8 +2,9 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import { IoLockClosed, IoPeople } from 'react-icons/io5';
 
 import { MemberRoom, Person } from '../../common/api/admin';
-import { signOut, whoAmI } from '../../common/api/personSession';
+import { getSession, signOut, whoAmI } from '../../common/api/personSession';
 import Button from '../../common/components/buttons/Button';
+import ActivityPanel from '../admin/ActivityPanel';
 import { formatDate, formatLastSeen, roomLink } from '../admin/adminUtils';
 
 import TeamPanel from './TeamPanel';
@@ -11,6 +12,8 @@ import TeamPanel from './TeamPanel';
 import style from '../admin/Admin.module.scss';
 
 const VIEWS = ['editor', 'cuesheet', 'timer', 'backstage'];
+
+type Panel = 'team' | 'activity';
 
 type State =
   | { kind: 'loading' }
@@ -21,8 +24,11 @@ type State =
 /** The rooms the person signed in on this device owns. */
 export default function MyRooms() {
   const [state, setState] = useState<State>({ kind: 'loading' });
-  // the room whose team is open, one at a time
-  const [open, setOpen] = useState<string | null>(null);
+  // the one panel open below a room: its team or its activity
+  const [open, setOpen] = useState<{ room: string; panel: Panel } | null>(null);
+  const toggle = (room: string, panel: Panel) =>
+    setOpen((current) => (current?.room === room && current.panel === panel ? null : { room, panel }));
+  const isOpen = (room: string, panel: Panel) => open?.room === room && open.panel === panel;
 
   const load = useCallback(async () => {
     try {
@@ -103,8 +109,11 @@ export default function MyRooms() {
                     {room.role}
                     {room.role === 'owner' && (
                       <div>
-                        <Button size='small' variant='ghosted' onClick={() => setOpen(open === room.name ? null : room.name)}>
-                          {open === room.name ? 'Hide team' : 'Team'}
+                        <Button size='small' variant='ghosted' onClick={() => toggle(room.name, 'team')}>
+                          {isOpen(room.name, 'team') ? 'Hide team' : 'Team'}
+                        </Button>
+                        <Button size='small' variant='ghosted' onClick={() => toggle(room.name, 'activity')}>
+                          {isOpen(room.name, 'activity') ? 'Hide activity' : 'Activity'}
                         </Button>
                       </div>
                     )}
@@ -119,10 +128,14 @@ export default function MyRooms() {
                     ))}
                   </td>
                 </tr>
-                {open === room.name && (
+                {open?.room === room.name && (
                   <tr>
                     <td colSpan={5}>
-                      <TeamPanel room={room} onChanged={load} />
+                      {open.panel === 'team' ? (
+                        <TeamPanel room={room} onChanged={load} />
+                      ) : (
+                        <ActivityPanel room={room.name} auth={{ session: getSession() ?? '' }} />
+                      )}
                     </td>
                   </tr>
                 )}
