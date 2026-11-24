@@ -106,3 +106,24 @@ How to use it:
 - [x] Push to `backup`: done 2026-11-24 (`f56c8fd4`). Later pushes: `git push backup <branch>` is allowed in `.claude/settings.local.json`; pushes to `origin` are denied there.
   - `origin` (ontime-rs) is **PUBLIC**. Never push to it.
 - [ ] `scripts/split-project-sharing.mjs` is not ours. Leave it alone.
+
+## Publishing (2026-11-24)
+
+- [x] A pre-push check, `scripts/hooks/check-push.mjs`, turned on with
+  `git config core.hooksPath scripts/hooks`.
+  - For a public remote it refuses real schedule files and personal values
+    taken from them.
+  - For every remote it refuses the master password and token-shaped text.
+  - Tested by planting all three; each was refused.
+  - **Never bypass it:** no `--no-verify`.
+- [x] A "Source code of this deployment" link in Settings → About, for
+  AGPL-3.0. Committed, not deployed.
+- [ ] **[ต้องถาม]** The user edits `.claude/settings.local.json` to allow
+  `git push origin *` and to deny force pushes and `--no-verify`. The agent's
+  permission check refuses to widen its own permissions.
+- [ ] **[ต้องถาม]** `git push origin feat/rust-cloud-backend`, which makes it
+  public. The hook checks it first.
+- [ ] **[ต้องถาม]** Deploy the client after that push, so the source link
+  points at current source.
+- [ ] **[ต้องถาม]** Back up the real schedules to a separate private repo,
+  `ontime-ops`. The user creates the repo.
