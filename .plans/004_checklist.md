@@ -97,7 +97,8 @@ How to use it:
 - [x] **Audit log:** who changed what, in which room. Plan: `007_audit_log.md`.
   - Approved 2026-11-24 with the 4 recommended decisions. Built and tested
     locally: core 311, e2e `activity.mjs` (25), browser check (11).
-  - **[ต้องถาม]** deploying the Worker and the client is still open.
+  - Deployed on 2026-11-24: Worker `02b203be` (rollback point `f366b3c1`),
+    Pages `781e445f`. The production smoke test passed 25/25.
 
 ## Housekeeping
 

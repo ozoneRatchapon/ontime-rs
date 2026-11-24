@@ -27,4 +27,5 @@
 - **2026-11-24, plan 007 audit log** (ab9894c3 for the server, 3f768647 for
   the client, and the commit that adds people events).
   - Room activity for owners and the admin; people events for the admin.
-  - See `.plans/007_audit_log.md` → "As built". Not deployed yet.
+  - See `.plans/007_audit_log.md` → "As built".
+  - Deployed on 2026-11-24: Worker `02b203be`, Pages `781e445f`.

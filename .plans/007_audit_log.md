@@ -1,6 +1,12 @@
 # 007 — Audit log: who changed what, in which room (sign-in phase 3 of 3)
 
-Status: **built and tested locally (2026-11-24); not deployed yet.** Builds on 001 and 002.
+Status: **done and deployed (2026-11-24).** Builds on 001 and 002.
+- **Worker:** `02b203be`. The rollback point is `f366b3c1`.
+- **Client:** Pages `781e445f`, live on `master.ontime-team.pages.dev`.
+- **Smoke test:** `activity.mjs` against production, 25/25, run twice. Both
+  times it removed its throwaway person and room.
+- **Existing rooms:** read-only `GET .../rundowns/current` returns 200 for all
+  of them.
 
 ## As built
 
@@ -54,12 +60,11 @@ names kept as they were.
 
 **Not done:** `server-native` (the LAN host) does not record activity yet.
 
-## Rollout still to do
+## Rollout
 
-1. Record the Worker version.
-2. Deploy the Worker, then the client.
-3. Smoke test with a throwaway person and room.
-4. Remove the throwaway person and room.
+Done on 2026-11-24, see the status above.
+- A forgotten smoke room drops out of the list, but its Durable Object
+  storage stays, as with every forgotten room.
 
 ## Goal
 
