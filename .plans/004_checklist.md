@@ -230,3 +230,12 @@ How to use it:
       teleprompter 8.
   - The 5 remaining vite and vitest alerts should close: none of the
     vulnerable versions are installed.
+  - **Deployed on 2026-11-24** with the teleprompter audit log, the script
+    cache and the `api` split.
+    - Worker `abbd7a7d`; the rollback point is `c9560deb`.
+    - Pages Preview `46fc3dc5` (`master`) and Production `7d5cfedf` (`main`).
+  - **Production smoke test:**
+    - `teleprompter.mjs` 35/35 and `activity.mjs` 25/25, with throwaway rooms;
+    - both URLs serve the new bundle;
+    - all 4 rooms answer 200, checked read-only;
+    - `/admin` and the teleprompter view boot in a browser with no errors.
