@@ -5,6 +5,8 @@ import { wait } from './support.mjs';
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
 const room = 'up-' + Math.random().toString(36).slice(2, 10);
 const r = (path) => `${base}/r/${room}${path}`;
+// a deployment with a master password only lets the master create a room
+const token = process.env.ONTIME_TOKEN;
 
 let failed = false;
 const check = (label, actual, expected) => {
@@ -15,7 +17,7 @@ const check = (label, actual, expected) => {
 const call = async (method, path, body) => {
   const response = await fetch(r(path), {
     method,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await response.text();
@@ -37,7 +39,7 @@ check(
 await call('POST', `/data/rundowns/${rid}/load`);
 
 // --- the socket --------------------------------------------------------------
-const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}`);
+const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?${new URLSearchParams({ room, ...(token ? { token } : {}) })}`);
 const packets = [];
 ws.addEventListener('message', (e) => packets.push(JSON.parse(e.data)));
 await new Promise((resolve, reject) => {
@@ -106,4 +108,8 @@ check('symbols only: 422', (await call('POST', '/data/rundowns', { title: '-,.' 
 check('rename to emoji only: 422', (await call('PATCH', `/data/rundowns/${rid}`, { title: '🎉' })).status, 422);
 
 ws.close();
+if (token) {
+  // take it off the admin room list again
+  await fetch(`${base}/admin/rooms/${room}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+}
 process.exit(failed ? 1 : 0);
