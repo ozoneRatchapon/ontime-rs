@@ -2,6 +2,7 @@
 //! shared transport. Ported from upstream ontime; the shared contract is
 //! `tests/fixtures/teleprompter_*.json`, generated from upstream's own code.
 
+pub mod position;
 pub mod script;
 pub mod settings;
 pub mod wrap;

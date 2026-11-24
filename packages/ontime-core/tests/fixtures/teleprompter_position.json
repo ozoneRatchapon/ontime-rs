@@ -1,0 +1,4152 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b by scripts/teleprompter-oracle/generate.sh; do not edit by hand.",
+ "cases": {
+  "sweeps": [
+   {
+    "name": "two events, one empty",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "layout": {
+     "rowCount": 6,
+     "events": [
+      {
+       "id": "a",
+       "cue": "a",
+       "title": "a",
+       "firstRow": 0,
+       "startRow": 1,
+       "endRow": 3,
+       "nextRow": 4,
+       "text": [
+        {
+         "row": 1,
+         "start": 0
+        },
+        {
+         "row": 2,
+         "start": 8
+        }
+       ]
+      },
+      {
+       "id": "b",
+       "cue": "b",
+       "title": "b",
+       "firstRow": 4,
+       "startRow": 5,
+       "endRow": 5,
+       "nextRow": 6,
+       "text": []
+      }
+     ]
+    },
+    "rows": [
+     {
+      "row": -0.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1.5
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": -0.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1.25
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": 0,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 0.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 0.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 0.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 1,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 1,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 1.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 1.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 1.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 2,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 0
+      },
+      "back": 2,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 0.25
+      },
+      "back": 2.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 0.5
+      },
+      "back": 2.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 0.75
+      },
+      "back": 2.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 3,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 1
+      },
+      "back": 3,
+      "eventAt": "a"
+     },
+     {
+      "row": 3.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 1.25
+      },
+      "back": 3.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 3.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 1.5
+      },
+      "back": 3.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 3.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 1.75
+      },
+      "back": 3.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 4,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 4,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 4.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 4.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 4.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 5,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 5.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 5.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 5.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 6,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1
+      },
+      "back": 6,
+      "eventAt": "b"
+     },
+     {
+      "row": 6.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.25
+      },
+      "back": 6.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 6.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.5
+      },
+      "back": 6.5,
+      "eventAt": "b"
+     }
+    ]
+   },
+   {
+    "name": "two events",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "layout": {
+     "rowCount": 7,
+     "events": [
+      {
+       "id": "a",
+       "cue": "a",
+       "title": "a",
+       "firstRow": 0,
+       "startRow": 1,
+       "endRow": 3,
+       "nextRow": 4,
+       "text": [
+        {
+         "row": 1,
+         "start": 0
+        },
+        {
+         "row": 2,
+         "start": 8
+        }
+       ]
+      },
+      {
+       "id": "b",
+       "cue": "b",
+       "title": "b",
+       "firstRow": 4,
+       "startRow": 5,
+       "endRow": 6,
+       "nextRow": 7,
+       "text": [
+        {
+         "row": 5,
+         "start": 0
+        }
+       ]
+      }
+     ]
+    },
+    "rows": [
+     {
+      "row": -0.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1.5
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": -0.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1.25
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": 0,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 0.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 0.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 0.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 1,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 1,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 1.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 1.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 1.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 2,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 0
+      },
+      "back": 2,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 0.25
+      },
+      "back": 2.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 0.5
+      },
+      "back": 2.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 0.75
+      },
+      "back": 2.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 3,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 1
+      },
+      "back": 3,
+      "eventAt": "a"
+     },
+     {
+      "row": 3.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 1.25
+      },
+      "back": 3.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 3.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 1.5
+      },
+      "back": 3.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 3.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 8,
+       "lines": 1.75
+      },
+      "back": 3.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 4,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 4,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 4.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 4.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 4.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 5,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 5.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 5.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 5.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 6,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1
+      },
+      "back": 6,
+      "eventAt": "b"
+     },
+     {
+      "row": 6.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.25
+      },
+      "back": 6.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 6.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.5
+      },
+      "back": 6.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 6.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.75
+      },
+      "back": 6.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 7,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 2
+      },
+      "back": 7,
+      "eventAt": "b"
+     },
+     {
+      "row": 7.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 2.25
+      },
+      "back": 7.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 7.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 2.5
+      },
+      "back": 7.5,
+      "eventAt": "b"
+     }
+    ]
+   },
+   {
+    "name": "three short events",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "c",
+      "cue": "c",
+      "title": "c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "c"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "layout": {
+     "rowCount": 9,
+     "events": [
+      {
+       "id": "a",
+       "cue": "a",
+       "title": "a",
+       "firstRow": 0,
+       "startRow": 1,
+       "endRow": 2,
+       "nextRow": 3,
+       "text": [
+        {
+         "row": 1,
+         "start": 0
+        }
+       ]
+      },
+      {
+       "id": "b",
+       "cue": "b",
+       "title": "b",
+       "firstRow": 3,
+       "startRow": 4,
+       "endRow": 5,
+       "nextRow": 6,
+       "text": [
+        {
+         "row": 4,
+         "start": 0
+        }
+       ]
+      },
+      {
+       "id": "c",
+       "cue": "c",
+       "title": "c",
+       "firstRow": 6,
+       "startRow": 7,
+       "endRow": 8,
+       "nextRow": 9,
+       "text": [
+        {
+         "row": 7,
+         "start": 0
+        }
+       ]
+      }
+     ]
+    },
+    "rows": [
+     {
+      "row": -0.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1.5
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": -0.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1.25
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": 0,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 0.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 0.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 0.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 1,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 1,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 1.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 1.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 1.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 2,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 1
+      },
+      "back": 2,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 1.25
+      },
+      "back": 2.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 1.5
+      },
+      "back": 2.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 2.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 1.75
+      },
+      "back": 2.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 3,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 3,
+      "eventAt": "b"
+     },
+     {
+      "row": 3.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 3.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 3.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 3.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 3.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 3.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 4,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 4,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 4.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 4.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 4.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1
+      },
+      "back": 5,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.25
+      },
+      "back": 5.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.5
+      },
+      "back": 5.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 5.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.75
+      },
+      "back": 5.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 6,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 6,
+      "eventAt": "c"
+     },
+     {
+      "row": 6.25,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 6.25,
+      "eventAt": "c"
+     },
+     {
+      "row": 6.5,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 6.5,
+      "eventAt": "c"
+     },
+     {
+      "row": 6.75,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 6.75,
+      "eventAt": "c"
+     },
+     {
+      "row": 7,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 7,
+      "eventAt": "c"
+     },
+     {
+      "row": 7.25,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 7.25,
+      "eventAt": "c"
+     },
+     {
+      "row": 7.5,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 7.5,
+      "eventAt": "c"
+     },
+     {
+      "row": 7.75,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 7.75,
+      "eventAt": "c"
+     },
+     {
+      "row": 8,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 1
+      },
+      "back": 8,
+      "eventAt": "c"
+     },
+     {
+      "row": 8.25,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 1.25
+      },
+      "back": 8.25,
+      "eventAt": "c"
+     },
+     {
+      "row": 8.5,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 1.5
+      },
+      "back": 8.5,
+      "eventAt": "c"
+     },
+     {
+      "row": 8.75,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 1.75
+      },
+      "back": 8.75,
+      "eventAt": "c"
+     },
+     {
+      "row": 9,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 2
+      },
+      "back": 9,
+      "eventAt": "c"
+     },
+     {
+      "row": 9.25,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 2.25
+      },
+      "back": 9.25,
+      "eventAt": "c"
+     },
+     {
+      "row": 9.5,
+      "anchor": {
+       "eventId": "c",
+       "charOffset": 0,
+       "lines": 2.5
+      },
+      "back": 9.5,
+      "eventAt": "c"
+     }
+    ]
+   },
+   {
+    "name": "no headings",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "layout": {
+     "rowCount": 4,
+     "events": [
+      {
+       "id": "a",
+       "cue": "a",
+       "title": "a",
+       "firstRow": 0,
+       "startRow": 0,
+       "endRow": 1,
+       "nextRow": 2,
+       "text": [
+        {
+         "row": 0,
+         "start": 0
+        }
+       ]
+      },
+      {
+       "id": "b",
+       "cue": "b",
+       "title": "b",
+       "firstRow": 2,
+       "startRow": 2,
+       "endRow": 3,
+       "nextRow": 4,
+       "text": [
+        {
+         "row": 2,
+         "start": 0
+        }
+       ]
+      }
+     ]
+    },
+    "rows": [
+     {
+      "row": -0.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": -0.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": 0,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 0,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 0.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 0.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 0.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 0.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 1,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 1
+      },
+      "back": 1,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.25,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 1.25
+      },
+      "back": 1.25,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.5,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 1.5
+      },
+      "back": 1.5,
+      "eventAt": "a"
+     },
+     {
+      "row": 1.75,
+      "anchor": {
+       "eventId": "a",
+       "charOffset": 0,
+       "lines": 1.75
+      },
+      "back": 1.75,
+      "eventAt": "a"
+     },
+     {
+      "row": 2,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 2,
+      "eventAt": "b"
+     },
+     {
+      "row": 2.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 2.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 2.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 2.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 2.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 2.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 3,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1
+      },
+      "back": 3,
+      "eventAt": "b"
+     },
+     {
+      "row": 3.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.25
+      },
+      "back": 3.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 3.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.5
+      },
+      "back": 3.5,
+      "eventAt": "b"
+     },
+     {
+      "row": 3.75,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 1.75
+      },
+      "back": 3.75,
+      "eventAt": "b"
+     },
+     {
+      "row": 4,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 2
+      },
+      "back": 4,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.25,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 2.25
+      },
+      "back": 4.25,
+      "eventAt": "b"
+     },
+     {
+      "row": 4.5,
+      "anchor": {
+       "eventId": "b",
+       "charOffset": 0,
+       "lines": 2.5
+      },
+      "back": 4.5,
+      "eventAt": "b"
+     }
+    ]
+   },
+   {
+    "name": "only empty events",
+    "events": [
+     {
+      "id": "x",
+      "cue": "x",
+      "title": "x",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "x"
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "y",
+      "cue": "y",
+      "title": "y",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "y"
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "layout": {
+     "rowCount": 4,
+     "events": [
+      {
+       "id": "x",
+       "cue": "x",
+       "title": "x",
+       "firstRow": 0,
+       "startRow": 1,
+       "endRow": 1,
+       "nextRow": 2,
+       "text": []
+      },
+      {
+       "id": "y",
+       "cue": "y",
+       "title": "y",
+       "firstRow": 2,
+       "startRow": 3,
+       "endRow": 3,
+       "nextRow": 4,
+       "text": []
+      }
+     ]
+    },
+    "rows": [
+     {
+      "row": -0.5,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": -1.5
+      },
+      "back": -0.5,
+      "eventAt": "x"
+     },
+     {
+      "row": -0.25,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": -1.25
+      },
+      "back": -0.25,
+      "eventAt": "x"
+     },
+     {
+      "row": 0,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 0,
+      "eventAt": "x"
+     },
+     {
+      "row": 0.25,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 0.25,
+      "eventAt": "x"
+     },
+     {
+      "row": 0.5,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 0.5,
+      "eventAt": "x"
+     },
+     {
+      "row": 0.75,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 0.75,
+      "eventAt": "x"
+     },
+     {
+      "row": 1,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 1,
+      "eventAt": "x"
+     },
+     {
+      "row": 1.25,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 1.25,
+      "eventAt": "x"
+     },
+     {
+      "row": 1.5,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 1.5,
+      "eventAt": "x"
+     },
+     {
+      "row": 1.75,
+      "anchor": {
+       "eventId": "x",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 1.75,
+      "eventAt": "x"
+     },
+     {
+      "row": 2,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 2,
+      "eventAt": "y"
+     },
+     {
+      "row": 2.25,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 2.25,
+      "eventAt": "y"
+     },
+     {
+      "row": 2.5,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 2.5,
+      "eventAt": "y"
+     },
+     {
+      "row": 2.75,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 2.75,
+      "eventAt": "y"
+     },
+     {
+      "row": 3,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 3,
+      "eventAt": "y"
+     },
+     {
+      "row": 3.25,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 3.25,
+      "eventAt": "y"
+     },
+     {
+      "row": 3.5,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 3.5,
+      "eventAt": "y"
+     },
+     {
+      "row": 3.75,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 3.75,
+      "eventAt": "y"
+     },
+     {
+      "row": 4,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": 1
+      },
+      "back": 4,
+      "eventAt": "y"
+     },
+     {
+      "row": 4.25,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": 1.25
+      },
+      "back": 4.25,
+      "eventAt": "y"
+     },
+     {
+      "row": 4.5,
+      "anchor": {
+       "eventId": "y",
+       "charOffset": 0,
+       "lines": 1.5
+      },
+      "back": 4.5,
+      "eventAt": "y"
+     }
+    ]
+   },
+   {
+    "name": "thai and emoji",
+    "events": [
+     {
+      "id": "t",
+      "cue": "t",
+      "title": "t",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "t"
+       },
+       {
+        "kind": "text",
+        "text": "สวัสดีครับ",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "ยินดีต้อนรับ",
+        "start": 11
+       },
+       {
+        "kind": "text",
+        "text": "ทุกท่าน 👋🏽",
+        "start": 23
+       },
+       {
+        "kind": "text",
+        "text": "ขอบคุณครับ",
+        "start": 36
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "e",
+      "cue": "e",
+      "title": "e",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "e"
+       },
+       {
+        "kind": "text",
+        "text": "👨‍👩‍👧‍👦 family",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "indente",
+        "start": 21,
+        "indent": 2
+       },
+       {
+        "kind": "text",
+        "text": "d line",
+        "start": 28,
+        "indent": 2
+       },
+       {
+        "kind": "text",
+        "text": "here",
+        "start": 35,
+        "indent": 2
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "layout": {
+     "rowCount": 12,
+     "events": [
+      {
+       "id": "t",
+       "cue": "t",
+       "title": "t",
+       "firstRow": 0,
+       "startRow": 1,
+       "endRow": 5,
+       "nextRow": 6,
+       "text": [
+        {
+         "row": 1,
+         "start": 0
+        },
+        {
+         "row": 2,
+         "start": 11
+        },
+        {
+         "row": 3,
+         "start": 23
+        },
+        {
+         "row": 4,
+         "start": 36
+        }
+       ]
+      },
+      {
+       "id": "e",
+       "cue": "e",
+       "title": "e",
+       "firstRow": 6,
+       "startRow": 7,
+       "endRow": 11,
+       "nextRow": 12,
+       "text": [
+        {
+         "row": 7,
+         "start": 0
+        },
+        {
+         "row": 8,
+         "start": 21
+        },
+        {
+         "row": 9,
+         "start": 28
+        },
+        {
+         "row": 10,
+         "start": 35
+        }
+       ]
+      }
+     ]
+    },
+    "rows": [
+     {
+      "row": -0.5,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": -1.5
+      },
+      "back": 0,
+      "eventAt": "t"
+     },
+     {
+      "row": -0.25,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": -1.25
+      },
+      "back": 0,
+      "eventAt": "t"
+     },
+     {
+      "row": 0,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 0,
+      "eventAt": "t"
+     },
+     {
+      "row": 0.25,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 0.25,
+      "eventAt": "t"
+     },
+     {
+      "row": 0.5,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 0.5,
+      "eventAt": "t"
+     },
+     {
+      "row": 0.75,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 0.75,
+      "eventAt": "t"
+     },
+     {
+      "row": 1,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 1,
+      "eventAt": "t"
+     },
+     {
+      "row": 1.25,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 1.25,
+      "eventAt": "t"
+     },
+     {
+      "row": 1.5,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 1.5,
+      "eventAt": "t"
+     },
+     {
+      "row": 1.75,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 1.75,
+      "eventAt": "t"
+     },
+     {
+      "row": 2,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 11,
+       "lines": 0
+      },
+      "back": 2,
+      "eventAt": "t"
+     },
+     {
+      "row": 2.25,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 11,
+       "lines": 0.25
+      },
+      "back": 2.25,
+      "eventAt": "t"
+     },
+     {
+      "row": 2.5,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 11,
+       "lines": 0.5
+      },
+      "back": 2.5,
+      "eventAt": "t"
+     },
+     {
+      "row": 2.75,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 11,
+       "lines": 0.75
+      },
+      "back": 2.75,
+      "eventAt": "t"
+     },
+     {
+      "row": 3,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 23,
+       "lines": 0
+      },
+      "back": 3,
+      "eventAt": "t"
+     },
+     {
+      "row": 3.25,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 23,
+       "lines": 0.25
+      },
+      "back": 3.25,
+      "eventAt": "t"
+     },
+     {
+      "row": 3.5,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 23,
+       "lines": 0.5
+      },
+      "back": 3.5,
+      "eventAt": "t"
+     },
+     {
+      "row": 3.75,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 23,
+       "lines": 0.75
+      },
+      "back": 3.75,
+      "eventAt": "t"
+     },
+     {
+      "row": 4,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 36,
+       "lines": 0
+      },
+      "back": 4,
+      "eventAt": "t"
+     },
+     {
+      "row": 4.25,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 36,
+       "lines": 0.25
+      },
+      "back": 4.25,
+      "eventAt": "t"
+     },
+     {
+      "row": 4.5,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 36,
+       "lines": 0.5
+      },
+      "back": 4.5,
+      "eventAt": "t"
+     },
+     {
+      "row": 4.75,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 36,
+       "lines": 0.75
+      },
+      "back": 4.75,
+      "eventAt": "t"
+     },
+     {
+      "row": 5,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 36,
+       "lines": 1
+      },
+      "back": 5,
+      "eventAt": "t"
+     },
+     {
+      "row": 5.25,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 36,
+       "lines": 1.25
+      },
+      "back": 5.25,
+      "eventAt": "t"
+     },
+     {
+      "row": 5.5,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 36,
+       "lines": 1.5
+      },
+      "back": 5.5,
+      "eventAt": "t"
+     },
+     {
+      "row": 5.75,
+      "anchor": {
+       "eventId": "t",
+       "charOffset": 36,
+       "lines": 1.75
+      },
+      "back": 5.75,
+      "eventAt": "t"
+     },
+     {
+      "row": 6,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 0,
+       "lines": -1
+      },
+      "back": 6,
+      "eventAt": "e"
+     },
+     {
+      "row": 6.25,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 0,
+       "lines": -0.75
+      },
+      "back": 6.25,
+      "eventAt": "e"
+     },
+     {
+      "row": 6.5,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 0,
+       "lines": -0.5
+      },
+      "back": 6.5,
+      "eventAt": "e"
+     },
+     {
+      "row": 6.75,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 0,
+       "lines": -0.25
+      },
+      "back": 6.75,
+      "eventAt": "e"
+     },
+     {
+      "row": 7,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 0,
+       "lines": 0
+      },
+      "back": 7,
+      "eventAt": "e"
+     },
+     {
+      "row": 7.25,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 0,
+       "lines": 0.25
+      },
+      "back": 7.25,
+      "eventAt": "e"
+     },
+     {
+      "row": 7.5,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 0,
+       "lines": 0.5
+      },
+      "back": 7.5,
+      "eventAt": "e"
+     },
+     {
+      "row": 7.75,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 0,
+       "lines": 0.75
+      },
+      "back": 7.75,
+      "eventAt": "e"
+     },
+     {
+      "row": 8,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 21,
+       "lines": 0
+      },
+      "back": 8,
+      "eventAt": "e"
+     },
+     {
+      "row": 8.25,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 21,
+       "lines": 0.25
+      },
+      "back": 8.25,
+      "eventAt": "e"
+     },
+     {
+      "row": 8.5,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 21,
+       "lines": 0.5
+      },
+      "back": 8.5,
+      "eventAt": "e"
+     },
+     {
+      "row": 8.75,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 21,
+       "lines": 0.75
+      },
+      "back": 8.75,
+      "eventAt": "e"
+     },
+     {
+      "row": 9,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 28,
+       "lines": 0
+      },
+      "back": 9,
+      "eventAt": "e"
+     },
+     {
+      "row": 9.25,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 28,
+       "lines": 0.25
+      },
+      "back": 9.25,
+      "eventAt": "e"
+     },
+     {
+      "row": 9.5,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 28,
+       "lines": 0.5
+      },
+      "back": 9.5,
+      "eventAt": "e"
+     },
+     {
+      "row": 9.75,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 28,
+       "lines": 0.75
+      },
+      "back": 9.75,
+      "eventAt": "e"
+     },
+     {
+      "row": 10,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 0
+      },
+      "back": 10,
+      "eventAt": "e"
+     },
+     {
+      "row": 10.25,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 0.25
+      },
+      "back": 10.25,
+      "eventAt": "e"
+     },
+     {
+      "row": 10.5,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 0.5
+      },
+      "back": 10.5,
+      "eventAt": "e"
+     },
+     {
+      "row": 10.75,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 0.75
+      },
+      "back": 10.75,
+      "eventAt": "e"
+     },
+     {
+      "row": 11,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 1
+      },
+      "back": 11,
+      "eventAt": "e"
+     },
+     {
+      "row": 11.25,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 1.25
+      },
+      "back": 11.25,
+      "eventAt": "e"
+     },
+     {
+      "row": 11.5,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 1.5
+      },
+      "back": 11.5,
+      "eventAt": "e"
+     },
+     {
+      "row": 11.75,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 1.75
+      },
+      "back": 11.75,
+      "eventAt": "e"
+     },
+     {
+      "row": 12,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 2
+      },
+      "back": 12,
+      "eventAt": "e"
+     },
+     {
+      "row": 12.25,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 2.25
+      },
+      "back": 12.25,
+      "eventAt": "e"
+     },
+     {
+      "row": 12.5,
+      "anchor": {
+       "eventId": "e",
+       "charOffset": 35,
+       "lines": 2.5
+      },
+      "back": 12.5,
+      "eventAt": "e"
+     }
+    ]
+   },
+   {
+    "name": "empty script",
+    "events": [],
+    "layout": {
+     "rowCount": 0,
+     "events": []
+    },
+    "rows": [
+     {
+      "row": -0.5,
+      "anchor": null,
+      "back": null,
+      "eventAt": null
+     },
+     {
+      "row": -0.25,
+      "anchor": null,
+      "back": null,
+      "eventAt": null
+     },
+     {
+      "row": 0,
+      "anchor": null,
+      "back": null,
+      "eventAt": null
+     },
+     {
+      "row": 0.25,
+      "anchor": null,
+      "back": null,
+      "eventAt": null
+     },
+     {
+      "row": 0.5,
+      "anchor": null,
+      "back": null,
+      "eventAt": null
+     }
+    ]
+   }
+  ],
+  "anchors": [
+   {
+    "name": "the start of an event",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 0,
+     "lines": 0
+    },
+    "row": 5
+   },
+   {
+    "name": "an event outside the script",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "gone",
+     "charOffset": 0,
+     "lines": 0
+    },
+    "row": null
+   },
+   {
+    "name": "deep in the heading",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 0,
+     "lines": -3
+    },
+    "row": 4
+   },
+   {
+    "name": "an offset between lines",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "a",
+     "charOffset": 10,
+     "lines": 0.5
+    },
+    "row": 2.5
+   },
+   {
+    "name": "an offset past the text",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "a",
+     "charOffset": 999,
+     "lines": 0
+    },
+    "row": 2
+   },
+   {
+    "name": "an empty event",
+    "events": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 0,
+     "lines": 0.5
+    },
+    "row": 5.5
+   }
+  ],
+  "edits": [
+   {
+    "name": "after",
+    "previous": "one two three",
+    "next": "one two three four",
+    "offset": 4,
+    "result": 4
+   },
+   {
+    "name": "starting at",
+    "previous": "one two three",
+    "next": "one zero two three",
+    "offset": 4,
+    "result": 4
+   },
+   {
+    "name": "before",
+    "previous": "one two three",
+    "next": "zero one two three",
+    "offset": 8,
+    "result": 13
+   },
+   {
+    "name": "shorter before",
+    "previous": "one two three",
+    "next": "two three",
+    "offset": 8,
+    "result": 4
+   },
+   {
+    "name": "around",
+    "previous": "one two three",
+    "next": "one TWO three",
+    "offset": 5,
+    "result": 4
+   },
+   {
+    "name": "unchanged",
+    "previous": "one two three",
+    "next": "one two three",
+    "offset": 8,
+    "result": 8
+   },
+   {
+    "name": "emoji before",
+    "previous": "hi there",
+    "next": "👋🏽 hi there",
+    "offset": 3,
+    "result": 8
+   },
+   {
+    "name": "thai inside",
+    "previous": "สวัสดีครับ ทุกท่าน",
+    "next": "สวัสดีค่ะ ทุกท่าน",
+    "offset": 12,
+    "result": 11
+   },
+   {
+    "name": "everything replaced",
+    "previous": "abc",
+    "next": "xyz",
+    "offset": 2,
+    "result": 0
+   },
+   {
+    "name": "to empty",
+    "previous": "abc def",
+    "next": "",
+    "offset": 4,
+    "result": 0
+   },
+   {
+    "name": "from empty",
+    "previous": "",
+    "next": "abc",
+    "offset": 0,
+    "result": 0
+   },
+   {
+    "name": "repeated letters",
+    "previous": "aaaa",
+    "next": "aaaaaa",
+    "offset": 2,
+    "result": 2
+   }
+  ],
+  "reanchors": [
+   {
+    "name": "an event above grows",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "seven eight",
+        "start": 9
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 19
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "seven eight",
+        "start": 9
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 5,
+     "lines": 0
+    },
+    "result": {
+     "eventId": "b",
+     "charOffset": 5,
+     "lines": 0
+    }
+   },
+   {
+    "name": "an edit before the reader",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 19
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "zero one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 13
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 24
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "a",
+     "charOffset": 19,
+     "lines": 0
+    },
+    "result": {
+     "eventId": "a",
+     "charOffset": 24,
+     "lines": 0
+    }
+   },
+   {
+    "name": "rewrapping is not an edit",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 8
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 19
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "one two three four",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 19
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "a",
+     "charOffset": 19,
+     "lines": 0
+    },
+    "result": {
+     "eventId": "a",
+     "charOffset": 19,
+     "lines": 0
+    }
+   },
+   {
+    "name": "the event moves",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "c",
+      "cue": "c",
+      "title": "c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "c"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "c",
+      "cue": "c",
+      "title": "c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "c"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 6,
+     "lines": 0.5
+    },
+    "result": {
+     "eventId": "b",
+     "charOffset": 6,
+     "lines": 0.5
+    }
+   },
+   {
+    "name": "the event is deleted",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "c",
+      "cue": "c",
+      "title": "c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "c"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "c",
+      "cue": "c",
+      "title": "c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "c"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 6,
+     "lines": 0.5
+    },
+    "result": {
+     "eventId": "c",
+     "charOffset": 0,
+     "lines": 0
+    }
+   },
+   {
+    "name": "the last event is deleted",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 6,
+     "lines": 0.5
+    },
+    "result": {
+     "eventId": "a",
+     "charOffset": 0,
+     "lines": 1
+    }
+   },
+   {
+    "name": "the headings go",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 0,
+     "lines": -1
+    },
+    "result": {
+     "eventId": "b",
+     "charOffset": 0,
+     "lines": -1
+    }
+   },
+   {
+    "name": "nothing is left",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "c",
+      "cue": "c",
+      "title": "c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "c"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "x",
+      "cue": "x",
+      "title": "x",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "x"
+       },
+       {
+        "kind": "text",
+        "text": "seven",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "y",
+      "cue": "y",
+      "title": "y",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "y"
+       },
+       {
+        "kind": "text",
+        "text": "eight",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 6,
+     "lines": 0.5
+    },
+    "result": {
+     "eventId": "x",
+     "charOffset": 0,
+     "lines": 0
+    }
+   },
+   {
+    "name": "an empty script",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "c",
+      "cue": "c",
+      "title": "c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "c"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 6,
+     "lines": 0.5
+    },
+    "result": null
+   },
+   {
+    "name": "no anchor yet",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": null,
+    "result": {
+     "eventId": "a",
+     "charOffset": 0,
+     "lines": 0
+    }
+   },
+   {
+    "name": "a new event the reader was not in before",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "b",
+     "charOffset": 0,
+     "lines": 0
+    },
+    "result": {
+     "eventId": "b",
+     "charOffset": 0,
+     "lines": 0
+    }
+   },
+   {
+    "name": "the first and the deleted are gone, the one before survives",
+    "previous": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "b",
+      "title": "b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "b"
+       },
+       {
+        "kind": "text",
+        "text": "three four",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "c",
+      "cue": "c",
+      "title": "c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "c"
+       },
+       {
+        "kind": "text",
+        "text": "five six",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "a",
+      "cue": "a",
+      "title": "a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "a"
+       },
+       {
+        "kind": "text",
+        "text": "one two",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "c",
+     "charOffset": 0,
+     "lines": 0
+    },
+    "result": {
+     "eventId": "a",
+     "charOffset": 0,
+     "lines": 1
+    }
+   },
+   {
+    "name": "thai edit in the reader event",
+    "previous": [
+     {
+      "id": "t",
+      "cue": "t",
+      "title": "t",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "t"
+       },
+       {
+        "kind": "text",
+        "text": "สวัสดีครับ",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "ยินดีต้อนรับ",
+        "start": 11
+       },
+       {
+        "kind": "text",
+        "text": "ทุกท่าน",
+        "start": 23
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "next": [
+     {
+      "id": "t",
+      "cue": "t",
+      "title": "t",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "t"
+       },
+       {
+        "kind": "text",
+        "text": "สวัสดีค่ะ",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "ยินดีต้อนรับ",
+        "start": 10
+       },
+       {
+        "kind": "text",
+        "text": "ทุกท่าน",
+        "start": 22
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ],
+    "anchor": {
+     "eventId": "t",
+     "charOffset": 11,
+     "lines": 0.25
+    },
+    "result": {
+     "eventId": "t",
+     "charOffset": 10,
+     "lines": 0.25
+    }
+   }
+  ]
+ }
+}

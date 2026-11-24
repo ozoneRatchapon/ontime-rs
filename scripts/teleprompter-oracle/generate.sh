@@ -28,7 +28,7 @@ export * from '$work/upstream/packages/utils/src/teleprompter/teleprompterTransp
 SHIM
 commit="$(git -C "$root" rev-parse --short "$ref")"
 
-for name in wrap script; do
+for name in wrap script position; do
   "$esbuild" "$here/gen-$name.ts" --bundle --platform=node --format=esm --log-level=error \
     --alias:@upstream="$work/upstream" \
     --alias:ontime-types="$work/upstream/packages/types/src/index.ts" \
