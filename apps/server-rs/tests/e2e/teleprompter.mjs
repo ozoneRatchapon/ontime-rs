@@ -3,6 +3,10 @@
 //   npx wrangler dev --port 8787 --local
 //   node teleprompter.mjs http://127.0.0.1:8787
 //
+// Against a worker with a master password (production smoke test), set
+// ADMIN_PASSWORD: the room is created with the master token and forgotten
+// afterwards.
+//
 // A controller socket drives the transport and a follower socket sees the
 // same sync; edits keep the reader in place; Ontime loading an event moves the
 // reader in event mode; playback stops at the end of an event on the alarm.
@@ -16,10 +20,22 @@ const check = (label, actual, expected) => {
   console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
 };
 const room = `tp-${Math.random().toString(36).slice(2, 8)}`;
+const master = process.env.ADMIN_PASSWORD
+  ? (
+      await (
+        await fetch(`${base}/admin/login`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ password: process.env.ADMIN_PASSWORD }),
+        })
+      ).json()
+    ).token
+  : null;
+const auth = master ? { Authorization: `Bearer ${master}` } : {};
 const call = (path, { method = 'GET', body } = {}) =>
   fetch(`${base}/r/${room}${path}`, {
     method,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...auth },
     body: body ? JSON.stringify(body) : undefined,
   });
 const json = async (response) => response.json();
@@ -27,7 +43,8 @@ const json = async (response) => response.json();
 // a socket keeping the latest teleprompter keys it was sent
 const socket = () =>
   new Promise((resolve, reject) => {
-    const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}`);
+    const query = new URLSearchParams({ room, ...(master ? { token: master } : {}) });
+    const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?${query}`);
     const seen = { sync: null, state: null, syncs: [] };
     ws.addEventListener('message', (event) => {
       const packet = JSON.parse(event.data);
@@ -146,4 +163,5 @@ await wait(400);
 check('same sync as the others', JSON.stringify(late.seen.sync), JSON.stringify(follower.seen.sync));
 
 for (const s of [controller, follower, late]) s.ws.close();
+if (master) await fetch(`${base}/admin/rooms/${room}`, { method: 'DELETE', headers: auth });
 process.exit(failed ? 1 : 0);
