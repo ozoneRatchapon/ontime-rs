@@ -1,6 +1,6 @@
 # 001 — People and invite links (phase 1 of 3)
 
-Status: **implemented and tested locally (2026-11-23); not committed or deployed yet.**
+Status: **done — committed in `38ece1a7`, deployed 2026-11-23 (Worker `53bef09b`).**
 Approved as drafted: 90-day sliding sessions; the admin keeps the master password.
 
 The person session lives in `apps/client/src/common/api/personSession.ts`.

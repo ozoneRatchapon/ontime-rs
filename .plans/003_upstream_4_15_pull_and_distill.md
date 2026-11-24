@@ -2,7 +2,7 @@
 
 Status (2026-11-24):
 - **A1–A9 deployed.** Worker version `f366b3c1`; the rollback point is `1bf1ba98`.
-- **B1 + B2 on branch `feature/upstream-4.15`, tested locally, client not deployed.**
+- **B1 + B2 deployed (client, 2026-11-24, Pages `f2fcd906`)** from branch `feature/upstream-4.15`, which is not merged or pushed.
 
 ## B — what was done (branch `feature/upstream-4.15`)
 

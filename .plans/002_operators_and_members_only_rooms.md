@@ -1,6 +1,6 @@
 # 002 — Operators and members-only rooms (phase 2 of 3)
 
-Status: **implemented and tested locally (2026-11-23); not committed or deployed yet.**
+Status: **done — committed in `2fda18ef`, deployed 2026-11-23 (Worker `1bf1ba98`).**
 All three decisions were approved as drafted.
 
 Notes from building it:
