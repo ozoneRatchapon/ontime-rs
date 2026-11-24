@@ -34,44 +34,39 @@ How to use it:
 - **Branch:** `feat/rust-cloud-backend` holds everything
   (`feature/upstream-4.15` is merged into it). Not pushed.
 
-## B3 — upstream client patches still missing (work on a new `feature/upstream-b3` branch from `feat/rust-cloud-backend`)
+## B3 — upstream client patches (done 2026-11-24, merged into `feat/rust-cloud-backend`; client not deployed yet)
 
-- [ ] **979de757 "scope rundown data sources"** (52 files): the root that the
-  rest below depend on.
-  - Pull it in with `git format-patch -1 979de757 --stdout | git am -3
-    --include='apps/client/*' --include='packages/*'`.
-  - Resolve conflicts by keeping our room, session and timer-engine hooks.
-  - Done when typecheck is at baseline and every test passes.
-- [ ] **The 7 patches left out of B1.** Retry each after 979de757:
-  - timeline secondary text (5c7f3732);
-  - share link offers all views (f9eff7a3);
-  - sentry logging (f96ca94b);
-  - rundown cursor across editor layouts (989b3119);
-  - cuesheet delay rows (e7f07d48);
-  - quick add menu UX (e13cdf87);
-  - title list follows the live event (cd6cbaef).
-
-  Done when each one is either in, or listed in 003 with the reason it isn't.
-- [ ] **Un-skip** the SourcesPanel test (Excel upload message) once 979de757 is in.
-- [ ] **The conflicted fixes from 003 B3,** one commit per item:
-  - the rundown list stops jumping on edits and clicks;
-  - keyboard moves made faster than the server replies;
-  - an optimistic delete does not mutate the cache;
-  - confirm before deleting the running event;
-  - cuesheet render performance;
-  - the Safari clipboard for share links;
-  - PWA insets.
-
-  Done when tests pass and there is a browser check for the visible items.
-- [ ] Update the B section of 003 with what came in.
+- [x] 979de757 "scope rundown data sources".
+- [x] All 7 patches left out of B1. Along with them came:
+  - a84b8b55: navigation menu polish;
+  - de2c2c1c: multi-selection context menu;
+  - a60d9fff: title list waits for its scroll parent;
+  - `@mantine/hooks` 8 → 9, which upstream also uses.
+- [x] SourcesPanel test un-skipped.
+- [x] The B3 fixes:
+  - c6d23af6: PWA insets;
+  - 08031fa4: rundown rows don't refetch while scrolling;
+  - 3ffce666: keyboard moves made faster than the server replies;
+  - 858c1ffb, a5426750: optimistic delete;
+  - b4e0c15d: the list no longer jumps;
+  - 07a6b314: confirm before deleting the running event;
+  - 1f4f01b5: cuesheet performance;
+  - the Safari clipboard fix was already in from B1.
+- Tests:
+  - client typecheck: only the 3 known errors;
+  - client unit tests: 448 pass, 1 skipped (the countdown case, D3);
+  - build passes;
+  - browser: 10 views with no console errors; upstream 9, people 14 and
+    members 10 checks pass.
 - [ ] **[ต้องถาม]** Deploy the client.
 
 ## B4 — new features from upstream (chosen 2026-11-24)
 
 - [ ] **A sound when the timer ends.** Client only. Done when there is a setting
   to turn it on or off, it plays when the timer ends, and its tests pass.
-- [ ] **Secondary text in the studio and timeline cards** (5c7f3732, e7237950).
-  It needs 979de757 first.
+- [ ] **Secondary text in the studio and timeline cards.**
+  - Timeline (5c7f3732): done in B3.
+  - Studio (e7237950): still to do.
 - Not taking, for now: export every rundown to Excel, and searchable settings.
 
 ## D — RIIR
