@@ -140,8 +140,8 @@ importers:
         specifier: 5.6.0
         version: 5.6.0(react@19.2.7)
       react-router:
-        specifier: ^8.0.1
-        version: 8.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: ^8.5.2
+        version: 8.5.2(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react-virtuoso:
         specifier: ^4.18.23
         version: 4.18.24(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -2430,6 +2430,9 @@ packages:
 
   '@quansync/fs@1.0.0':
     resolution: {integrity: sha512-4TJ3DFtlf1L5LDMaM6CanJ/0lckGNtJcMjQ1NAV6zDmA0tEHKZtxNKin8EgPaVX1YzljbxckyT2tJrpQKAtngQ==}
+
+  '@remix-run/route-pattern@0.22.1':
+    resolution: {integrity: sha512-czdGJWh09Lapvcqt7Vb09KlrU2PhRJ8xQaI+AItTuD9aDJ5MAgxnS38lnys6Ll+6RJEqPiaUqTwIQhVLwFvv+w==}
 
   '@rolldown/binding-android-arm64@1.1.4':
     resolution: {integrity: sha512-EZLpf/8y7GXkkra90ML47kzik/GMP3EMcE9bPyHmRfxLC6z9+aW5A8poCsoxjrT5GfEcNAAvWwUHjvP1pUQkfw==}
@@ -5122,13 +5125,19 @@ packages:
     resolution: {integrity: sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw==}
     engines: {node: '>=0.10.0'}
 
-  react-router@8.0.1:
-    resolution: {integrity: sha512-5EL/fANovVUhRK50NLS8RYfX0BxrimoKsHWUPPy8v5UEl8i6vzF7e4POo3u+AhPItDwccUAJjMfIOmydxBJmQw==}
+  react-router@8.5.2:
+    resolution: {integrity: sha512-luPXqNUAIZAmCHbeBysc2KO7VJjckIMZk4ByEetS7Jotit8R6lLSVVeC76UE//AYK6QD6tAnVAPGkvmqMd+b1w==}
     engines: {node: '>=22.22.0'}
     peerDependencies:
+      '@types/react': '>=19.2.0'
+      '@types/react-dom': '>=19.2.0'
       react: '>=19.2.7'
       react-dom: '>=19.2.7'
     peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
       react-dom:
         optional: true
 
@@ -7736,6 +7745,8 @@ snapshots:
   '@quansync/fs@1.0.0':
     dependencies:
       quansync: 1.0.0
+
+  '@remix-run/route-pattern@0.22.1': {}
 
   '@rolldown/binding-android-arm64@1.1.4':
     optional: true
@@ -10422,11 +10433,14 @@ snapshots:
 
   react-refresh@0.18.0: {}
 
-  react-router@8.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  react-router@8.5.2(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
+      '@remix-run/route-pattern': 0.22.1
       cookie-es: 3.1.1
       react: 19.2.7
     optionalDependencies:
+      '@types/react': 19.1.12
+      '@types/react-dom': 19.1.9(@types/react@19.1.12)
       react-dom: 19.2.7(react@19.2.7)
 
   react-virtuoso@4.18.24(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
