@@ -71,6 +71,13 @@ fn mark_built(project: &mut Project, script: &Script, epoch_ms: i64) {
         return;
     }
     project.prompter.built = true;
+    // as upstream's first build: the reader is moved from the empty script to
+    // this one, which puts a reader with no place yet at the top
+    let empty = Layout::new(&[]);
+    let layout = Layout::new(&script.events);
+    let now = time_of_day(project, epoch_ms);
+    project.prompter.transport =
+        reanchor_transport(&project.prompter.transport, (&[], &empty), (&script.events, &layout), now);
     go_to_loaded(project, script, epoch_ms);
 }
 

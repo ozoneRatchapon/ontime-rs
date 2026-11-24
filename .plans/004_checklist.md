@@ -91,8 +91,9 @@ How to use it:
   - T0 contract, T1 core, T2 Durable Object, T4 upstream client, T5 tests.
   - Its 4 decisions use the recommended answers.
   - It is the largest remaining item (about 9 days), on `feature/teleprompter`.
-  - T0 and T1 (the contract and the core) were done on 2026-11-24. T2 (the
-    Durable Object) is next.
+  - T0–T5 done locally on 2026-11-24: core, Durable Object, upstream client,
+    browser check.
+  - **[ต้องถาม]** merge into `feat/rust-cloud-backend` and deploy.
 
 ## Dioxus pilot
 

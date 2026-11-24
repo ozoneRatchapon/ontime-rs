@@ -51,6 +51,15 @@ fn nothing_follows_until_the_script_is_read() {
 }
 
 #[test]
+fn the_first_command_in_a_room_with_nothing_loaded_plays_from_the_top() {
+    let mut project = room();
+    assert_eq!(project.runtime.selected_id, None);
+    assert!(prompt(&mut project, json!("toggle"), NOW));
+    assert_eq!(project.prompter.transport.playback, Playback::Play);
+    assert_eq!(reading(&project).as_deref(), Some("a"));
+}
+
+#[test]
 fn loading_an_event_moves_the_reader_in_event_mode_only() {
     let mut project = room();
     assert!(prompt(&mut project, json!("top"), NOW));

@@ -1,6 +1,7 @@
 # 008 — D1: the teleprompter, in the Rust core
 
-Status: **T0, T1 and T2 done (2026-11-24)** on `feature/teleprompter`; T4 is next.
+Status: **T0–T5 done locally (2026-11-24)** on `feature/teleprompter`. Not
+merged or deployed yet.
 Its 4 decisions use the recommended answers, so the user's standing approval
 applies.
 
@@ -55,6 +56,39 @@ improvement and must be added to both sides.
   - e2e `teleprompter.mjs` (35);
   - every other e2e suite is still green on both Workers;
   - native activity 9/9, and native serves `?source=`.
+
+**T4, the client from upstream:**
+- **14 upstream commits cherry-picked with `-x`.** `5757ebed0` was skipped:
+  it only adapts upstream's Playwright spec to a router prefix.
+- **What was left out:** every `apps/server` and `docs` part. Our vendored TS
+  server is older, isn't deployed, and the Rust core replaces it.
+  `git diff 10f27353 -- apps/server docs` is empty.
+- **Three client conflicts, kept both sides:**
+  - `getAppUrl` builds on `clientURL` and keeps the room.
+  - The settings menu has no upstream search keywords; that is another
+    feature.
+  - The preset route has no `ViewLoader` wrapper.
+- **Parity check:** every teleprompter file in `packages` and `apps/client` is
+  byte-identical to `upstream/master`.
+- **The TS side of the contract:**
+  `packages/utils/src/teleprompter/teleprompterContract.test.ts` replays the
+  same position and transport fixtures as the Rust tests.
+- **Tests:**
+  - utils 609 (upstream's teleprompter tests plus the contract);
+  - client 510;
+  - typecheck shows only the 3 known errors;
+  - the build works.
+
+**T5, the browser:**
+- `apps/server-rs/tests/browser/teleprompter.mjs` passes 8/8 against a local
+  Worker and a built client.
+- A controller and a remote screen scroll together and read the same line.
+  Pausing stops both, a late screen lands on the same line, an edit reaches
+  the screens, and the console has no errors.
+- **A bug the browser found, now fixed and covered by a core test:**
+  upstream's first build re-anchors from an empty script, which puts a reader
+  with no place at the top. `mark_built` didn't do this, so in a room with no
+  event loaded the first play paused at once.
 
 **Differences from upstream, all deliberate:**
 - **No 304 or ETag on the script:** the script carries its revision, which is
