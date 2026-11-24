@@ -162,7 +162,9 @@ fn addtime_extends_the_running_event() {
 
     let extended = timer(&runtime, &rundown, T0 + 10_000);
     assert_eq!(extended["addedTime"], 30_000);
-    assert_eq!(extended["duration"], 90_000);
+    // the plan: the client adds `addedTime` itself (getTotalTime), so counting
+    // it here too would extend the progress bar twice
+    assert_eq!(extended["duration"], 60_000);
     assert_eq!(extended["current"], 80_000);
 }
 

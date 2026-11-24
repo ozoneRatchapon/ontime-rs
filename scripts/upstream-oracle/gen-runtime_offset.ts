@@ -3,6 +3,10 @@
 // upstream's server computes them (stores/runtimeState.ts). Every screen reads
 // these from the runtime-data packet, so our Runtime::snapshot must agree.
 //
+// Roll is covered too (RIIR 4): runtime.service drives it from each tick's
+// result, which `tick` below copies. Ticks land exactly on a boundary, as the
+// Durable Object's alarm does; upstream ticks every 32ms instead.
+//
 // Each case is a rundown and a script of operator actions at given times. The
 // clock is faked; node runs with TZ=UTC so a time of day is epoch mod 24h.
 import { makeOntimeGroup } from '@upstream/apps/server/src/api-data/rundown/__mocks__/rundown.mocks.ts';
@@ -21,7 +25,7 @@ type Step =
   | { at: number; do: 'load'; id: string }
   | { at: number; do: 'addtime'; amount: number }
   | { at: number; do: 'mode'; mode: 'absolute' | 'relative' }
-  | { at: number; do: 'pause' | 'resume' | 'stop' | 'tick' };
+  | { at: number; do: 'pause' | 'resume' | 'stop' | 'tick' | 'roll' };
 
 const show = () =>
   rundownOf([
@@ -222,6 +226,56 @@ const cases: [string, ReturnType<typeof rundownOf>, Step[]][] = [
     ],
   ],
   ['started on the next day', overnight(), [{ at: 24 * H + 50 * MIN, do: 'start', id: 'b' }]],
+  // roll: the wall clock picks the event
+  ['roll before the show', show(), [{ at: 9 * H + 50 * MIN, do: 'roll' }]],
+  ['roll joins a running event', show(), [{ at: 10 * H + 10 * MIN, do: 'roll' }]],
+  ['roll in a gap waits', gaps(), [{ at: 10 * H + 40 * MIN, do: 'roll' }]],
+  [
+    'roll starts the event when it is due',
+    show(),
+    [
+      { at: 9 * H + 59 * MIN, do: 'roll' },
+      { at: 10 * H, do: 'tick' },
+      { at: 10 * H + 5 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'roll moves on when an event ends',
+    show(),
+    [
+      { at: 10 * H + 10 * MIN, do: 'roll' },
+      { at: 10 * H + 30 * MIN, do: 'tick' },
+      { at: 10 * H + 35 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'roll waits through a gap after an event',
+    gaps(),
+    [
+      { at: 10 * H + 10 * MIN, do: 'roll' },
+      { at: 10 * H + 30 * MIN, do: 'tick' },
+      { at: 10 * H + 40 * MIN, do: 'tick' },
+    ],
+  ],
+  ['roll after the show', show(), [{ at: 13 * H, do: 'roll' }]],
+  ['roll across midnight', overnight(), [{ at: 23 * H + 50 * MIN, do: 'roll' }]],
+  [
+    'roll into the next day',
+    overnight(),
+    [
+      { at: 23 * H + 50 * MIN, do: 'roll' },
+      { at: 24 * H + 30 * MIN, do: 'tick' },
+      { at: 24 * H + 40 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'roll takes over a late start',
+    show(),
+    [
+      { at: 10 * H + 5 * MIN, do: 'start', id: 'a' },
+      { at: 10 * H + 6 * MIN, do: 'roll' },
+    ],
+  ],
 ];
 
 const run = (rundown: ReturnType<typeof rundownOf>, steps: Step[]) => {
@@ -231,10 +285,17 @@ const run = (rundown: ReturnType<typeof rundownOf>, steps: Step[]) => {
   const processed = { ...rundown, entries: meta.entries, flatOrder: meta.flatEntryOrder };
   state.updateRundownData({ numEvents: meta.timedEventOrder.length, ...meta });
   const event = (id: string) => processed.entries[id];
+  // runtime.service checkTimerUpdate: roll moves itself on from a tick's result
+  const tick = () => {
+    const result: any = state.update();
+    if (state.getState().timer.playback !== 'roll') return;
+    if (result.hasSecondaryTimerFinished) state.roll(processed, meta);
+    else if (result.hasTimerFinished) state.rollNext(processed, meta);
+  };
 
   for (const step of steps) {
     fakeNow = DAY + step.at;
-    state.update();
+    tick();
     switch (step.do) {
       case 'load':
         state.load(event(step.id), processed, meta);
@@ -259,14 +320,25 @@ const run = (rundown: ReturnType<typeof rundownOf>, steps: Step[]) => {
       case 'stop':
         state.stop();
         break;
+      case 'roll':
+        state.roll(processed, meta);
+        break;
       case 'tick':
         break;
     }
-    state.update();
+    tick();
   }
 
-  const { offset, rundown: run, eventFlag, groupNow } = state.getState();
+  const { offset, rundown: run, eventFlag, groupNow, eventNow, timer } = state.getState();
   return {
+    timer: {
+      playback: timer.playback,
+      startedAt: timer.startedAt,
+      secondaryTimer: timer.secondaryTimer,
+      duration: timer.duration,
+      current: timer.current,
+    },
+    eventNow: eventNow?.id ?? null,
     offset: { ...offset },
     rundown: {
       selectedEventIndex: run.selectedEventIndex,

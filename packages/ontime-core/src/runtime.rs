@@ -201,7 +201,9 @@ impl TimerInputs {
         json!({
             "addedTime": self.added_time,
             "current": self.current(now),
-            "duration": duration,
+            // the planned length, as upstream reports it: added time shows in
+            // `current` and `expectedFinish`, not here
+            "duration": self.planned_duration,
             "elapsed": self.elapsed(now),
             "expectedFinish": match (self.started_at, duration) {
                 (Some(started), Some(duration)) => {
@@ -305,12 +307,14 @@ impl Runtime {
                 // an arbitrary fraction of a second, and carrying it forward would
                 // put the countdown back out of step with the wall clock. The time
                 // already counted is preserved to the nearest second.
-                let counted = paused_at - self.started_at.unwrap_or(paused_at) - self.paused_total;
+                let started = self.started_at.unwrap_or(paused_at);
+                let counted = paused_at - started - self.paused_total;
                 // anchoring `now - counted` keeps the displayed value within half a
                 // second of where it was paused; anchoring the two terms separately
-                // could shift it by a whole second, which reads as a skipped tick
-                self.started_at = Some(align_to_second(now - counted));
-                self.paused_total = 0;
+                // could shift it by a whole second, which reads as a skipped tick.
+                // The anchor goes into the paused total, so `startedAt` stays the
+                // time the event really started, as upstream shows it.
+                self.paused_total = align_to_second(now - counted) - started;
             }
             self.playback = Playback::Play;
             return true;
@@ -426,40 +430,75 @@ impl Runtime {
         self.load(rundown, Some(next))
     }
 
-    /// Hands the rundown to the wall clock.
+    /// Hands the rundown to the wall clock (upstream runtimeState.roll).
     ///
-    /// Finds whichever event should be on air right now and joins it part-way
-    /// through; if nothing is due yet, arms the next one and counts down to it.
+    /// 1. An event already playing simply carries on under roll, keeping how
+    ///    late it is.
+    /// 2. An armed event is rolled into: joined part-way if it is on air now,
+    ///    otherwise counted down to.
+    /// 3. Otherwise the clock picks the event: whichever should be on air, or
+    ///    the next one to come.
+    ///
     /// From then on `on_tick` moves from event to event without the operator.
     fn roll(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
+        match self.playback {
+            Playback::Play if self.selected_id.is_some() => {
+                self.playback = Playback::Roll;
+                return true;
+            }
+            Playback::Armed if self.selected_id.is_some() => {
+                return self.roll_into_loaded(rundown, now, tz_offset);
+            }
+            _ => {}
+        }
+
         let clock = time_of_day(now, tz_offset);
         let Some(found) = load_roll(rundown, clock) else {
             return false;
         };
+        self.selected_id = Some(found.id);
+        self.roll_into_loaded(rundown, now, tz_offset)
+    }
 
-        self.selected_id = Some(found.id.clone());
+    /// Rolls into the selected event: joins it at the right point if the clock
+    /// is inside it, otherwise waits for it to come round.
+    fn roll_into_loaded(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
+        let Some(event) = self.selected_id.as_ref().and_then(|id| rundown.get(id)) else {
+            return false;
+        };
+        let time_start = field(event, "timeStart").unwrap_or(0);
+        let time_end = field(event, "timeEnd").unwrap_or(time_start);
+        let day_offset = field(event, "dayOffset").unwrap_or(0);
+        let clock = time_of_day(now, tz_offset);
+
         self.playback = Playback::Roll;
         self.paused_at = None;
         self.paused_total = 0;
         self.added_time = 0;
 
-        if found.is_pending {
+        if !is_now(time_start, time_end, clock) {
             // nothing is due yet: wait, counting down to the start
             self.started_at = None;
-            self.secondary_target = Some(normalise_roll_start(found.time_start, clock));
-        } else {
-            // the event is already under way, so back-date the start to join it
-            // at the right point rather than restarting it
-            self.started_at = Some(now - found.elapsed);
-            self.secondary_target = None;
-
-            if self.actual_start.is_none() {
-                self.actual_start = Some(now - found.elapsed);
-                self.start_day_offset = Some(find_day_offset(found.time_start, clock));
-            }
+            self.secondary_target = Some(normalise_roll_start(time_start, clock));
+            return true;
         }
 
+        // the event is already under way, so back-date the start to join it at
+        // the right point rather than restarting it
+        let elapsed = (clock - time_start).rem_euclid(MS_PER_DAY);
+        self.started_at = Some(now - elapsed);
+        self.secondary_target = None;
+        if self.actual_start.is_none() {
+            self.backdate_show_start(now - elapsed, day_offset);
+        }
         true
+    }
+
+    /// The run began when the event roll started in was planned to, not when
+    /// roll was pressed, so no lateness is invented (upstream backdateShowStart).
+    fn backdate_show_start(&mut self, started: i64, day_offset: i64) {
+        self.actual_start = Some(started);
+        self.start_day_offset = Some(day_offset);
     }
 
     fn add_time(&mut self, amount: i64) -> bool {
@@ -549,13 +588,13 @@ impl Runtime {
             }
             // anchor to the instant the event was actually due, not to the tick
             // that happened to notice — the target is already a whole second
-            self.started_at = Some(align_to_second(now - (clock - target)));
+            let started = align_to_second(now - (clock - target));
+            self.started_at = Some(started);
             self.secondary_target = None;
             if self.actual_start.is_none() {
-                self.actual_start = Some(now);
                 let event = self.selected_id.as_ref().and_then(|id| rundown.get(id));
-                let time_start = event.and_then(|e| field(e, "timeStart")).unwrap_or(0);
-                self.start_day_offset = Some(find_day_offset(time_start, clock));
+                let day_offset = event.and_then(|e| field(e, "dayOffset")).unwrap_or(0);
+                self.backdate_show_start(started, day_offset);
             }
             return true;
         }
@@ -570,9 +609,16 @@ impl Runtime {
             return false;
         }
 
-        // re-resolve against the clock rather than simply stepping, so a rundown
-        // with gaps waits rather than running the next event early
-        self.roll(rundown, now, tz_offset)
+        // the next event in order, waiting for it if it is not due yet
+        // (upstream rollNext). Re-resolving by the clock instead would pick an
+        // event that just ended past midnight again, as the next day's.
+        match next_roll_event(rundown, self.selected_id.as_deref()) {
+            Some(next) => {
+                self.selected_id = Some(next);
+                self.roll_into_loaded(rundown, now, tz_offset)
+            }
+            None => self.roll(rundown, now, tz_offset),
+        }
     }
 
     /// Everything needed to compute the timer, decoupled from the rundown.
@@ -764,10 +810,12 @@ impl Runtime {
                 // measured in epoch, so a pause spanning midnight still counts
                 // correctly — the original computes this in time-of-day and
                 // notes the midnight case as broken
-                let paused_for = match (self.playback, self.paused_at) {
-                    (Playback::Pause, Some(paused_at)) => now - paused_at,
-                    _ => 0,
-                };
+                // earlier pauses are in the total; a pause still running adds to it
+                let paused_for = self.paused_total
+                    + match (self.playback, self.paused_at) {
+                        (Playback::Pause, Some(paused_at)) => now - paused_at,
+                        _ => 0,
+                    };
 
                 let offset_inputs = OffsetInputs {
                     started_at: time_of_day(started, tz_offset),
@@ -795,10 +843,11 @@ impl Runtime {
         // getExpectedTimes). Not wrapped, like plannedEnd, so a time after
         // midnight stays after the clock it is compared with.
         let ahead = self.look_ahead(rundown);
+        // and a roll still waiting for the show's first event has no run yet
         let active = matches!(
             self.playback,
             Playback::Play | Playback::Pause | Playback::Roll
-        );
+        ) && self.actual_start.is_some();
         let expected_at = |target: Option<&LookAheadTarget>, add_duration: bool| -> Option<i64> {
             let target = target.filter(|_| active)?;
             let event = rundown.get(&target.id)?;
@@ -916,6 +965,32 @@ fn normalise_end(start: i64, end: i64) -> i64 {
     } else {
         end
     }
+}
+
+/// Whether the clock is inside an event, its end included (upstream checkIsNow).
+fn is_now(start: i64, end: i64, clock: i64) -> bool {
+    match end < start {
+        true => clock >= start || clock <= end,
+        false => start <= clock && clock <= end,
+    }
+}
+
+/// The event roll moves to after `from`, wrapping to the top after the last.
+/// Zero-length events are passed over, or roll would stick on them
+/// (upstream findNextRollEvent).
+fn next_roll_event(rundown: &Rundown, from: Option<&str>) -> Option<String> {
+    let events = playable(rundown);
+    let first = from
+        .and_then(|id| events.iter().position(|e| e == id))
+        .map_or(0, |index| index + 1);
+    (0..events.len())
+        .map(|step| &events[(first + step) % events.len()])
+        .find(|id| {
+            rundown
+                .get(id)
+                .is_some_and(|e| field(e, "duration").unwrap_or(0) != 0)
+        })
+        .cloned()
 }
 
 /// An event due earlier today than the current clock is due tomorrow.
