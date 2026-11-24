@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
-use ontime_core::audit::{self, Actor, Chunk, Note, Page, Retention, Writes};
+use ontime_core::audit::{Actor, Chunk, Note, Retention, Writes};
 use ontime_core::audit_describe;
 use ontime_core::project::{hash_password, Project};
 use ontime_core::registry::{should_report, Member, RoomReport};
@@ -13,6 +13,7 @@ use ontime_core::socket;
 
 use serde::{Deserialize, Serialize};
 
+use crate::audit_store::{self, Batch};
 use crate::{presence, registry_host};
 
 /// Per-connection metadata, stored on the socket itself.
@@ -319,65 +320,18 @@ impl OntimeProject {
         let Some(writes) = audit_writes else {
             return storage.put(STORAGE_KEY, raw).await;
         };
-
-        let chunk = serde_json::to_string(&writes.put)
-            .map_err(|e| Error::RustError(format!("Could not serialise the audit log: {e}")))?;
-        let values = js_sys::Object::new();
-        js_sys::Reflect::set(&values, &STORAGE_KEY.into(), &raw.into())?;
-        js_sys::Reflect::set(&values, &audit::chunk_key(writes.put.no).into(), &chunk.into())?;
-        storage.put_multiple_raw(values).await?;
-
-        if !writes.delete.is_empty() {
-            let keys: Vec<String> = writes.delete.iter().map(|no| audit::chunk_key(*no)).collect();
-            storage.delete_multiple(keys).await?;
-        }
-        Ok(())
-    }
-
-    async fn load_chunk(&self, no: u64) -> Option<Chunk> {
-        self.state
-            .storage()
-            .get::<String>(&audit::chunk_key(no))
-            .await
-            .ok()
-            .and_then(|raw| serde_json::from_str(&raw).ok())
+        let mut batch = Batch::new();
+        batch.put_raw(STORAGE_KEY, raw)?;
+        batch.audit(&writes)?;
+        batch.commit(&mut storage).await
     }
 
     /// Adds a line to the log in memory. The returned writes go to [`persist`].
     async fn audit(&mut self, actor: Actor, note: Note, now: i64) -> Writes {
-        let head = match (self.audit_head.take(), self.project.audit.head()) {
-            (Some(chunk), Some(no)) if chunk.no == no => Some(chunk),
-            (_, Some(no)) => self.load_chunk(no).await,
-            (_, None) => None,
-        };
+        let head = audit_store::head(&self.state.storage(), &self.project.audit, self.audit_head.take()).await;
         let writes = self.project.audit.record(head, actor, note, now, Retention::ROOM);
         self.audit_head = Some(writes.put.clone());
         writes
-    }
-
-    /// One page of the log, newest first: `?before=<ms>&limit=<n>`.
-    async fn activity(&self, url: &Url) -> Result<Response> {
-        let query = |key: &str| url.query_pairs().find(|(k, _)| k == key).map(|(_, v)| v.to_string());
-        let before = query("before").and_then(|v| v.parse::<i64>().ok());
-        let limit = query("limit").and_then(|v| v.parse::<usize>().ok());
-
-        let mut page = Page::new(before, limit, now_ms(), Retention::ROOM);
-        for no in self.project.audit.newest_first(before) {
-            let chunk = match &self.audit_head {
-                Some(head) if head.no == no => Some(head.clone()),
-                _ => self.load_chunk(no).await,
-            };
-            if chunk.is_some_and(|chunk| page.take(&chunk)) {
-                break;
-            }
-        }
-
-        let mut headers = Headers::new();
-        headers.set("content-type", "application/json")?;
-        // names of the people who made changes
-        headers.set("cache-control", "no-store")?;
-        Ok(Response::from_json(&json!({ "lines": page.lines, "before": page.next_before() }))?
-            .with_headers(headers))
     }
 
     /// Tells every connected client to refetch a slice of server state.
@@ -664,7 +618,16 @@ impl OntimeProject {
             if self.is_new {
                 return Response::error("This room does not exist", 404);
             }
-            return self.activity(&req.url()?).await;
+            let storage = self.state.storage();
+            return audit_store::page(
+                &storage,
+                &self.project.audit,
+                &req.url()?,
+                Retention::ROOM,
+                now_ms(),
+                self.audit_head.as_ref(),
+            )
+            .await;
         }
 
         let note = audit_describe::http_note(&self.project, &api_request);

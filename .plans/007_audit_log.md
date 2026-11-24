@@ -1,6 +1,65 @@
 # 007 — Audit log: who changed what, in which room (sign-in phase 3 of 3)
 
-Status: **plan, waiting for approval** (2026-11-24). Builds on 001 and 002.
+Status: **built and tested locally (2026-11-24); not deployed yet.** Builds on 001 and 002.
+
+## As built
+
+The 4 decisions were approved as recommended: field names only, 2,000 lines
+or 90 days per room and 365 days for the registry, owners and admin read,
+names kept as they were.
+
+**Where the code is:**
+- `ontime-core`:
+  - `audit.rs`: the line, actor and action types, plus chunked storage,
+    pruning, merging and paging;
+  - `audit_describe.rs`: what a room request or socket command records, and
+    who the actor is;
+  - `registry_audit.rs`: people events.
+- `server-rs`:
+  - `audit_store.rs`: chunk load and page, and the batched write;
+  - `room.rs` and `registry_host.rs` use it;
+  - `/admin/activity` is in `admin.rs`.
+- Client:
+  - `common/api/activity.ts`, `common/utils/activityText.ts`;
+  - `views/admin/ActivityPanel.tsx`, used by `/my-rooms`, the admin room rows
+    and the admin "People activity" section.
+
+**Changes from the plan:**
+- **Storage is chunked, not one key.**
+  - `worker` 0.4.2 has no SQL API.
+  - With a single 300 KB key, every change would have rewritten 300 KB.
+  - Instead, lines live in chunks of 100 under `audit_v1:<n>`, and a change
+    rewrites only the newest chunk (at most about 15 KB).
+  - The room's index of chunks is a field of the project document, which is
+    written anyway. The registry keeps its index under `audit_index_v1`.
+  - Each change goes out in a single `put_multiple`, so a change and its line
+    are written together.
+  - The 2,000-line limit is enforced as 20 chunks of 100.
+- **One room endpoint, for owners and the admin:**
+  `GET /r/<room>/data/activity?before=&limit=`.
+  - It replaces `/auth/rooms/<room>/activity` and
+    `/admin/rooms/<room>/activity`.
+  - The room already knows both callers, so the registry doesn't need to be
+    involved.
+  - Registry events are at `GET /admin/activity`.
+- **"Show older" is a button,** not loading more on scroll.
+- **Members-only on or off is recorded room-side** (where it happens), not
+  in the registry.
+- **A command that changes nothing is not recorded,** for example a second
+  pause.
+  - Repeats that do change something within 2 s merge, such as add-time
+    tapped twice.
+- **A restore keeps the room's own index,** and a downloaded backup leaves the
+  log out.
+
+**Not done:** `server-native` (the LAN host) does not record activity yet.
+
+## Rollout still to do
+
+1. Record the Worker version.
+2. Deploy the Worker, then the client.
+3. Smoke test with a throwaway person and room.
+4. Remove the throwaway person and room.
 
 ## Goal
 

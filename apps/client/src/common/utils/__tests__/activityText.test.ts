@@ -58,6 +58,23 @@ describe('describeChange()', () => {
   });
 });
 
+describe('people events', () => {
+  it('name the person and the room', () => {
+    expect(
+      describeChange({
+        at: 0,
+        actor: { kind: 'person', id: 'x', name: 'Owner' },
+        action: 'operator-remove',
+        subject: { title: 'Nok' },
+        room: 'gala',
+      }),
+    ).toBe('removed the operator Nok in gala');
+    expect(
+      describeChange({ at: 0, actor: { kind: 'admin' }, action: 'members-change', fields: ['owners'], room: 'gala' }),
+    ).toBe('changed who looks after the room (owners) in gala');
+  });
+});
+
 describe('formatAmount()', () => {
   it('uses minutes when whole, seconds otherwise', () => {
     expect(formatAmount(60_000)).toBe('+1 min');

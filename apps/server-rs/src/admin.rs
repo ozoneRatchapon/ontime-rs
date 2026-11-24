@@ -10,6 +10,7 @@
 //! - `POST   /admin/people/<id>/invite`    a new invite code
 //! - `DELETE /admin/people/<id>/sessions`  sign them out everywhere
 //! - `DELETE /admin/people/<id>`           remove them
+//! - `GET    /admin/activity`      people events, newest first: `?before=&limit=`
 //!
 //! With no `SESSION_PASSWORD` configured the admin surface is closed rather than
 //! open: unlike creating a room, listing every room is never a default.
@@ -63,11 +64,18 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
         return Response::error("Unauthorized", 401);
     }
 
-    // only the room list and people are reachable from here; `report` is for
-    // rooms and `auth` has its own front door
+    // only the room list, people and their activity are reachable from here;
+    // `report` is for rooms and `auth` has its own front door
     let first = rest.split('/').next().unwrap_or_default();
-    if !matches!(first, "rooms" | "people") {
+    if !matches!(first, "rooms" | "people" | "activity") {
         return Response::error("Not found", 404);
+    }
+    if rest == "activity" {
+        if method != Method::Get {
+            return Response::error("Method not allowed", 405);
+        }
+        let query = req.url()?.query().map(|query| format!("?{query}")).unwrap_or_default();
+        return registry_host::forward(env, method, &format!("activity{query}"), None).await;
     }
 
     let body = match method {

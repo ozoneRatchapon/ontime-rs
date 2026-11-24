@@ -121,6 +121,23 @@ check('the owner removes the operator', (await call(`/auth/rooms/${room}/operato
 const after = await json(await read({ session: owner_session }));
 check('still named', after.lines.find((l) => l.action === 'start')?.actor?.name, `Op ${suffix}`);
 
+console.log('== people events, for the admin ==');
+check('not for an owner', (await call('/admin/activity', { token: owner_session })).status, 401);
+const people = await json(await call('/admin/activity?limit=200', { token: master }));
+const mine = people.lines.filter((l) => JSON.stringify(l).includes(suffix));
+const kinds = mine.map((l) => [l.action, l.actor.kind === 'person' ? l.actor.name : l.actor.kind]);
+check('newest first, each attributed', kinds, [
+  ['operator-remove', `Owner ${suffix}`],
+  ['invite-redeem', `Op ${suffix}`],
+  ['operator-add', `Owner ${suffix}`],
+  ['members-change', 'admin'],
+  ['invite-redeem', `Owner ${suffix}`],
+  ['invite-issue', 'admin'],
+  ['person-create', 'admin'],
+]);
+check('the room is named', mine[0].room, room);
+check('the removed operator is still named', mine[0].subject, { title: `Op ${suffix}` });
+
 console.log('== cleanup ==');
 await call(r('/data/session/password'), { token: master, method: 'POST', body: { password: null } });
 await call(`/admin/people/${owner.id}`, { token: master, method: 'DELETE' });

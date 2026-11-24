@@ -134,7 +134,7 @@ export default function MyRooms() {
                       {open.panel === 'team' ? (
                         <TeamPanel room={room} onChanged={load} />
                       ) : (
-                        <ActivityPanel room={room.name} auth={{ session: getSession() ?? '' }} />
+                        <ActivityPanel source={{ kind: 'room', room: room.name, auth: { session: getSession() ?? '' } }} />
                       )}
                     </td>
                   </tr>

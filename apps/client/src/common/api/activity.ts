@@ -48,7 +48,16 @@ export type ActivityAction =
   | 'members-only-off'
   | 'restore'
   | 'report-archive'
-  | 'report-clear';
+  | 'report-clear'
+  // people events, on the admin page
+  | 'person-create'
+  | 'person-remove'
+  | 'invite-issue'
+  | 'invite-redeem'
+  | 'sign-out'
+  | 'members-change'
+  | 'operator-add'
+  | 'operator-remove';
 
 export interface ActivityLine {
   /** epoch ms of the latest occurrence */
@@ -64,6 +73,8 @@ export interface ActivityLine {
   amount?: number;
   /** repeats merged into this line; absent means once */
   times?: number;
+  /** the room a people event is about */
+  room?: string;
 }
 
 export interface ActivityPage {
@@ -75,18 +86,22 @@ export interface ActivityPage {
 /** Who is asking: an owner's session, or the admin's token. */
 export type ActivityAuth = { session: string } | { token: string };
 
-export async function roomActivity(
-  room: string,
-  auth: ActivityAuth,
-  before: number | null = null,
-): Promise<ActivityPage> {
+/** One page of a room's log. */
+export function roomActivity(room: string, auth: ActivityAuth, before: number | null = null): Promise<ActivityPage> {
+  return activityPage(`/r/${encodeURIComponent(room)}/data/activity`, auth, before);
+}
+
+/** One page of the people events, for the admin. */
+export function peopleActivity(token: string, before: number | null = null): Promise<ActivityPage> {
+  return activityPage('/admin/activity', { token }, before);
+}
+
+async function activityPage(path: string, auth: ActivityAuth, before: number | null): Promise<ActivityPage> {
   const query = new URLSearchParams({ limit: '100' });
   if (before !== null) query.set('before', String(before));
   const headers: Record<string, string> =
     'session' in auth ? { 'X-Ontime-Session': auth.session } : { Authorization: `Bearer ${auth.token}` };
-  const response = await fetch(`${getWorkerOrigin()}/r/${encodeURIComponent(room)}/data/activity?${query}`, {
-    headers,
-  });
+  const response = await fetch(`${getWorkerOrigin()}${path}?${query}`, { headers });
   if (!response.ok) {
     throw new AdminError(response.status, await response.text().catch(() => response.statusText));
   }

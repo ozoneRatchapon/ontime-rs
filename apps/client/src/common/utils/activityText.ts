@@ -53,6 +53,14 @@ const verbs: Record<ActivityAction, string> = {
   restore: 'restored the room from a backup',
   'report-archive': 'archived the report',
   'report-clear': 'cleared the report',
+  'person-create': 'added the person',
+  'person-remove': 'removed the person',
+  'invite-issue': 'made an invite link for',
+  'invite-redeem': 'signed in with an invite link',
+  'sign-out': 'signed out',
+  'members-change': 'changed who looks after the room',
+  'operator-add': 'added the operator',
+  'operator-remove': 'removed the operator',
 };
 
 /** '+1 min', '-30 s' */
@@ -71,6 +79,7 @@ export function describeChange(line: ActivityLine): string {
   if (line.amount !== undefined) parts.push(formatAmount(line.amount));
   if (line.fields?.length) parts.push(`(${line.fields.join(', ')})`);
   if (line.more) parts.push(`and ${line.more} more`);
+  if (line.room) parts.push(`in ${line.room}`);
   if (line.times && line.times > 1) parts.push(`×${line.times}`);
   return parts.join(' ');
 }

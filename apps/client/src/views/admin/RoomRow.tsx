@@ -147,7 +147,7 @@ export default function RoomRow({ room, clients, people, onChanged, onError }: R
       {showActivity && (
         <tr>
           <td colSpan={COLUMNS}>
-            <ActivityPanel room={room.name} auth={{ token: getAdminToken() ?? '' }} />
+            <ActivityPanel source={{ kind: 'room', room: room.name, auth: { token: getAdminToken() ?? '' } }} />
           </td>
         </tr>
       )}

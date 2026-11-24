@@ -94,8 +94,10 @@ How to use it:
 
 ## Sign-in phase 3
 
-- [ ] **Audit log:** who changed what, in which room. Plan: `007_audit_log.md`.
-  **[ต้องถาม]** approve it before starting.
+- [x] **Audit log:** who changed what, in which room. Plan: `007_audit_log.md`.
+  - Approved 2026-11-24 with the 4 recommended decisions. Built and tested
+    locally: core 311, e2e `activity.mjs` (25), browser check (11).
+  - **[ต้องถาม]** deploying the Worker and the client is still open.
 
 ## Housekeeping
 

@@ -80,12 +80,15 @@ pub enum Action {
     ReportClear,
     // people, kept by the registry
     PersonCreate,
-    PersonRename,
     PersonRemove,
     InviteIssue,
     InviteRedeem,
     SignOut,
+    /// The admin set a room's owners or operators.
     MembersChange,
+    /// An owner added or removed an operator of their room.
+    OperatorAdd,
+    OperatorRemove,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -111,8 +114,8 @@ impl Action {
             ProjectData | Settings | ViewSettings | CustomFields | UrlPresets | Css | PasswordSet
             | PasswordCleared | MembersOnlyOn | MembersOnlyOff | Restore => Area::Room,
             ReportArchive | ReportClear => Area::Report,
-            PersonCreate | PersonRename | PersonRemove | InviteIssue | InviteRedeem | SignOut
-            | MembersChange => Area::People,
+            PersonCreate | PersonRemove | InviteIssue | InviteRedeem | SignOut | MembersChange
+            | OperatorAdd | OperatorRemove => Area::People,
         }
     }
 }
@@ -149,11 +152,14 @@ pub struct Note {
     /// Milliseconds added (negative: removed), for [`Action::AddTime`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub amount: Option<i64>,
+    /// The room a registry line is about. A room's own lines leave it out.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub room: Option<String>,
 }
 
 impl Note {
     pub fn new(action: Action) -> Self {
-        Self { action, subject: None, fields: Vec::new(), more: 0, amount: None }
+        Self { action, subject: None, fields: Vec::new(), more: 0, amount: None, room: None }
     }
 
     pub fn about(mut self, subject: Option<Subject>) -> Self {
@@ -173,6 +179,11 @@ impl Note {
 
     pub fn with_amount(mut self, amount: i64) -> Self {
         self.amount = Some(amount);
+        self
+    }
+
+    pub fn in_room(mut self, room: &str) -> Self {
+        self.room = Some(room.to_string());
         self
     }
 }
@@ -227,6 +238,9 @@ pub const MERGE_WINDOW_MS: i64 = 2_000;
 
 /// Most lines one page may ask for.
 pub const MAX_PAGE: usize = 200;
+
+/// Where a host without a project document keeps its [`AuditIndex`].
+pub const INDEX_KEY: &str = "audit_index_v1";
 
 /// The storage key of chunk `no`. Zero-padded so keys also sort in order.
 pub fn chunk_key(no: u64) -> String {

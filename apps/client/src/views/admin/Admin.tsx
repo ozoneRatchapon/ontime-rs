@@ -15,6 +15,7 @@ import {
 import Button from '../../common/components/buttons/Button';
 import Input from '../../common/components/input/input/Input';
 
+import ActivityPanel from './ActivityPanel';
 import AdminLogin from './AdminLogin';
 import PeoplePanel from './PeoplePanel';
 import RoomRow from './RoomRow';
@@ -150,8 +151,26 @@ function RoomList({ onSignOut }: { onSignOut: () => void }) {
 
       <PeoplePanel people={people} onChanged={load} onError={setError} />
 
+      <PeopleActivity />
+
       <AddRoom onAdded={load} onError={setError} />
     </div>
+  );
+}
+
+/** Invites, sign-ins and team changes across every room, opened on demand. */
+function PeopleActivity() {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className={style.section}>
+      <div className={style.actions}>
+        <h2>People activity</h2>
+        <Button size='small' variant='ghosted' onClick={() => setOpen((shown) => !shown)}>
+          {open ? 'Hide' : 'Show'}
+        </Button>
+      </div>
+      {open && <ActivityPanel source={{ kind: 'people', token: getAdminToken() ?? '' }} />}
+    </section>
   );
 }
 

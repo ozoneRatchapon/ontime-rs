@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ActivityAuth, ActivityLine, roomActivity } from '../../common/api/activity';
+import { ActivityAuth, ActivityLine, ActivityPage, peopleActivity, roomActivity } from '../../common/api/activity';
 import Button from '../../common/components/buttons/Button';
 import { describeActor, describeChange } from '../../common/utils/activityText';
 
@@ -8,28 +8,49 @@ import { formatDate, formatLastSeen } from './adminUtils';
 
 import style from './Admin.module.scss';
 
-interface ActivityPanelProps {
-  room: string;
-  auth: ActivityAuth;
+/** Whose log to show: one room's, or the people events (admin only). */
+export type ActivitySource = { kind: 'room'; room: string; auth: ActivityAuth } | { kind: 'people'; token: string };
+
+function fetchPage(source: ActivitySource, before: number | null): Promise<ActivityPage> {
+  switch (source.kind) {
+    case 'room':
+      return roomActivity(source.room, source.auth, before);
+    case 'people':
+      return peopleActivity(source.token, before);
+  }
 }
 
-/** Who changed what in a room, newest first. For its owners and the admin. */
-export default function ActivityPanel({ room, auth }: ActivityPanelProps) {
+/** A stable identity for a source, since callers build a fresh object each render. */
+function sourceKey(source: ActivitySource): string {
+  switch (source.kind) {
+    case 'room':
+      return JSON.stringify(['room', source.room, source.auth]);
+    case 'people':
+      return JSON.stringify(['people', source.token]);
+  }
+}
+
+interface ActivityPanelProps {
+  source: ActivitySource;
+}
+
+/** Who changed what, newest first. A room's for its owners and the admin; the people events for the admin. */
+export default function ActivityPanel({ source }: ActivityPanelProps) {
   const [lines, setLines] = useState<ActivityLine[]>([]);
   const [before, setBefore] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // depend on the credential itself: callers build a fresh `auth` each render
-  const session = 'session' in auth ? auth.session : null;
-  const token = 'token' in auth ? auth.token : null;
+  // loads use the latest source, and reload only when its key changes
+  const latest = useRef(source);
+  latest.current = source;
+  const key = sourceKey(source);
 
   const load = useCallback(
     async (from: number | null) => {
       setLoading(true);
       try {
-        const who: ActivityAuth = session !== null ? { session } : { token: token ?? '' };
-        const page = await roomActivity(room, who, from);
+        const page = await fetchPage(latest.current, from);
         setLines((shown) => (from === null ? page.lines : [...shown, ...page.lines]));
         setBefore(page.before);
         setError(null);
@@ -39,7 +60,7 @@ export default function ActivityPanel({ room, auth }: ActivityPanelProps) {
         setLoading(false);
       }
     },
-    [room, session, token],
+    [key],
   );
 
   useEffect(() => {

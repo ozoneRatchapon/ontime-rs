@@ -11,10 +11,14 @@
 use serde_json::Value;
 use worker::*;
 
+use ontime_core::audit::{AuditIndex, Retention, INDEX_KEY};
 use ontime_core::directory::{self, Directory};
+use ontime_core::registry_audit;
 use ontime_core::registry::{Member, Registry, RoomReport, REGISTRY_NAME};
 use ontime_core::identity::Identity;
 use uuid::Uuid;
+
+use crate::audit_store::{self, Batch};
 
 /// Carries a person's session token — from the browser to the Worker, and from
 /// the Worker on to the registry, where it is moved into the body.
@@ -42,12 +46,6 @@ async fn load<T: serde::de::DeserializeOwned + Default>(storage: &Storage, key: 
         .ok()
         .and_then(|raw| serde_json::from_str(&raw).ok())
         .unwrap_or_default()
-}
-
-async fn store<T: serde::Serialize>(storage: &mut Storage, key: &str, value: &T) -> Result<()> {
-    let raw = serde_json::to_string(value)
-        .map_err(|e| Error::RustError(format!("Could not serialise {key}: {e}")))?;
-    storage.put(key, raw).await
 }
 
 /// Serves a registry request inside the registry's own Durable Object.
@@ -79,15 +77,38 @@ pub async fn serve(state: &State, mut req: Request) -> Result<Response> {
         body["token"] = Value::String(session);
     }
 
-    let response = directory::handle(&mut document, method.as_ref(), &segments, &body, now_ms(), &mut fresh_secret);
+    let now = now_ms();
 
-    // each document is written only when it actually moved
+    // the people events, for the admin only (the Worker checks that)
+    if method == Method::Get && segments.as_slice() == ["activity"] {
+        let index = load::<AuditIndex>(&storage, INDEX_KEY).await;
+        return audit_store::page(&storage, &index, &req.url()?, Retention::REGISTRY, now, None).await;
+    }
+
+    // described before it runs, so a removed person is still named
+    let described = registry_audit::note(&document, method.as_ref(), &segments, &body, now);
+    let response = directory::handle(&mut document, method.as_ref(), &segments, &body, now, &mut fresh_secret);
+
+    // each document is written only when it actually moved, and all of it at once
+    let mut batch = Batch::new();
     if response.changed && document.rooms != before.rooms {
-        store(&mut storage, ROOMS_KEY, &document.rooms).await?;
+        batch.put(ROOMS_KEY, &document.rooms)?;
     }
     if response.changed && document.identity != before.identity {
-        store(&mut storage, IDENTITY_KEY, &document.identity).await?;
+        batch.put(IDENTITY_KEY, &document.identity)?;
     }
+    let line = match response.status < 400 && response.changed {
+        true => described.or_else(|| registry_audit::redeemed(method.as_ref(), &segments, &response.body)),
+        false => None,
+    };
+    if let Some((actor, note)) = line {
+        let mut index = load::<AuditIndex>(&storage, INDEX_KEY).await;
+        let head = audit_store::head(&storage, &index, None).await;
+        let writes = index.record(head, actor, note, now, Retention::REGISTRY);
+        batch.put(INDEX_KEY, &index)?;
+        batch.audit(&writes)?;
+    }
+    batch.commit(&mut storage).await?;
 
     Ok(Response::from_json(&response.body)?.with_status(response.status))
 }

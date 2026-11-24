@@ -13,6 +13,7 @@ pub mod offset;
 pub mod parser;
 pub mod project;
 pub mod registry;
+pub mod registry_audit;
 pub mod rundown;
 pub mod rundown_routes;
 pub mod runtime;

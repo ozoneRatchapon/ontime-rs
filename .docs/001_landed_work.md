@@ -24,3 +24,7 @@
   - The fixture is `packages/ontime-core/tests/fixtures/schedule_math.json`.
   - It is run by `schedule_math_tests.rs` and `scheduleMath.contract.test.ts`.
   - See `.plans/005_d2_one_copy_of_schedule_math.md`.
+- **2026-11-24, plan 007 audit log** (ab9894c3 for the server, 3f768647 for
+  the client, and the commit that adds people events).
+  - Room activity for owners and the admin; people events for the admin.
+  - See `.plans/007_audit_log.md` → "As built". Not deployed yet.

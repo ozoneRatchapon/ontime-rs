@@ -186,6 +186,11 @@ impl Identity {
 
     /// Who a session token belongs to. The second value says whether
     /// `last_seen` moved, i.e. whether the identity has to be stored.
+    /// Whose live session a token is, without touching it.
+    pub fn person_of(&self, token: &str, now: i64) -> Option<Uuid> {
+        self.session_index(token, now).map(|index| self.sessions[index].person)
+    }
+
     pub fn authenticate(&mut self, token: &str, now: i64) -> Option<(Uuid, bool)> {
         let index = self.session_index(token, now)?;
         let session = &mut self.sessions[index];
