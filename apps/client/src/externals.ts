@@ -51,6 +51,13 @@ export const baseURI = resolveBaseURI();
  * project. `useStickyRoom` puts it back in the URL.
  */
 export const activeRoom = getRoom();
+
+/**
+ * Pages which belong to no room: the admin list, invite links and a person's rooms.
+ * They open no socket and read nothing from a room, which on a Worker with a
+ * master password may not exist yet.
+ */
+export const isRoomlessPage = /\/(admin|join|my-rooms)\/?$/.test(window.location.pathname);
 export const serverURL = getBaseServerUrl();
 
 /**

@@ -11,13 +11,13 @@ import IdentifyOverlay from './common/components/identify-overlay/IdentifyOverla
 import { AppContextProvider } from './common/context/AppContext';
 import { ontimeQueryClient } from './common/queryClient';
 import { connectSocket } from './common/utils/socket';
-import { baseURI } from './externals';
+import { baseURI, isRoomlessPage } from './externals';
 import KeepAwake from './features/keep-awake/KeepAwake';
 import { TranslationProvider } from './translation/TranslationProvider';
 
 // these pages belong to no room; connecting would count them as a viewer of
 // the default room (and, on a gated Worker, knock on a room that may not exist)
-if (!/\/(admin|join|my-rooms)\/?$/.test(window.location.pathname)) {
+if (!isRoomlessPage) {
   connectSocket();
 }
 
