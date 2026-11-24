@@ -4,7 +4,9 @@ on:
   pull_request:
     branches: '*'
   push:
-    branches: [master]
+    # this fork works on these branches and rarely through pull requests, so
+    # pushes to them have to be checked too
+    branches: [master, feat/rust-cloud-backend, 'feature/**', 'hotfix/**']
   workflow_dispatch:
 
 jobs:

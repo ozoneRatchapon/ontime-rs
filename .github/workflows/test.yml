@@ -3,6 +3,10 @@ name: Ontime test
 on:
   pull_request:
     branches: '*'
+  push:
+    # this fork works on these branches and rarely through pull requests, so
+    # pushes to them have to be checked too
+    branches: [feat/rust-cloud-backend, 'feature/**', 'hotfix/**']
   workflow_dispatch:
 
 jobs:
