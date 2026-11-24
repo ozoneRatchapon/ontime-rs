@@ -86,8 +86,12 @@ How to use it:
     approved on 2026-11-24.
     - The copies agree and the contract guards them, so it isn't urgent.
     - Pick it up when the timeline or countdown math changes next.
-- [ ] **D1, teleprompter.** Write a plan file (core model + wasm + shared
-  transport in the room's Durable Object). **[ต้องถาม]** before starting.
+- [ ] **D1, teleprompter.** Plan written: `008_d1_teleprompter.md`
+  (2026-11-24).
+  - T0 contract, T1 core, T2 Durable Object, T4 upstream client, T5 tests.
+  - Its 4 decisions use the recommended answers.
+  - It is the largest remaining item (about 9 days). Start it on
+    `feature/teleprompter`.
 
 ## Dioxus pilot
 
