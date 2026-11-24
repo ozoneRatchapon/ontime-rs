@@ -58,23 +58,24 @@ How to use it:
   - build passes;
   - browser: 10 views with no console errors; upstream 9, people 14 and
     members 10 checks pass.
-- [ ] **[ต้องถาม]** Deploy the client.
+- [x] Client deployed 2026-11-24 (Pages `33ac5d08`). The read-only production
+  check passed.
 
 ## B4 — new features from upstream (chosen 2026-11-24)
 
-- [ ] **A sound when the timer ends.** Client only. Done when there is a setting
-  to turn it on or off, it plays when the timer ends, and its tests pass.
-- [ ] **Secondary text in the studio and timeline cards.**
+- [x] **A sound when the timer ends.** It was already in from B1 (f3156b02):
+  Timer view → "Play sound on timer end".
+- [x] **Secondary text in the studio and timeline cards.**
   - Timeline (5c7f3732): done in B3.
-  - Studio (e7237950): still to do.
+  - Studio (e7237950): done 2026-11-24.
 - Not taking, for now: export every rundown to Excel, and searchable settings.
 
 ## D — RIIR
 
-- [ ] **D3, countdown with skipped events (759ea78e).**
-  - It needs `getExpectedEnd` and the `getExpected` refactor in utils.
-  - Pull the client side, then un-skip the test in `countdown.utils.test.ts`.
-  - Consider putting the logic in `ontime-core` and the wasm.
+- [x] **D3, countdown with skipped events (759ea78e)**, done 2026-11-24.
+  - `getExpectedEnd` was ported into utils, with tests.
+  - The countdown test is un-skipped.
+  - Client tests: 454 pass, 0 skipped.
 - [ ] **D2, gap and schedule calculations shared through the wasm.** Write a plan
   file first. **[ต้องถาม]** before starting.
 - [ ] **D1, teleprompter.** Write a plan file (core model + wasm + shared
@@ -87,11 +88,17 @@ How to use it:
 
 ## Housekeeping
 
-- [ ] `upstream.mjs` on production: the 0.5–0.8 s waits are too short for
-  production's latency, and one check failed once. Wait for a condition, or
-  wait longer.
-- [ ] A browser test for a silently dropped socket, the case B2 actually fixes,
-  for example by blocking the socket without closing it.
+- [x] `upstream.mjs` waits for the packet it expects instead of a fixed pause.
+  Three runs on production all passed.
+  - **Correction:** the suite has 25 checks, not 26. The run earlier reported
+    as "one failed" had in fact passed completely; that was a miscount.
+- [x] Browser test for a **truly** silent socket drop.
+  - Chrome's CDP "offline" mode is **not** silent: it fires a close event.
+  - So the test puts a TCP proxy in front of the Worker that freezes without
+    closing (`/tmp/ontime-people-check/freeze-proxy.mjs` and
+    `silent-drop2.mjs`).
+  - Result: no close event, the watchdog reconnects, and after the thaw the
+    new socket answers.
 - [ ] Remove the trial worktree: `git worktree remove /tmp/ontime-pull-trial`.
 - In `raknong_4ever`, one entry says it is in a group that does not list it (from
   the old `parent` bug). **Decided: leave it** (2026-11-24). Nothing is broken,
