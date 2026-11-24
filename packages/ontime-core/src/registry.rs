@@ -90,6 +90,18 @@ pub enum Role {
     Operator,
 }
 
+/// Who a session belongs to and what they are to one room, as `auth/check`
+/// answers it. The room keeps this for a minute, and its audit log uses the
+/// name as it is at that moment.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Member {
+    pub person: Uuid,
+    /// Missing from a registry that predates the audit log.
+    #[serde(default)]
+    pub name: String,
+    pub role: Role,
+}
+
 /// A room as one of its members sees it.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct MemberRoom<'a> {

@@ -193,11 +193,21 @@ pub fn may_control(project: &Project, req: &ApiRequest) -> bool {
 /// Turning members-only on or off is for an owner or the admin — not an
 /// operator, and not the room password, which members-only is there to replace.
 fn may_switch_members_only(req: &ApiRequest) -> bool {
-    let master = match (req.master_token.as_deref(), req.token.as_deref()) {
+    is_owner_or_admin(req)
+}
+
+/// The master password, or an owner's session. Who may switch members-only,
+/// and who may read the room's activity.
+pub fn is_owner_or_admin(req: &ApiRequest) -> bool {
+    is_admin(req) || req.member == Some(Role::Owner)
+}
+
+/// Whether the request presents the master password.
+pub fn is_admin(req: &ApiRequest) -> bool {
+    match (req.master_token.as_deref(), req.token.as_deref()) {
         (Some(master), Some(presented)) => token_matches(master, presented),
         _ => false,
-    };
-    master || req.member == Some(Role::Owner)
+    }
 }
 
 pub const NEEDS_SIGN_IN: &str =
@@ -350,23 +360,22 @@ where
         .map_err(|e| ApiResponse::error(format!("Invalid input: {e}"), 400))
 }
 
-pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse {
-    let mut effects: Vec<Effect> = Vec::new();
-    let path = req
-        .path
-        .split('?')
-        .next()
-        .unwrap_or(&req.path)
-        .trim_end_matches('/');
-
+/// The path's segments from the API root, without a query string, a trailing
+/// slash or any host prefix before `/data/` or `/user/`.
+pub(crate) fn route_segments(raw: &str) -> Vec<&str> {
+    let path = raw.split('?').next().unwrap_or(raw).trim_end_matches('/');
     // a caller may hand us the whole original URL path, so trim anything before
     // the API root
     let path = ["/data/", "/user/"]
         .iter()
         .find_map(|prefix| path.find(prefix).map(|i| &path[i..]))
         .unwrap_or(path);
+    path.trim_start_matches('/').split('/').collect()
+}
 
-    let segments: Vec<&str> = path.trim_start_matches('/').split('/').collect();
+pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse {
+    let mut effects: Vec<Effect> = Vec::new();
+    let segments = route_segments(&req.path);
 
     // Setting the password is allowed while the room is still open, so a new
     // room can be claimed; afterwards it needs the current token like anything else.
@@ -539,6 +548,7 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             let mut snapshot = serde_json::to_value(&*project).unwrap_or(Value::Null);
             if let Some(object) = snapshot.as_object_mut() {
                 object.remove("passwordHash");
+                object.remove("audit");
             }
             ApiResponse::json(&snapshot)
         }
@@ -550,6 +560,8 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             match serde_json::from_value::<Project>(req.body.clone()) {
                 Ok(mut restored) => {
                     restored.password_hash = project.password_hash.clone();
+                    // the log belongs to this room, not to whatever the backup came from
+                    restored.audit = project.audit.clone();
                     restored.runtime = Default::default();
                     *project = restored;
                     project.ensure_consistent();
@@ -579,7 +591,11 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             501,
         ),
 
-        _ => ApiResponse::error(format!("Not implemented: {:?} {path}", req.method), 404),
+        _ => {
+            let method = req.method;
+            let path = segments.join("/");
+            ApiResponse::error(format!("Not implemented: {method:?} /{path}"), 404)
+        }
     };
 
     response.effects.append(&mut effects);

@@ -1,4 +1,6 @@
 pub mod api;
+pub mod audit;
+pub mod audit_describe;
 pub mod aux_timer;
 pub mod cue;
 pub mod custom_fields;

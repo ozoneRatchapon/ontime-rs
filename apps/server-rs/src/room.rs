@@ -5,8 +5,10 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
+use ontime_core::audit::{self, Actor, Chunk, Note, Page, Retention, Writes};
+use ontime_core::audit_describe;
 use ontime_core::project::{hash_password, Project};
-use ontime_core::registry::{should_report, Role, RoomReport};
+use ontime_core::registry::{should_report, Member, RoomReport};
 use ontime_core::socket;
 
 use serde::{Deserialize, Serialize};
@@ -35,6 +37,14 @@ struct ClientInfo {
     /// so it may drive a members-only room. Decided once, at connect.
     #[serde(default)]
     privileged: bool,
+    /// Who drives the room from this socket, for the audit log. Decided once,
+    /// at connect, like `privileged`.
+    #[serde(default = "anyone")]
+    actor: Actor,
+}
+
+fn anyone() -> Actor {
+    Actor::Anyone
 }
 
 /// How long a room trusts what the registry said about a session. Removing
@@ -81,9 +91,12 @@ pub struct OntimeProject {
     /// When this instance last reported to the registry, and what it said. Lost
     /// on eviction, which only means the next use reports again.
     last_report: Option<(i64, RoomReport)>,
-    /// Session token -> (when asked, what they are here). Refusals are kept too,
+    /// Session token -> (when asked, who they are here). Refusals are kept too,
     /// so a bad token cannot make the room ask the registry on every request.
-    members: HashMap<String, (i64, Option<Role>)>,
+    members: HashMap<String, (i64, Option<Member>)>,
+    /// The newest audit chunk, kept once loaded so each change does not read
+    /// it again. Lost on eviction, which only costs one read.
+    audit_head: Option<Chunk>,
 }
 
 #[durable_object]
@@ -98,6 +111,7 @@ impl DurableObject for OntimeProject {
             is_new: false,
             last_report: None,
             members: HashMap::new(),
+            audit_head: None,
         }
     }
 
@@ -173,13 +187,11 @@ impl DurableObject for OntimeProject {
             return Ok(());
         }
 
+        let info = ws.deserialize_attachment::<ClientInfo>().ok().flatten();
+
         // a viewer's screen in a members-only room may watch, never drive
         if self.project.members_only {
-            let privileged = ws
-                .deserialize_attachment::<ClientInfo>()
-                .ok()
-                .flatten()
-                .is_some_and(|info| info.privileged);
+            let privileged = info.as_ref().is_some_and(|info| info.privileged);
             if !privileged {
                 // sent as a log line, which the editor already shows
                 let refusal = json!({
@@ -198,8 +210,16 @@ impl DurableObject for OntimeProject {
         }
 
         let now = now_ms();
+        let before = self.project.runtime.selected_id.clone();
         if api::apply_socket_command(&mut self.project, tag, payload, now) {
-            self.persist().await?;
+            let writes = match audit_describe::socket_note(&self.project, tag, payload, before.as_deref()) {
+                Some(note) => {
+                    let actor = info.map_or(Actor::Anyone, |info| info.actor);
+                    Some(self.audit(actor, note, now).await)
+                }
+                None => None,
+            };
+            self.persist(writes).await?;
             self.broadcast_runtime(now);
             self.sync_alarm().await?;
         }
@@ -222,7 +242,7 @@ impl DurableObject for OntimeProject {
             .runtime
             .on_tick(&rundown, now, self.project.timezone_offset)
         {
-            self.persist().await?;
+            self.persist(None).await?;
         }
 
         self.broadcast_runtime(now);
@@ -286,14 +306,78 @@ impl OntimeProject {
         Ok(())
     }
 
-    async fn persist(&mut self) -> Result<()> {
+    /// Writes the project, and with it the audit chunk a change added, in one
+    /// call, so a change and its log line cannot disagree.
+    async fn persist(&mut self, audit_writes: Option<Writes>) -> Result<()> {
         // once something is stored the room exists, and the creation gate no
         // longer applies to it
         self.is_new = false;
 
         let raw = serde_json::to_string(&self.project)
             .map_err(|e| Error::RustError(format!("Could not serialise project: {e}")))?;
-        self.state.storage().put(STORAGE_KEY, raw).await
+        let mut storage = self.state.storage();
+        let Some(writes) = audit_writes else {
+            return storage.put(STORAGE_KEY, raw).await;
+        };
+
+        let chunk = serde_json::to_string(&writes.put)
+            .map_err(|e| Error::RustError(format!("Could not serialise the audit log: {e}")))?;
+        let values = js_sys::Object::new();
+        js_sys::Reflect::set(&values, &STORAGE_KEY.into(), &raw.into())?;
+        js_sys::Reflect::set(&values, &audit::chunk_key(writes.put.no).into(), &chunk.into())?;
+        storage.put_multiple_raw(values).await?;
+
+        if !writes.delete.is_empty() {
+            let keys: Vec<String> = writes.delete.iter().map(|no| audit::chunk_key(*no)).collect();
+            storage.delete_multiple(keys).await?;
+        }
+        Ok(())
+    }
+
+    async fn load_chunk(&self, no: u64) -> Option<Chunk> {
+        self.state
+            .storage()
+            .get::<String>(&audit::chunk_key(no))
+            .await
+            .ok()
+            .and_then(|raw| serde_json::from_str(&raw).ok())
+    }
+
+    /// Adds a line to the log in memory. The returned writes go to [`persist`].
+    async fn audit(&mut self, actor: Actor, note: Note, now: i64) -> Writes {
+        let head = match (self.audit_head.take(), self.project.audit.head()) {
+            (Some(chunk), Some(no)) if chunk.no == no => Some(chunk),
+            (_, Some(no)) => self.load_chunk(no).await,
+            (_, None) => None,
+        };
+        let writes = self.project.audit.record(head, actor, note, now, Retention::ROOM);
+        self.audit_head = Some(writes.put.clone());
+        writes
+    }
+
+    /// One page of the log, newest first: `?before=<ms>&limit=<n>`.
+    async fn activity(&self, url: &Url) -> Result<Response> {
+        let query = |key: &str| url.query_pairs().find(|(k, _)| k == key).map(|(_, v)| v.to_string());
+        let before = query("before").and_then(|v| v.parse::<i64>().ok());
+        let limit = query("limit").and_then(|v| v.parse::<usize>().ok());
+
+        let mut page = Page::new(before, limit, now_ms(), Retention::ROOM);
+        for no in self.project.audit.newest_first(before) {
+            let chunk = match &self.audit_head {
+                Some(head) if head.no == no => Some(head.clone()),
+                _ => self.load_chunk(no).await,
+            };
+            if chunk.is_some_and(|chunk| page.take(&chunk)) {
+                break;
+            }
+        }
+
+        let mut headers = Headers::new();
+        headers.set("content-type", "application/json")?;
+        // names of the people who made changes
+        headers.set("cache-control", "no-store")?;
+        Ok(Response::from_json(&json!({ "lines": page.lines, "before": page.next_before() }))?
+            .with_headers(headers))
     }
 
     /// Tells every connected client to refetch a slice of server state.
@@ -491,17 +575,17 @@ impl OntimeProject {
 
     /// What the person behind a session is to this room, asking the registry at
     /// most once a minute per session.
-    async fn member(&mut self, session: Option<String>, room_name: &str) -> Option<Role> {
+    async fn member(&mut self, session: Option<String>, room_name: &str) -> Option<Member> {
         let session = session?;
         let now = now_ms();
         self.members.retain(|_, (asked, _)| now - *asked < MEMBER_CACHE_MS);
-        if let Some((_, role)) = self.members.get(&session) {
-            return *role;
+        if let Some((_, member)) = self.members.get(&session) {
+            return member.clone();
         }
         match registry_host::check(&self._env, &session, room_name).await {
-            Ok(role) => {
-                self.members.insert(session, (now, role));
-                role
+            Ok(member) => {
+                self.members.insert(session, (now, member.clone()));
+                member
             }
             // the registry being unreachable is not an answer worth keeping
             Err(e) => {
@@ -533,8 +617,11 @@ impl OntimeProject {
                 .ok()
                 .map(|secret| hash_password(&secret.to_string())),
             room_is_new: self.is_new,
-            member,
+            member: member.as_ref().map(|member| member.role),
         };
+        // decided before the change: setting a password changes what the
+        // presented token matches
+        let actor = audit_describe::actor(&self.project, &api_request, member.as_ref());
 
         // an upgrade never reaches the shared routing, because the socket belongs
         // to the host — but it is gated by the same rule
@@ -545,7 +632,7 @@ impl OntimeProject {
             if !api::may_create_room(&api_request) {
                 return Response::error("This room does not exist", 403);
             }
-            let upgraded = self.open_websocket(api::is_privileged(&self.project, &api_request))?;
+            let upgraded = self.open_websocket(api::is_privileged(&self.project, &api_request), actor)?;
             // there is somebody to broadcast to again, so the heartbeat that was
             // stood down when the last client left has to come back
             self.sync_alarm().await?;
@@ -565,7 +652,24 @@ impl OntimeProject {
             return Response::from_json(&json!({ "clients": self.client_list(None) }));
         }
 
-        let response = api::handle(&mut self.project, &api_request, now_ms());
+        // who changed what, for an owner or the admin. Host-side because the
+        // lines are stored apart from the project.
+        if req.method() == Method::Get && api_request.path.ends_with("/data/activity") {
+            if !api::is_authorised(&self.project, &api_request) {
+                return Response::error("Unauthorized", 401);
+            }
+            if !api::is_owner_or_admin(&api_request) {
+                return Response::error("Only an owner of this room can read its activity", 403);
+            }
+            if self.is_new {
+                return Response::error("This room does not exist", 404);
+            }
+            return self.activity(&req.url()?).await;
+        }
+
+        let note = audit_describe::http_note(&self.project, &api_request);
+        let now = now_ms();
+        let response = api::handle(&mut self.project, &api_request, now);
 
         let mut should_persist = false;
         let mut refetches = Vec::new();
@@ -582,7 +686,11 @@ impl OntimeProject {
         }
 
         if should_persist {
-            self.persist().await?;
+            let writes = match note {
+                Some(note) if response.status < 400 => Some(self.audit(actor, note, now).await),
+                _ => None,
+            };
+            self.persist(writes).await?;
         }
         for (target, rundown_id) in &refetches {
             self.broadcast_refetch(target, rundown_id.as_deref());
@@ -607,7 +715,7 @@ impl OntimeProject {
         Ok(worker_response)
     }
 
-    fn open_websocket(&mut self, privileged: bool) -> Result<Response> {
+    fn open_websocket(&mut self, privileged: bool, actor: Actor) -> Result<Response> {
         let pair = WebSocketPair::new()?;
         self.state.accept_web_socket(&pair.server);
 
@@ -621,6 +729,7 @@ impl OntimeProject {
             origin: String::new(),
             path: String::new(),
             privileged,
+            actor,
         };
         let _ = pair.server.serialize_attachment(&info);
 

@@ -11,7 +11,7 @@ use serde_json::{json, Value};
 use uuid::Uuid;
 
 use crate::identity::{Identity, IdentityError, PersonSummary, Secrets};
-use crate::registry::{self, Registry, RegistryResponse, Role};
+use crate::registry::{self, Member, Registry, RegistryResponse, Role};
 
 /// Both documents the registry instance stores.
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -179,7 +179,11 @@ fn route(
 
         ("POST", ["auth", "check"]) => match identity.authenticate(text(body, "token"), now) {
             Some((id, touched)) => match rooms.role_in(text(body, "room"), &id) {
-                Some(role) => RegistryResponse::ok(json!({ "person": id, "role": role }), touched),
+                Some(role) => {
+                    let name = identity.person(&id).map(|person| person.name.clone()).unwrap_or_default();
+                    let member = Member { person: id, name, role };
+                    RegistryResponse::ok(json!(member), touched)
+                }
                 None => RegistryResponse {
                     changed: touched,
                     ..RegistryResponse::error(403, "not a member of this room")

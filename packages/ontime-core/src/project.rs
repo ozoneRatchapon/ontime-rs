@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+use crate::audit::AuditIndex;
 use crate::aux_timer::{AuxTimerNames, AuxTimers};
 use crate::message::{ArchivedRun, ArchivedRunEvent, MessageState, Report, ReportArchive};
 use crate::rundown::Rundown;
@@ -139,6 +140,11 @@ pub struct Project {
     /// behaves as it always has until its owner turns it on.
     #[serde(default)]
     pub members_only: bool,
+    /// Which chunks of the audit log exist. The lines are stored apart, see
+    /// [`crate::audit`]. It lives here because this document is written with
+    /// every change, so a change and its log line are written together.
+    #[serde(default)]
+    pub audit: AuditIndex,
 }
 
 /// Hashes a room password. The resulting digest doubles as the bearer token, the
@@ -200,6 +206,7 @@ impl Default for Project {
             heartbeat_ms: default_heartbeat_ms(),
             password_hash: None,
             members_only: false,
+            audit: AuditIndex::default(),
         }
     }
 }

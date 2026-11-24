@@ -12,7 +12,7 @@ use serde_json::Value;
 use worker::*;
 
 use ontime_core::directory::{self, Directory};
-use ontime_core::registry::{Registry, Role, RoomReport, REGISTRY_NAME};
+use ontime_core::registry::{Member, Registry, RoomReport, REGISTRY_NAME};
 use ontime_core::identity::Identity;
 use uuid::Uuid;
 
@@ -136,17 +136,14 @@ pub async fn report(env: &Env, report: &RoomReport) -> Result<()> {
     Ok(())
 }
 
-/// What a session's person is to a room: `Ok(None)` for a valid answer of
-/// "nobody here", `Err` when the registry could not be asked.
-pub async fn check(env: &Env, session: &str, room: &str) -> Result<Option<Role>> {
+/// Who a session's person is and what they are to a room: `Ok(None)` for a
+/// valid answer of "nobody here", `Err` when the registry could not be asked.
+pub async fn check(env: &Env, session: &str, room: &str) -> Result<Option<Member>> {
     let body = serde_json::json!({ "token": session, "room": room }).to_string();
     let mut response = forward(env, Method::Post, "auth/check", Some(body)).await?;
     if response.status_code() != 200 {
         return Ok(None);
     }
     let answer: Value = response.json().await?;
-    Ok(answer
-        .get("role")
-        .cloned()
-        .and_then(|role| serde_json::from_value(role).ok()))
+    Ok(serde_json::from_value(answer).ok())
 }
