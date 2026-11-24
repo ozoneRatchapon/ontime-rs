@@ -1,8 +1,10 @@
 import { DatabaseModel, OntimeView } from 'ontime-types';
+import { defaultTeleprompterSettings } from 'ontime-utils';
 
 import { backstageRundown, broadcastRundown, stageRundown } from './demoRundowns.js';
 
 export const demoDb: DatabaseModel = {
+  projectId: 'demo',
   rundowns: {
     default: stageRundown,
     backstage: backstageRundown,
@@ -29,6 +31,7 @@ export const demoDb: DatabaseModel = {
     operatorKey: null,
     timeFormat: '24',
     language: 'en',
+    auxTimerNames: ['', '', ''],
   },
   viewSettings: {
     dangerColor: '#ff7300',
@@ -83,4 +86,5 @@ export const demoDb: DatabaseModel = {
     triggers: [],
     automations: {},
   },
+  teleprompter: { ...defaultTeleprompterSettings },
 };

@@ -16,9 +16,11 @@ export function safeMerge(existing: DatabaseModel, newData: Partial<DatabaseMode
     urlPresets = [],
     customFields = {},
     automation,
+    teleprompter = {},
   } = deepNewData;
 
   return {
+    projectId: existing.projectId,
     rundowns: { ...existing.rundowns, ...rundowns },
     project: { ...deepExisting.project, ...project },
     settings: { ...deepExisting.settings, ...settings },
@@ -29,5 +31,6 @@ export function safeMerge(existing: DatabaseModel, newData: Partial<DatabaseMode
     customFields: { ...deepExisting.customFields, ...customFields },
     // trigger and automation are coupled and cannot be changed individually so we replace the whole automation
     automation: automation ?? deepExisting.automation,
+    teleprompter: { ...deepExisting.teleprompter, ...teleprompter },
   };
 }

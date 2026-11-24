@@ -307,6 +307,10 @@ const actionHandlers: Record<ApiActionTag, ActionHandler> = {
     runtimeService.setOffsetMode(mode);
     return { payload: 'success' };
   },
+  /* Teleprompter: served by the Rust core (plan 008); this TS server is not deployed */
+  teleprompter: () => {
+    throw new Error('The teleprompter is served by the Rust backend');
+  },
 };
 
 /**

@@ -2,6 +2,7 @@ import { SimpleDirection, SimplePlayback, SimpleTimerState } from 'ontime-types'
 
 export class SimpleTimer {
   state: SimpleTimerState = {
+    name: '',
     duration: 0,
     current: 0,
     playback: SimplePlayback.Stop,
@@ -19,6 +20,7 @@ export class SimpleTimer {
 
   public reset() {
     this.state = {
+      name: '',
       duration: 0,
       current: 0,
       playback: SimplePlayback.Stop,

@@ -30,6 +30,7 @@ export function migrateServerPort(jsonData: Partial<DatabaseModel>): {
     operatorKey,
     timeFormat,
     language,
+    auxTimerNames: ['', '', ''],
     app: 'ontime',
   } as Settings;
   return { db, serverPort: settings?.serverPort };

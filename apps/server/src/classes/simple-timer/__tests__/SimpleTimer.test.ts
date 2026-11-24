@@ -12,6 +12,7 @@ describe('SimpleTimer count-down', () => {
     test('setting the timer duration', () => {
       const newState = timer.setTime(initialTime);
       const expected: SimpleTimerState = {
+        name: '',
         duration: initialTime,
         current: initialTime,
         direction: SimpleDirection.CountDown,
@@ -23,6 +24,7 @@ describe('SimpleTimer count-down', () => {
     test('setting the timer to play', () => {
       const newState = timer.start(0);
       const expected: SimpleTimerState = {
+        name: '',
         duration: initialTime,
         current: initialTime,
         direction: SimpleDirection.CountDown,
@@ -34,6 +36,7 @@ describe('SimpleTimer count-down', () => {
     test('updating the timer', () => {
       let newState = timer.update(100);
       const expected: SimpleTimerState = {
+        name: '',
         duration: initialTime,
         current: initialTime - 100,
         direction: SimpleDirection.CountDown,
@@ -54,6 +57,7 @@ describe('SimpleTimer count-down', () => {
       const pausedTime = 200;
       let newState = timer.pause(1500);
       const expected: SimpleTimerState = {
+        name: '',
         duration: initialTime,
         current: initialTime - 1500,
         direction: SimpleDirection.CountDown,
@@ -79,6 +83,7 @@ describe('SimpleTimer count-down', () => {
     test('stopping the timer clears the running data', () => {
       const newState = timer.stop();
       const expected: SimpleTimerState = {
+        name: '',
         duration: initialTime,
         current: initialTime,
         direction: SimpleDirection.CountDown,
@@ -93,6 +98,7 @@ describe('SimpleTimer count-down', () => {
 
       let newState = timer.start(0);
       const expected: SimpleTimerState = {
+        name: '',
         duration: initialTime,
         current: initialTime,
         direction: SimpleDirection.CountUp,
@@ -123,6 +129,7 @@ describe('SimpleTimer count-down', () => {
 
       let newState = timer.start(0);
       expect(newState).toStrictEqual({
+        name: '',
         duration: 1000,
         current: 1000,
         direction: SimpleDirection.CountUp,
@@ -131,6 +138,7 @@ describe('SimpleTimer count-down', () => {
 
       newState = timer.update(100);
       expect(newState).toStrictEqual({
+        name: '',
         duration: 1000,
         current: initialTime + 100,
         direction: SimpleDirection.CountUp,
@@ -139,6 +147,7 @@ describe('SimpleTimer count-down', () => {
 
       newState = timer.update(500);
       expect(newState).toStrictEqual({
+        name: '',
         duration: 1000,
         current: 1500,
         direction: SimpleDirection.CountUp,
@@ -147,6 +156,7 @@ describe('SimpleTimer count-down', () => {
 
       newState = timer.setDirection(SimpleDirection.CountDown, 600);
       expect(newState).toStrictEqual({
+        name: '',
         duration: 1500,
         current: 1500,
         direction: SimpleDirection.CountDown,
@@ -155,6 +165,7 @@ describe('SimpleTimer count-down', () => {
 
       newState = timer.update(700);
       expect(newState).toStrictEqual({
+        name: '',
         duration: 1500,
         current: 1400,
         direction: SimpleDirection.CountDown,
@@ -163,6 +174,7 @@ describe('SimpleTimer count-down', () => {
 
       newState = timer.setDirection(SimpleDirection.CountUp, 700);
       expect(newState).toStrictEqual({
+        name: '',
         duration: 1400,
         current: 1400,
         direction: SimpleDirection.CountUp,
@@ -171,6 +183,7 @@ describe('SimpleTimer count-down', () => {
 
       newState = timer.update(800);
       expect(newState).toStrictEqual({
+        name: '',
         duration: 1400,
         current: 1500,
         direction: SimpleDirection.CountUp,

@@ -1,8 +1,9 @@
-import { DatabaseModel, LogOrigin } from 'ontime-types';
-import { getErrorMessage } from 'ontime-utils';
+import { DatabaseModel, LogOrigin, TeleprompterSettings } from 'ontime-types';
+import { defaultTeleprompterSettings, getErrorMessage } from 'ontime-utils';
 
 import { logger } from '../../classes/Logger.js';
 import { portManager } from '../../classes/port-manager/PortManager.js';
+import { makeProjectId } from '../../models/dataModel.js';
 import { parseAutomationSettings } from '../automation/automation.parser.js';
 import { parseCustomFields } from '../custom-fields/customFields.parser.js';
 import { parseProjectData } from '../project-data/projectData.parser.js';
@@ -75,6 +76,8 @@ export function parseDatabaseModel(
   const rundowns = parseRundowns(migratedData, customFields, makeEmitError('Rundowns'));
 
   const data: DatabaseModel = {
+    projectId:
+      typeof migratedData.projectId === 'string' && migratedData.projectId ? migratedData.projectId : makeProjectId(),
     rundowns,
     project: parseProjectData(migratedData, makeEmitError('Project')),
     settings,
@@ -82,7 +85,26 @@ export function parseDatabaseModel(
     urlPresets: parseUrlPresets(migratedData, makeEmitError('URL Presets')),
     customFields,
     automation: parseAutomationSettings(migratedData),
+    teleprompter: parseTeleprompter(migratedData.teleprompter),
   };
 
   return { data, errors, migrated };
+}
+
+/**
+ * The teleprompter settings of a project file, each invalid value taken from the defaults.
+ * This TS server is not deployed (the Rust core serves the teleprompter); it only has to read the field.
+ */
+function parseTeleprompter(input: unknown): TeleprompterSettings {
+  const settings = { ...defaultTeleprompterSettings };
+  if (!input || typeof input !== 'object') return settings;
+  const data = input as Partial<Record<keyof TeleprompterSettings, unknown>>;
+  if (typeof data.script === 'string') settings.script = data.script;
+  if (typeof data.charsPerLine === 'number' && Number.isFinite(data.charsPerLine)) {
+    settings.charsPerLine = Math.min(Math.max(Math.round(data.charsPerLine), 10), 80);
+  }
+  if (data.heading === 'title' || data.heading === 'cue' || data.heading === 'both' || data.heading === 'none') {
+    settings.heading = data.heading;
+  }
+  return settings;
 }

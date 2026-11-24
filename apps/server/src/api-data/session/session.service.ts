@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { GetInfo, LinkOptions, OntimeView, SessionStats } from 'ontime-types';
 
 import { socket } from '../../adapters/WebsocketAdapter.js';
@@ -14,6 +16,8 @@ import { getNetworkInterfaces } from '../../utils/network.js';
 import { getTimezoneLabel } from '../../utils/time.js';
 
 const startedAt = new Date();
+/** Identifies this server process, as upstream's app state service does */
+const nodeId = randomUUID();
 
 /** Gathers information related to runtime */
 export async function getSessionStats(): Promise<SessionStats> {
@@ -31,6 +35,8 @@ export async function getSessionStats(): Promise<SessionStats> {
     playback,
     timezone: getTimezoneLabel(startedAt),
     version: ONTIME_VERSION,
+    nodeId,
+    projectId: getDataProvider().getData().projectId,
   };
 }
 

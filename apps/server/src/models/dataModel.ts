@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
+
 import { DatabaseModel, Rundown } from 'ontime-types';
-import { generateId } from 'ontime-utils';
+import { defaultTeleprompterSettings, generateId } from 'ontime-utils';
 
 import { ONTIME_VERSION } from '../ONTIME_VERSION.js';
 
@@ -12,7 +14,8 @@ const defaultRundown: Rundown = {
   revision: 0,
 };
 
-const dbModel: DatabaseModel = {
+// a project's id is made per project, see makeNewProject
+const dbModel: Omit<DatabaseModel, 'projectId'> = {
   rundowns: {
     default: { ...defaultRundown },
   },
@@ -30,6 +33,7 @@ const dbModel: DatabaseModel = {
     operatorKey: null,
     timeFormat: '24',
     language: 'en',
+    auxTimerNames: ['', '', ''],
   },
   viewSettings: {
     overrideStyles: false,
@@ -46,6 +50,7 @@ const dbModel: DatabaseModel = {
     triggers: [],
     automations: {},
   },
+  teleprompter: { ...defaultTeleprompterSettings },
 };
 
 /**
@@ -53,12 +58,13 @@ const dbModel: DatabaseModel = {
  */
 export function makeNewProject(defaultRundownId?: string): DatabaseModel {
   const rundown = makeNewRundown(defaultRundownId);
-  const newProject = structuredClone(dbModel);
-  newProject.rundowns = {
-    [rundown.id]: rundown,
+  return {
+    ...structuredClone(dbModel),
+    projectId: makeProjectId(),
+    rundowns: {
+      [rundown.id]: rundown,
+    },
   };
-
-  return newProject;
 }
 
 /**
@@ -71,10 +77,14 @@ export function makeNewRundown(id?: string): Rundown {
   return newRundown;
 }
 
+export function makeProjectId(): string {
+  return randomUUID();
+}
+
 /**
  * Get a top level property of the DatabaseModel
  */
-export function getPartialProject<T extends keyof DatabaseModel>(key: T): DatabaseModel[T] {
+export function getPartialProject<T extends keyof typeof dbModel>(key: T): (typeof dbModel)[T] {
   if (Object.hasOwn(dbModel, key)) {
     return structuredClone(dbModel[key]);
   }

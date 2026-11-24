@@ -208,6 +208,9 @@ export const startServer = async (): Promise<{ message: string; serverPort: numb
     clock: state.clock,
     timer: state.timer,
     message: { ...runtimeStorePlaceholder.message },
+    // the teleprompter is served by the Rust core; this server only reports the idle state
+    teleprompter: { ...runtimeStorePlaceholder.teleprompter },
+    teleprompterSync: { ...runtimeStorePlaceholder.teleprompterSync },
     offset: state.offset,
     rundown: state.rundown,
     eventNow: state.eventNow,
@@ -215,18 +218,21 @@ export const startServer = async (): Promise<{ message: string; serverPort: numb
     eventFlag: null,
     groupNow: null,
     auxtimer1: {
+      name: '',
       duration: timerConfig.auxTimerDefault,
       current: timerConfig.auxTimerDefault,
       playback: SimplePlayback.Stop,
       direction: SimpleDirection.CountDown,
     },
     auxtimer2: {
+      name: '',
       duration: timerConfig.auxTimerDefault,
       current: timerConfig.auxTimerDefault,
       playback: SimplePlayback.Stop,
       direction: SimpleDirection.CountDown,
     },
     auxtimer3: {
+      name: '',
       duration: timerConfig.auxTimerDefault,
       current: timerConfig.auxTimerDefault,
       playback: SimplePlayback.Stop,
