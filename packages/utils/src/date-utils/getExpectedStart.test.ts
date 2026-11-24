@@ -317,7 +317,7 @@ describe('getExpectedStart()', () => {
 });
 
 describe('getExpectedEnd()', () => {
-  const event = { timeStart: 1000, dayOffset: 0, duration: 500, countToEnd: false };
+  const event = { timeStart: 1000, dayOffset: 0 as Day, duration: 500, countToEnd: false };
 
   it('is the expected start plus the duration', () => {
     expect(getExpectedEnd(event, 2000, 0)).toBe(2500);
@@ -329,6 +329,6 @@ describe('getExpectedEnd()', () => {
   });
 
   it('a count to end event on the next day ends a day later', () => {
-    expect(getExpectedEnd({ ...event, countToEnd: true, dayOffset: 1 }, 0, 0)).toBe(1500 + 86400000);
+    expect(getExpectedEnd({ ...event, countToEnd: true, dayOffset: 1 as Day }, 0, 0)).toBe(1500 + 86400000);
   });
 });

@@ -1,6 +1,29 @@
 # 005 — D2: one copy of the schedule math, in Rust
 
-Status: **plan, waiting for approval** (2026-11-24).
+Status: **step 1 done (2026-11-24); step 2 waiting for approval.**
+
+## Step 1 result
+
+- **The fixture:** `packages/ontime-core/tests/fixtures/schedule_math.json`.
+  - 30 `expected_start` cases: every upstream case, plus a clamped negative
+    delay, a positive delay, 23:50 pushed past midnight, a next-day event
+    whose overnight gap absorbs lateness, and relative mode with nulls.
+  - 6 `expected_end` cases, including count-to-end on the running day.
+- **The runners:**
+  - `packages/ontime-core/tests/schedule_math_tests.rs`;
+  - `packages/utils/src/date-utils/scheduleMath.contract.test.ts`.
+- **Rust gained `offset::expected_end`**, ported from `getExpectedEnd`. It is
+  used only by the contract for now.
+- **Result:** both pass, and no differences were found.
+  - Changing one expected value turns both suites red, so the contract does
+    catch drift.
+- **Not covered yet:** the linked-to-loaded and gap look-ahead.
+  - The TS side has no standalone `getLinksToLoaded` in our tree.
+  - The Rust side keeps it inline in `runtime.rs`.
+  - Covering it needs a small extraction on both sides. That belongs in step 2.
+- **Decision 1 answered:** the copies agree today, so unifying them is about
+  stopping future drift, not fixing a bug. Step 2 is still worth doing, but it
+  isn't urgent.
 
 ## The problem
 

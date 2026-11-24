@@ -131,3 +131,27 @@ pub fn expected_start(inputs: &ExpectedStartInputs) -> i64 {
     // otherwise the gaps absorb what they can
     with_offset - inputs.total_gap
 }
+
+/// The parts of an event that decide when it ends.
+#[derive(Debug, Clone)]
+pub struct ExpectedEndInputs {
+    pub time_start: i64,
+    pub day_offset: i64,
+    pub duration: i64,
+    pub count_to_end: bool,
+}
+
+/// When an event is expected to end, given when it is expected to start.
+///
+/// Ported from upstream `getExpectedEnd`. A `countToEnd` event ends on the wall
+/// clock at its planned end, or at its start if it starts after that.
+pub fn expected_end(event: &ExpectedEndInputs, expected_start: i64, current_day: i64) -> i64 {
+    match event.count_to_end {
+        true => {
+            let relative_day_offset = event.day_offset - current_day;
+            let planned_end = event.time_start + event.duration + relative_day_offset * MS_PER_DAY;
+            expected_start.max(planned_end)
+        }
+        false => expected_start + event.duration,
+    }
+}

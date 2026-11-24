@@ -79,8 +79,10 @@ How to use it:
   - The countdown test is un-skipped.
   - Client tests: 454 pass, 0 skipped.
 - [ ] **D2, gap and schedule calculations shared through the wasm.** Plan:
-  `005_d2_one_copy_of_schedule_math.md`. **[ต้องถาม]** approve it before
-  starting.
+  `005_d2_one_copy_of_schedule_math.md`.
+  - Step 1 (the shared contract, test only) is done: 36 cases, run by both
+    cargo and vitest. The copies agree.
+  - **[ต้องถาม]** step 2 (the browser uses the wasm) still needs approval.
 - [ ] **D1, teleprompter.** Write a plan file (core model + wasm + shared
   transport in the room's Durable Object). **[ต้องถาม]** before starting.
 
