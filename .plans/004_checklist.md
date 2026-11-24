@@ -126,5 +126,24 @@ How to use it:
   and let the hook run.
 - [x] Client deployed 2026-11-24 (Pages `1e580e95`). The source link on production opens github.com/ozoneRatchapon/ontime-rs. Previously:
   points at current source.
-- [ ] **[ต้องถาม]** Back up the real schedules to a separate private repo,
-  `ontime-ops`. The user creates the repo.
+- [x] Real schedules backed up by the user to `ozoneRatchapon/ontime-ops`,
+  2026-11-24. Checked: the repo is PRIVATE. Copy new schedule files there too.
+
+## Dependabot (2026-11-24): 206 open alerts on the default branch `feat/rust-cloud-backend`
+
+- **Nothing that ships is exposed.** Production is the static client bundle plus
+  the Rust Worker.
+- **The critical alert** is `proxy-addr`, which comes in through Express in the
+  TS server. We don't deploy that.
+- **Most alerts** come from code that never ships:
+  - `apps/electron`: 27 alerts;
+  - `apps/server` (TS): multer, express and the like;
+  - dev and test tools: vite, happy-dom, undici, xmldom.
+- **Client runtime:**
+  - axios is already past the fix (1.21.1), so that alert is stale.
+  - react-router #50 applies only to RSC mode, which we don't use. Bumped to
+    8.5.2 anyway (`cc025051`): tests and browser walk-throughs pass. It reaches
+    production with the next client deploy.
+- [ ] Optional: dismiss the alerts for `apps/electron` and `apps/server` as "not
+  deployed", or remove those packages from the workspace. **[ต้องถาม]**: it
+  changes what the repo contains.
