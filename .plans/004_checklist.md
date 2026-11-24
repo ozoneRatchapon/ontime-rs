@@ -82,15 +82,20 @@ How to use it:
   `005_d2_one_copy_of_schedule_math.md`.
   - Step 1 (the shared contract, test only) is done: 36 cases, run by both
     cargo and vitest. The copies agree.
-  - **[ต้องถาม]** step 2 (the browser uses the wasm) still needs approval.
+  - Step 2 (the browser uses the wasm) is deferred, as recommended and
+    approved on 2026-11-24.
+    - The copies agree and the contract guards them, so it isn't urgent.
+    - Pick it up when the timeline or countdown math changes next.
 - [ ] **D1, teleprompter.** Write a plan file (core model + wasm + shared
   transport in the room's Durable Object). **[ต้องถาม]** before starting.
 
 ## Dioxus pilot
 
 - [ ] Try Dioxus on our own pages, `/admin`, `/join` and `/my-rooms`. Plan:
-  `006_dioxus_pilot_on_our_own_pages.md`. **[ต้องถาม]** approve it before
-  starting.
+  `006_dioxus_pilot_on_our_own_pages.md`.
+  - Deferred, as recommended and approved on 2026-11-24.
+  - The React pages work, and the bundle-size risk isn't worth it now.
+  - The audit log UI was built in React.
 
 ## Sign-in phase 3
 
@@ -160,6 +165,28 @@ How to use it:
   - react-router #50 applies only to RSC mode, which we don't use. Bumped to
     8.5.2 anyway (`cc025051`): tests and browser walk-throughs pass. It reaches
     production with the next client deploy.
-- [ ] Optional: dismiss the alerts for `apps/electron` and `apps/server` as "not
-  deployed", or remove those packages from the workspace. **[ต้องถาม]**: it
-  changes what the repo contains.
+- [x] **Alerts that come only from `apps/electron` or `apps/server` were
+  dismissed** on 2026-11-24.
+  - 156 of 206, dismissed as `not_used` with a comment.
+  - **How they were sorted:**
+    - `pnpm why -r` traced each installed version back to the workspace
+      packages that pull it in;
+    - each alert's vulnerable range was matched against those versions.
+  - **Why dismiss rather than remove the packages:** both are still
+    referenced.
+    - `apps/server` is used by `vitest.workspace.js`, the `Dockerfile`, the
+      root `dev:prefix` script and `docs/tracking-upstream.md`.
+    - Deleting them would also make upstream patches that touch them fail to
+      apply.
+- [ ] **50 alerts stay open.** They are client build and test tools or the
+  repo root, none in the browser bundle:
+  - undici 7 (16), from the repo root;
+  - vite 5 and 7 (7);
+  - happy-dom (4);
+  - postcss (3), nanoid 3 through postcss (3);
+  - js-yaml, browserslist, deepmerge-ts, @vitest/mocker;
+  - sharp, from the repo root.
+  - 4 of them, nanoid (3) and react-router (1), have no installed version in
+    range. They are stale and should close on the next scan.
+  - The fix is a dependency bump in a separate pass. The next upstream pull
+    may bring most of them.
