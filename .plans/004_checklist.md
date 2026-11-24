@@ -31,10 +31,10 @@ How to use it:
 
 - **Worker:** `f366b3c1` (A1–A9). Rollback point: `1bf1ba98`.
 - **Client:** Pages `f2fcd906`, from branch `feature/upstream-4.15` (B1 + B2).
-- **Branch `feature/upstream-4.15`:** 101+ commits on top of
-  `feat/rust-cloud-backend`. Not merged, not pushed.
+- **Branch:** `feat/rust-cloud-backend` holds everything
+  (`feature/upstream-4.15` is merged into it). Not pushed.
 
-## B3 — upstream client patches still missing (work on `feature/upstream-4.15`)
+## B3 — upstream client patches still missing (work on a new `feature/upstream-b3` branch from `feat/rust-cloud-backend`)
 
 - [ ] **979de757 "scope rundown data sources"** (52 files): the root that the
   rest below depend on.
@@ -66,13 +66,13 @@ How to use it:
 - [ ] Update the B section of 003 with what came in.
 - [ ] **[ต้องถาม]** Deploy the client.
 
-## B4 — new features from upstream
+## B4 — new features from upstream (chosen 2026-11-24)
 
-- [ ] **[ต้องถาม]** Which of these to take:
-  - export every rundown to Excel;
-  - a sound when the timer ends;
-  - searchable settings;
-  - secondary text in the studio and timeline cards.
+- [ ] **A sound when the timer ends.** Client only. Done when there is a setting
+  to turn it on or off, it plays when the timer ends, and its tests pass.
+- [ ] **Secondary text in the studio and timeline cards** (5c7f3732, e7237950).
+  It needs 979de757 first.
+- Not taking, for now: export every rundown to Excel, and searchable settings.
 
 ## D — RIIR
 
@@ -98,8 +98,13 @@ How to use it:
 - [ ] A browser test for a silently dropped socket, the case B2 actually fixes,
   for example by blocking the socket without closing it.
 - [ ] Remove the trial worktree: `git worktree remove /tmp/ontime-pull-trial`.
-- [ ] **[ต้องถาม]** In `raknong_4ever`, one entry says it is in a group that does
-  not list it (from the old `parent` bug). Fix it or leave it.
-- [ ] **[ต้องถาม]** Merge `feature/upstream-4.15` into `feat/rust-cloud-backend`.
-- [ ] **[ต้องถาม]** Push. The repo must be private first.
+- In `raknong_4ever`, one entry says it is in a group that does not list it (from
+  the old `parent` bug). **Decided: leave it** (2026-11-24). Nothing is broken,
+  and the room is not to be written.
+- [x] Merge `feature/upstream-4.15` into `feat/rust-cloud-backend`: fast-forward
+  to `58ba3d97`, 2026-11-24. Work on `feat/rust-cloud-backend` from now on.
+- [ ] **[ต้องถาม]** Push.
+  - Use only `backup` (ontime-rs-private, PRIVATE).
+  - `origin` (ontime-rs) is **PUBLIC**. Never push to it.
+  - The push is done by the user; the agent's permission check refuses it.
 - [ ] `scripts/split-project-sharing.mjs` is not ours. Leave it alone.
