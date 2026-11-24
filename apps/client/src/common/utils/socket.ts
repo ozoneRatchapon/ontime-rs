@@ -52,6 +52,11 @@ import { nowInMillis } from './time';
 import { applyEngineState, initTimerEngine, stopTimerEngine } from './timerEngine';
 
 let websocket: WebSocket | null = null;
+/**
+ * Whether this page opened a socket at all. Pages which belong to no room (/admin, /join,
+ * /my-rooms) never do, and the environment listeners must not open one for them.
+ */
+let isSocketWanted = false;
 let reconnectTimeout: NodeJS.Timeout | null = null;
 let watchdogInterval: NodeJS.Timeout | null = null;
 let pingTimer: NodeJS.Timeout | null = null;
@@ -80,6 +85,7 @@ let lastContact = 0;
 let hasLoggedConnectionIssue = false;
 
 export const connectSocket = () => {
+  isSocketWanted = true;
   if (websocket && (websocket.readyState === WebSocket.CONNECTING || websocket.readyState === WebSocket.OPEN)) {
     return;
   }
@@ -456,6 +462,7 @@ function logConnectionIssue(text: string) {
 
 /** Rechecks a socket when a resumed browser may have lost it while timers were suspended. */
 function handleEnvironmentChange() {
+  if (!isSocketWanted) return;
   if (!websocket || websocket.readyState === WebSocket.CLOSED || websocket.readyState === WebSocket.CLOSING) {
     // A pending reconnect may be delayed by backoff, so retry immediately.
     reconnectAttempts = 0;

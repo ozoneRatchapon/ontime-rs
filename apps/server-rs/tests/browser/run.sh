@@ -30,9 +30,12 @@ wait_for() {
 }
 
 if [ "${1:-}" = "--start" ]; then
-  echo "==> starting the worker"
+  # a fresh, empty state every run, as on CI: rooms left by earlier runs would
+  # hide whatever only happens on a new deployment
+  state="$(mktemp -d)"
+  echo "==> starting the worker (state in $state)"
   (cd "$root/apps/server-rs" && npx --yes wrangler@latest dev --port 8788 --local \
-    --var "SESSION_PASSWORD:$ADMIN_PASSWORD" >/tmp/ontime-browser-wrangler.log 2>&1) &
+    --persist-to "$state" --var "SESSION_PASSWORD:$ADMIN_PASSWORD" >/tmp/ontime-browser-wrangler.log 2>&1) &
   pids+=($!)
   echo "==> building the client against $BROWSER_API"
   (cd "$root/apps/client" && VITE_WORKER_URL="$BROWSER_API" pnpm build >/tmp/ontime-browser-build.log 2>&1)
