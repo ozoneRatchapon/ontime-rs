@@ -35,6 +35,10 @@ pub struct OffsetInputs {
     pub started_at: i64,
     /// Which day the run began on, relative to the rundown's planned start.
     pub start_day_offset: i64,
+    /// Which day the loaded event actually started on, counted the same way:
+    /// the run's first day plus the midnights since. Not the run's first day,
+    /// or an event started after midnight reads as a whole day early.
+    pub started_day: i64,
     /// The loaded event's planned start and day.
     pub event_time_start: i64,
     pub event_day_offset: i64,
@@ -57,7 +61,9 @@ pub struct OffsetInputs {
 ///   began, which is what you want when a show starts late by design
 pub fn runtime_offset(inputs: &OffsetInputs) -> (i64, i64) {
     // how late the loaded event started against its planned slot
-    let event_start_offset = inputs.started_at + inputs.start_day_offset * MS_PER_DAY
+    // upstream uses the run's first day here, which puts every event started
+    // after midnight a day early (see runtime_offset_tests DELIBERATE)
+    let event_start_offset = inputs.started_at + inputs.started_day * MS_PER_DAY
         - (inputs.event_time_start + inputs.event_day_offset * MS_PER_DAY);
 
     // running past the end adds to the debt; `current` is negative there

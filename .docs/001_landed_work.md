@@ -45,3 +45,14 @@
   - See `.plans/005_d2_one_copy_of_schedule_math.md`.
   - Deployed 2026-11-25, see below.
 - **Deployed 2026-11-25:** Worker `cf7dd63c` (rollback point `abbd7a7d`), Pages `76c9ceee` (master) and `3b1ea2fb` (main). The production smoke test `offset.mjs` passed 17/17.
+- **2026-11-25, RIIR 4:** roll follows upstream.
+  - Covers taking over a playing event, rolling into the armed one, moving on
+    in order (an overnight event no longer repeats for the next day),
+    backdating the show start, and no expected times while waiting.
+  - `timer.duration` is now the plan. The client adds `addedTime` itself, so
+    the progress bar had counted it twice.
+  - `startedAt` keeps the real start after a pause.
+  - Lateness of an event started after midnight is no longer a day off.
+    This is an upstream bug: see `.docs/002_upstream_issue_offset_after_midnight.md`.
+  - Contract: 39 cases in `runtime_offset.json`; 4 deliberate differences,
+    each with a reason.

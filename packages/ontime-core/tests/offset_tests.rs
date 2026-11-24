@@ -11,6 +11,7 @@ fn on_time() -> OffsetInputs {
     OffsetInputs {
         started_at: 10 * HOUR,
         start_day_offset: 0,
+        started_day: 0,
         event_time_start: 10 * HOUR,
         event_day_offset: 0,
         current: 5 * MINUTE,
@@ -142,23 +143,25 @@ fn relative_offset_still_reports_drift_after_a_late_start() {
 
 #[test]
 fn an_event_planned_for_the_next_day_is_not_a_day_late() {
-    // event runs at 00:30 the day after the run began
+    // the run began on day 0; its event planned for 00:30 on day 1 starts then
     let inputs = OffsetInputs {
         started_at: 30 * MINUTE,
         start_day_offset: 0,
+        started_day: 1,
         event_time_start: 30 * MINUTE,
         event_day_offset: 1,
         ..on_time()
     };
-    // without the day terms this would read as nearly a full day early
-    assert_eq!(runtime_offset(&inputs).0, -DAY);
+    // measured from the day it started, not the run's first day (where
+    // upstream reads it as a whole day early)
+    assert_eq!(runtime_offset(&inputs).0, 0);
 
-    // with the run itself having begun on that later day, it is on time
+    // started at 00:30 but still on day 0, it really is a day early
     let inputs = OffsetInputs {
-        start_day_offset: 1,
+        started_day: 0,
         ..inputs
     };
-    assert_eq!(runtime_offset(&inputs).0, 0);
+    assert_eq!(runtime_offset(&inputs).0, -DAY);
 }
 
 // --- which day a clock reading belongs to ----------------------------------

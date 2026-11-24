@@ -50,6 +50,20 @@ struct Fixture {
 /// Upstream's own results that this fork deliberately does not follow, with why.
 /// Each is a `(case, field)`; anything else that differs fails the test.
 const DELIBERATE: &[(&str, &str, &str)] = &[
+    // Upstream measures how late an event started from the run's first day,
+    // so an event started after midnight reads as almost a day early
+    // (-23:55 here for one 5 minutes late). Ours measures from the day it
+    // started: +5 minutes, and -5 relative to a run that began 10 late.
+    (
+        "after midnight",
+        "offset.absolute",
+        "upstream bug: run's first day used for an event started after midnight",
+    ),
+    (
+        "after midnight",
+        "offset.relative",
+        "upstream bug: run's first day used for an event started after midnight",
+    ),
     // When roll moves on to the flagged event, upstream reports no next flag
     // (eventFlag null, which we match) but keeps the flag start it worked out
     // while the previous event ran: its waiting path never recomputes it. A

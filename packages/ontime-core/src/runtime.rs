@@ -820,6 +820,7 @@ impl Runtime {
                 let offset_inputs = OffsetInputs {
                     started_at: time_of_day(started, tz_offset),
                     start_day_offset,
+                    started_day: start_day_offset + days_between(actual_start, started, tz_offset),
                     event_time_start: field(event, "timeStart").unwrap_or(0),
                     event_day_offset: field(event, "dayOffset").unwrap_or(0),
                     current: inputs.current(now).unwrap_or(0),
