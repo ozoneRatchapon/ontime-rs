@@ -79,15 +79,15 @@ How to use it:
   - `getExpectedEnd` was ported into utils, with tests.
   - The countdown test is un-skipped.
   - Client tests: 454 pass, 0 skipped.
-- [ ] **D2, gap and schedule calculations shared through the wasm.** Plan:
-      `005_d2_one_copy_of_schedule_math.md`.
-  - Step 1 (the shared contract, test only) is done: 36 cases, run by both
-    cargo and vitest. The copies agree.
-  - Step 2 (the browser uses the wasm) is deferred, as recommended and
-    approved on 2026-11-24.
-    - The copies agree and the contract guards them, so it isn't urgent.
-    - Pick it up when the timeline or countdown math changes next.
-- [ ] **D1, teleprompter.** Plan written: `008_d1_teleprompter.md`
+- [x] **D2, gap and schedule calculations: closed by contracts, not wasm.**
+      Plan: `005_d2_one_copy_of_schedule_math.md`.
+  - Step 1 is done: a shared contract of 36 cases, run by cargo and vitest.
+  - RIIR 1 (d97f8087) and RIIR 3 (1794b36c6) pin the server against
+    upstream's own code. They found and fixed 20 differences.
+  - Step 2 (the browser uses the wasm) is not recommended. The TS fallback
+    would stay, and the wasm calls would cost more than they save. See the plan.
+  - RIIR 3 is not deployed yet.
+- [x] **D1, teleprompter.** Plan written: `008_d1_teleprompter.md`
       (2026-11-24).
   - T0 contract, T1 core, T2 Durable Object, T4 upstream client, T5 tests.
   - Its 4 decisions use the recommended answers.
