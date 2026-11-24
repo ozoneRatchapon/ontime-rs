@@ -56,3 +56,4 @@
     This is an upstream bug: see `.docs/002_upstream_issue_offset_after_midnight.md`.
   - Contract: 39 cases in `runtime_offset.json`; 4 deliberate differences,
     each with a reason.
+- **Deployed 2026-11-25 (RIIR 4 + midnight fix):** Worker `da25059c` (rollback point `cf7dd63c`), Pages `3baf31ec` (master) and `ee7fd909` (main). Production smoke tests passed: `offset.mjs` 17/17 twice, `roll.mjs` 14/14.

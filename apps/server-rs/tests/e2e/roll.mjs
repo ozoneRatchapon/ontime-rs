@@ -24,17 +24,22 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // unique per run: a name derived from seconds collides whenever two runs
 // start in the same second, and the room still holds the previous run's rundown
 const room = 'roll-' + Math.random().toString(36).slice(2, 10);
+// the master token, so the suite can create its throwaway room on a gated
+// deployment (see README); without it the suite runs against wrangler dev
+const token = process.env.ONTIME_TOKEN;
+const socketUrl = () =>
+  `${base.replace(/^http/, 'ws')}/ws?${new URLSearchParams({ room, ...(token ? { token } : {}) })}`;
 const api = (method, path, body) =>
   fetch(`${base}/r/${room}${path}`, {
     method,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   }).then(async (r) => (r.status === 204 ? null : r.json().catch(() => null)));
 
 await api('POST', '/data/settings', { timezoneOffset: 0 });
 
 // read the server's clock so the rundown can be positioned against it
-const probe = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}`);
+const probe = new WebSocket(socketUrl());
 const serverClock = await new Promise((resolve, reject) => {
   probe.addEventListener('message', (e) => {
     const p = JSON.parse(e.data);
@@ -54,7 +59,7 @@ await api('POST', `/data/rundowns/${rid}/load`);
 const a = await api('POST', `/data/rundowns/${rid}/entry`, { title: 'ROLL_A', duration: 5000 });
 const b = await api('POST', `/data/rundowns/${rid}/entry`, { title: 'ROLL_B', duration: 5000 });
 
-const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}`);
+const ws = new WebSocket(socketUrl());
 const runtime = [];
 const send = (tag, payload) => {
   assertSocketAlive(tag);
@@ -153,6 +158,10 @@ await wait(300);
 ws.close();
 await api('POST', '/data/rundowns/default/load');
 await api('DELETE', `/data/rundowns/${rid}`);
+if (token) {
+  // take it off the admin room list again
+  await fetch(`${base}/admin/rooms/${room}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+}
 
 console.log(failed ? '\nSOME CHECKS FAILED' : '\nALL CHECKS PASSED');
 process.exit(failed ? 1 : 0);
