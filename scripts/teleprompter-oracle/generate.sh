@@ -18,22 +18,29 @@ esbuild="$(ls -d "$root"/node_modules/.pnpm/esbuild@*/node_modules/esbuild/bin/e
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/upstream" "$work/out"
-git -C "$root" archive "$ref" packages/types packages/utils apps/server/src/services/teleprompter-service \
+git -C "$root" archive "$ref" tsconfig.common.json packages/types packages/utils apps/server/src/services/teleprompter-service \
   | tar -x -C "$work/upstream"
+# only the teleprompter part of ontime-utils, so the bundle needs none of its npm dependencies
+cat > "$work/ontime-utils.ts" <<SHIM
+export * from '$work/upstream/packages/utils/src/teleprompter/teleprompterSettings.ts';
+export * from '$work/upstream/packages/utils/src/teleprompter/teleprompterPosition.ts';
+export * from '$work/upstream/packages/utils/src/teleprompter/teleprompterTransport.ts';
+SHIM
 commit="$(git -C "$root" rev-parse --short "$ref")"
 
-for name in wrap; do
-  "$esbuild" "$here/gen-$name.ts" --bundle --platform=node --format=esm --log-level=warning \
+for name in wrap script; do
+  "$esbuild" "$here/gen-$name.ts" --bundle --platform=node --format=esm --log-level=error \
     --alias:@upstream="$work/upstream" \
     --alias:ontime-types="$work/upstream/packages/types/src/index.ts" \
-    --alias:ontime-utils="$work/upstream/packages/utils/index.ts" \
+    --alias:ontime-utils="$work/ontime-utils.ts" \
     --outfile="$work/out/gen-$name.mjs"
   node "$work/out/gen-$name.mjs" > "$work/out/$name.json"
   COMMIT="$commit" NAME="$name" node -e '
     const fs = require("fs");
     const cases = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    const count = Array.isArray(cases) ? cases.length : Object.values(cases).reduce((n, list) => n + list.length, 0);
     const comment = `Generated from upstream ontime ${process.env.COMMIT} by scripts/teleprompter-oracle/generate.sh; do not edit by hand.`;
     fs.writeFileSync(process.argv[2], JSON.stringify({ _comment: comment, cases }, null, 1) + "\n");
   ' "$work/out/$name.json" "$fixtures/teleprompter_$name.json"
-  echo "teleprompter_$name.json: $(node -e 'console.log(require(process.argv[1]).cases.length)' "$fixtures/teleprompter_$name.json") cases"
+  echo "teleprompter_$name.json written"
 done

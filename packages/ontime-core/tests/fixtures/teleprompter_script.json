@@ -1,0 +1,1887 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b by scripts/teleprompter-oracle/generate.sh; do not edit by hand.",
+ "cases": {
+  "builds": [
+   {
+    "name": "reads the note",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "none"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "Note a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "reads the title",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "title",
+     "charsPerLine": 32,
+     "heading": "none"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "Title a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "reads a text custom field",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "custom-script",
+     "charsPerLine": 32,
+     "heading": "none"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "Script a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "an image field gives nothing",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "custom-poster",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": []
+   },
+   {
+    "name": "a missing field gives nothing",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "custom-missing",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": []
+   },
+   {
+    "name": "an unknown source gives nothing",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "skip",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": []
+   },
+   {
+    "name": "none gives nothing",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "none",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": []
+   },
+   {
+    "name": "an inherited name gives nothing",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "custom-constructor",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": []
+   },
+   {
+    "name": "rundown order, no skipped events, no other entries",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "b",
+      "skipped",
+      "delay",
+      "ms",
+      "a"
+     ],
+     "flatOrder": [
+      "b",
+      "skipped",
+      "delay",
+      "ms",
+      "a"
+     ],
+     "entries": {
+      "b": {
+       "id": "b",
+       "type": "event",
+       "cue": "B",
+       "title": "Title b",
+       "note": "Note b",
+       "custom": {
+        "script": "Script b"
+       },
+       "skip": false,
+       "parent": null
+      },
+      "skipped": {
+       "id": "skipped",
+       "type": "event",
+       "cue": "SKIPPED",
+       "title": "Title skipped",
+       "note": "Note skipped",
+       "custom": {
+        "script": "Script skipped"
+       },
+       "skip": true,
+       "parent": null
+      },
+      "delay": {
+       "id": "delay",
+       "type": "delay",
+       "duration": 0
+      },
+      "ms": {
+       "id": "ms",
+       "type": "milestone",
+       "cue": "M",
+       "title": "Mile"
+      },
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": [
+     {
+      "id": "b",
+      "cue": "B",
+      "title": "Title b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title b"
+       },
+       {
+        "kind": "text",
+        "text": "Note b",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title a"
+       },
+       {
+        "kind": "text",
+        "text": "Note a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "the title heading",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title a"
+       },
+       {
+        "kind": "text",
+        "text": "Note a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "the cue heading",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "cue"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "A"
+       },
+       {
+        "kind": "text",
+        "text": "Note a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "both headings",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "both"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "A · Title a"
+       },
+       {
+        "kind": "text",
+        "text": "Note a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "both headings without a cue",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "both"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title a"
+       },
+       {
+        "kind": "text",
+        "text": "Note a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "no cue, no cue heading",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "cue"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "Note a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "indentation and positions",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "one\n  two three",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 12,
+     "heading": "none"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "text",
+        "text": "one",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "two three",
+        "start": 6,
+        "indent": 2
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "events without text are left out",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a",
+      "b",
+      "c"
+     ],
+     "flatOrder": [
+      "a",
+      "b",
+      "c"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": " \n ",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      },
+      "b": {
+       "id": "b",
+       "type": "event",
+       "cue": "B",
+       "title": "Title b",
+       "skip": false,
+       "parent": null
+      },
+      "c": {
+       "id": "c",
+       "type": "event",
+       "cue": "C",
+       "title": "Title c",
+       "note": "Note c",
+       "custom": {
+        "script": "Script c"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": [
+     {
+      "id": "c",
+      "cue": "C",
+      "title": "Title c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title c"
+       },
+       {
+        "kind": "text",
+        "text": "Note c",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "a custom field missing on the event",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a",
+      "b"
+     ],
+     "flatOrder": [
+      "a",
+      "b"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {},
+       "skip": false,
+       "parent": null
+      },
+      "b": {
+       "id": "b",
+       "type": "event",
+       "cue": "B",
+       "title": "Title b",
+       "note": "Note b",
+       "custom": {
+        "script": "Script b"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "custom-script",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": [
+     {
+      "id": "b",
+      "cue": "B",
+      "title": "Title b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title b"
+       },
+       {
+        "kind": "text",
+        "text": "Script b",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "a non-text value is no text",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a",
+      "b"
+     ],
+     "flatOrder": [
+      "a",
+      "b"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": 42,
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      },
+      "b": {
+       "id": "b",
+       "type": "event",
+       "cue": "B",
+       "title": "Title b",
+       "note": "Note b",
+       "custom": {
+        "script": "Script b"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": [
+     {
+      "id": "b",
+      "cue": "B",
+      "title": "Title b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title b"
+       },
+       {
+        "kind": "text",
+        "text": "Note b",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "flat order decides, groups included",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "c",
+      "a",
+      "b"
+     ],
+     "flatOrder": [
+      "c",
+      "a",
+      "b"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Note a",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      },
+      "b": {
+       "id": "b",
+       "type": "event",
+       "cue": "B",
+       "title": "Title b",
+       "note": "Note b",
+       "custom": {
+        "script": "Script b"
+       },
+       "skip": false,
+       "parent": null
+      },
+      "c": {
+       "id": "c",
+       "type": "event",
+       "cue": "C",
+       "title": "Title c",
+       "note": "Note c",
+       "custom": {
+        "script": "Script c"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": [
+     {
+      "id": "c",
+      "cue": "C",
+      "title": "Title c",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title c"
+       },
+       {
+        "kind": "text",
+        "text": "Note c",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title a"
+       },
+       {
+        "kind": "text",
+        "text": "Note a",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     },
+     {
+      "id": "b",
+      "cue": "B",
+      "title": "Title b",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title b"
+       },
+       {
+        "kind": "text",
+        "text": "Note b",
+        "start": 0
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "long notes wrap",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "A",
+       "title": "Title a",
+       "note": "Good evening and welcome to the 2026 awards, our first guest is a well-known face",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 20,
+     "heading": "title"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "A",
+      "title": "Title a",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "Title a"
+       },
+       {
+        "kind": "text",
+        "text": "Good evening and",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "welcome to the",
+        "start": 17
+       },
+       {
+        "kind": "text",
+        "text": "2026 awards, our",
+        "start": 32
+       },
+       {
+        "kind": "text",
+        "text": "first guest is a",
+        "start": 49
+       },
+       {
+        "kind": "text",
+        "text": "well-known face",
+        "start": 66
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "thai",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [
+      "a"
+     ],
+     "flatOrder": [
+      "a"
+     ],
+     "entries": {
+      "a": {
+       "id": "a",
+       "type": "event",
+       "cue": "1",
+       "title": "เปิดงาน",
+       "note": "สวัสดีครับ ยินดีต้อนรับทุกท่าน",
+       "custom": {
+        "script": "Script a"
+       },
+       "skip": false,
+       "parent": null
+      }
+     },
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 10,
+     "heading": "both"
+    },
+    "events": [
+     {
+      "id": "a",
+      "cue": "1",
+      "title": "เปิดงาน",
+      "lines": [
+       {
+        "kind": "heading",
+        "text": "1 · เปิดงาน"
+       },
+       {
+        "kind": "text",
+        "text": "สวัสดีครับ",
+        "start": 0
+       },
+       {
+        "kind": "text",
+        "text": "ยินดีต้อนรับทุก",
+        "start": 11
+       },
+       {
+        "kind": "text",
+        "text": "ท่าน",
+        "start": 26
+       },
+       {
+        "kind": "blank"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "an empty rundown",
+    "rundown": {
+     "id": "show",
+     "title": "Show",
+     "order": [],
+     "flatOrder": [],
+     "entries": {},
+     "revision": 1
+    },
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "settings": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "events": []
+   }
+  ],
+  "parses": [
+   {
+    "name": "takes what it is given",
+    "data": {
+     "script": "title",
+     "charsPerLine": 40,
+     "heading": "none"
+    },
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "title",
+     "charsPerLine": 40,
+     "heading": "none"
+    }
+   },
+   {
+    "name": "clamps a long line",
+    "data": {
+     "charsPerLine": 1000
+    },
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 80,
+     "heading": "title"
+    }
+   },
+   {
+    "name": "clamps a short line",
+    "data": {
+     "charsPerLine": 2
+    },
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 10,
+     "heading": "title"
+    }
+   },
+   {
+    "name": "rounds a half up",
+    "data": {
+     "charsPerLine": 32.5
+    },
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 33,
+     "heading": "title"
+    }
+   },
+   {
+    "name": "rounds down",
+    "data": {
+     "charsPerLine": 32.4
+    },
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    }
+   },
+   {
+    "name": "falls back on invalid values",
+    "data": {
+     "charsPerLine": "many",
+     "heading": "banner"
+    },
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    }
+   },
+   {
+    "name": "a partial patch keeps the rest",
+    "data": {
+     "heading": "cue"
+    },
+    "fallback": {
+     "script": "custom-script",
+     "charsPerLine": 50,
+     "heading": "both"
+    },
+    "result": {
+     "script": "custom-script",
+     "charsPerLine": 50,
+     "heading": "cue"
+    }
+   },
+   {
+    "name": "not an object",
+    "data": "nope",
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    }
+   },
+   {
+    "name": "null",
+    "data": null,
+    "fallback": {
+     "script": "title",
+     "charsPerLine": 20,
+     "heading": "none"
+    },
+    "result": {
+     "script": "title",
+     "charsPerLine": 20,
+     "heading": "none"
+    }
+   },
+   {
+    "name": "an array",
+    "data": [
+     "title"
+    ],
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    }
+   },
+   {
+    "name": "infinity",
+    "data": {
+     "charsPerLine": null
+    },
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    }
+   },
+   {
+    "name": "a numeric script is ignored",
+    "data": {
+     "script": 7
+    },
+    "fallback": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    },
+    "result": {
+     "script": "note",
+     "charsPerLine": 32,
+     "heading": "title"
+    }
+   }
+  ],
+  "readables": [
+   {
+    "script": "note",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": true
+   },
+   {
+    "script": "title",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": true
+   },
+   {
+    "script": "custom-script",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": true
+   },
+   {
+    "script": "custom-poster",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": false
+   },
+   {
+    "script": "custom-missing",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": false
+   },
+   {
+    "script": "custom-constructor",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": false
+   },
+   {
+    "script": "skip",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": false
+   },
+   {
+    "script": "",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": false
+   },
+   {
+    "script": "custom-",
+    "customFields": {
+     "script": {
+      "type": "text",
+      "label": "Script",
+      "colour": ""
+     },
+     "poster": {
+      "type": "image",
+      "label": "Poster",
+      "colour": ""
+     }
+    },
+    "readable": false
+   }
+  ],
+  "renames": [
+   {
+    "source": "custom-script",
+    "oldKey": "script",
+    "newKey": "lines",
+    "result": "custom-lines"
+   },
+   {
+    "source": "custom-script",
+    "oldKey": "script",
+    "newKey": null,
+    "result": "note"
+   },
+   {
+    "source": "custom-script",
+    "oldKey": "other",
+    "newKey": "lines",
+    "result": "custom-script"
+   },
+   {
+    "source": "note",
+    "oldKey": "script",
+    "newKey": "lines",
+    "result": "note"
+   },
+   {
+    "source": "title",
+    "oldKey": "script",
+    "newKey": null,
+    "result": "title"
+   }
+  ]
+ }
+}
