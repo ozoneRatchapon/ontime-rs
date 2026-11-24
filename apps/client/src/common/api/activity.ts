@@ -1,5 +1,4 @@
 import { getWorkerOrigin } from '../../externals';
-
 import { AdminError } from './admin';
 
 /**
@@ -8,7 +7,10 @@ import { AdminError } from './admin';
  */
 
 export type ActivityActor =
-  { kind: 'person'; id: string; name: string } | { kind: 'roomPassword' } | { kind: 'admin' } | { kind: 'anyone' };
+  | { kind: 'person'; id: string; name: string }
+  | { kind: 'roomPassword' }
+  | { kind: 'admin' }
+  | { kind: 'anyone' };
 
 export type ActivityAction =
   | 'start'

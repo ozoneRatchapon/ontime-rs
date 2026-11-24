@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityAuth, ActivityLine, ActivityPage, peopleActivity, roomActivity } from '../../common/api/activity';
 import Button from '../../common/components/buttons/Button';
 import { describeActor, describeChange } from '../../common/utils/activityText';
-
 import { formatDate, formatLastSeen } from './adminUtils';
 
 import style from './Admin.module.scss';
@@ -30,6 +29,12 @@ function sourceKey(source: ActivitySource): string {
   }
 }
 
+/** Lines identical down to the millisecond would have been merged into one, so this is unique */
+function lineKey(line: ActivityLine): string {
+  const actor = line.actor.kind === 'person' ? line.actor.id : line.actor.kind;
+  return [line.at, actor, line.action, line.subject?.cue, line.subject?.title, line.times].join('|');
+}
+
 interface ActivityPanelProps {
   source: ActivitySource;
 }
@@ -46,26 +51,24 @@ export default function ActivityPanel({ source }: ActivityPanelProps) {
   latest.current = source;
   const key = sourceKey(source);
 
-  const load = useCallback(
-    async (from: number | null) => {
-      setLoading(true);
-      try {
-        const page = await fetchPage(latest.current, from);
-        setLines((shown) => (from === null ? page.lines : [...shown, ...page.lines]));
-        setBefore(page.before);
-        setError(null);
-      } catch (err) {
-        setError(`Could not load the activity. ${err}`);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [key],
-  );
+  const load = useCallback(async (from: number | null) => {
+    setLoading(true);
+    try {
+      const page = await fetchPage(latest.current, from);
+      setLines((shown) => (from === null ? page.lines : [...shown, ...page.lines]));
+      setBefore(page.before);
+      setError(null);
+    } catch (err) {
+      setError(`Could not load the activity. ${err}`);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  // a new source starts again from its newest lines
   useEffect(() => {
     load(null);
-  }, [load]);
+  }, [key, load]);
 
   return (
     <div className={style.team}>
@@ -80,8 +83,8 @@ export default function ActivityPanel({ source }: ActivityPanelProps) {
       {lines.length > 0 && (
         <table className={style.table}>
           <tbody>
-            {lines.map((line, index) => (
-              <tr key={`${line.at}-${index}`}>
+            {lines.map((line) => (
+              <tr key={lineKey(line)}>
                 <td className={style.muted} title={formatDate(line.at)}>
                   {formatLastSeen(line.at)}
                 </td>

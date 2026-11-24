@@ -7,7 +7,6 @@ import type { Day, MaybeNumber } from 'ontime-types';
 import { OffsetMode } from 'ontime-types';
 
 import fixture from '../../../ontime-core/tests/fixtures/schedule_math.json';
-
 import { getExpectedEnd, getExpectedStart } from './getExpectedStart';
 
 type StartCase = {

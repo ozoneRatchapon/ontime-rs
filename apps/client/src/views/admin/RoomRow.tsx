@@ -12,7 +12,6 @@ import {
 } from '../../common/api/admin';
 import Button from '../../common/components/buttons/Button';
 import Input from '../../common/components/input/input/Input';
-
 import ActivityPanel from './ActivityPanel';
 import { formatDate, formatLastSeen, roomLink, summariseClients } from './adminUtils';
 import OwnerPicker from './OwnerPicker';

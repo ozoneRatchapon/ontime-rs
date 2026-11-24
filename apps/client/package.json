@@ -60,23 +60,21 @@
     ]
   },
   "devDependencies": {
-    "@rolldown/binding-darwin-arm64": "1.2.0",
-    "@sentry/vite-plugin": "5.1.1",
+    "@sentry/vite-plugin": "5.4.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-legacy": "^8.0.1",
-    "@vitejs/plugin-react": "5.2.0",
-    "babel-plugin-react-compiler": "1.0.0",
+    "@vitejs/plugin-react": "6.1.2",
     "happy-dom": "^21.0.4",
+    "oxc-transform-react": "^0.155.0",
     "ontime-types": "workspace:*",
     "ontime-utils": "workspace:*",
-    "rollup": "^4.62.2",
     "sass": "^1.57.1",
     "typescript": "catalog:",
-    "vite": "5.4.21",
+    "vite": "8.3.4",
     "vite-plugin-compression2": "2.5.1",
-    "vite-plugin-svgr": "4.5.0",
+    "vite-plugin-svgr": "5.2.0",
     "vitest": "catalog:"
   }
 }

@@ -6,7 +6,6 @@ import { getSession, signOut, whoAmI } from '../../common/api/personSession';
 import Button from '../../common/components/buttons/Button';
 import ActivityPanel from '../admin/ActivityPanel';
 import { formatDate, formatLastSeen, roomLink } from '../admin/adminUtils';
-
 import TeamPanel from './TeamPanel';
 
 import style from '../admin/Admin.module.scss';
@@ -96,49 +95,51 @@ export default function MyRooms() {
             <tbody>
               {state.rooms.map((room) => (
                 <Fragment key={room.name}>
-                <tr>
-                  <td>
-                    <a href={roomLink(room.name, 'editor')} className={style.roomName}>
-                      {room.name}
-                    </a>
-                    {room.protected && <IoLockClosed className={style.lock} title='Has a room password' />}
-                    {room.membersOnly && <IoPeople className={style.lock} title='Editing needs sign-in' />}
-                    <div className={style.muted}>{room.title}</div>
-                  </td>
-                  <td>
-                    {room.role}
-                    {room.role === 'owner' && (
-                      <div>
-                        <Button size='small' variant='ghosted' onClick={() => toggle(room.name, 'team')}>
-                          {isOpen(room.name, 'team') ? 'Hide team' : 'Team'}
-                        </Button>
-                        <Button size='small' variant='ghosted' onClick={() => toggle(room.name, 'activity')}>
-                          {isOpen(room.name, 'activity') ? 'Hide activity' : 'Activity'}
-                        </Button>
-                      </div>
-                    )}
-                  </td>
-                  <td>{room.note}</td>
-                  <td title={formatDate(room.lastSeen)}>{formatLastSeen(room.lastSeen)}</td>
-                  <td className={style.links}>
-                    {VIEWS.map((view) => (
-                      <a key={view} href={roomLink(room.name, view)} target='_blank' rel='noreferrer'>
-                        {view}
-                      </a>
-                    ))}
-                  </td>
-                </tr>
-                {open?.room === room.name && (
                   <tr>
-                    <td colSpan={5}>
-                      {open.panel === 'team' ? (
-                        <TeamPanel room={room} onChanged={load} />
-                      ) : (
-                        <ActivityPanel source={{ kind: 'room', room: room.name, auth: { session: getSession() ?? '' } }} />
+                    <td>
+                      <a href={roomLink(room.name, 'editor')} className={style.roomName}>
+                        {room.name}
+                      </a>
+                      {room.protected && <IoLockClosed className={style.lock} title='Has a room password' />}
+                      {room.membersOnly && <IoPeople className={style.lock} title='Editing needs sign-in' />}
+                      <div className={style.muted}>{room.title}</div>
+                    </td>
+                    <td>
+                      {room.role}
+                      {room.role === 'owner' && (
+                        <div>
+                          <Button size='small' variant='ghosted' onClick={() => toggle(room.name, 'team')}>
+                            {isOpen(room.name, 'team') ? 'Hide team' : 'Team'}
+                          </Button>
+                          <Button size='small' variant='ghosted' onClick={() => toggle(room.name, 'activity')}>
+                            {isOpen(room.name, 'activity') ? 'Hide activity' : 'Activity'}
+                          </Button>
+                        </div>
                       )}
                     </td>
+                    <td>{room.note}</td>
+                    <td title={formatDate(room.lastSeen)}>{formatLastSeen(room.lastSeen)}</td>
+                    <td className={style.links}>
+                      {VIEWS.map((view) => (
+                        <a key={view} href={roomLink(room.name, view)} target='_blank' rel='noreferrer'>
+                          {view}
+                        </a>
+                      ))}
+                    </td>
                   </tr>
-                )}
+                  {open?.room === room.name && (
+                    <tr>
+                      <td colSpan={5}>
+                        {open.panel === 'team' ? (
+                          <TeamPanel room={room} onChanged={load} />
+                        ) : (
+                          <ActivityPanel
+                            source={{ kind: 'room', room: room.name, auth: { session: getSession() ?? '' } }}
+                          />
+                        )}
+                      </td>
+                    </tr>
+                  )}
                 </Fragment>
               ))}
               {state.rooms.length === 0 && (

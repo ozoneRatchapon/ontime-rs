@@ -14,7 +14,6 @@ import {
 } from '../../common/api/admin';
 import Button from '../../common/components/buttons/Button';
 import Input from '../../common/components/input/input/Input';
-
 import ActivityPanel from './ActivityPanel';
 import AdminLogin from './AdminLogin';
 import PeoplePanel from './PeoplePanel';

@@ -207,14 +207,26 @@ How to use it:
     - `wrangler dev` with e2e `activity`, `people` and `shapes` all pass;
     - the 32 "local timer engine unavailable" test logs were there before the
       bump too.
-- [ ] **5 alerts stay open, all tied to the client's exact `vite` 5.4.21 pin.**
-  - vite 5 itself: 2 alerts.
-  - vitest and @vitest/mocker 4.0.17: 3 alerts. vitest 4.1 needs vite 6+
-    (`vite/module-runner`) and fails to start with vite 5. Tried, then
-    reverted.
-  - All of them are dev-server or test-runner issues, and nothing of theirs
-    ships.
-  - **The fix:** move the client to vite 6 or 7, together with
-    `@vitejs/plugin-legacy`, `@vitejs/plugin-react` and `vite-plugin-svgr`.
-    That's a build-system change worth its own pass, or wait until upstream
-    does it.
+- [x] **The client moved to vite 8, matching upstream (2026-11-24, `feature/vite-8`).**
+  - **New versions:** vite 8.3.4, plugin-react 6.1.2, svgr 5.2.0, Sentry plugin
+    5.4.0, `oxc-transform-react` in place of `babel-plugin-react-compiler`,
+    and the vitest catalog at 5.0.5.
+  - **Config:** upstream's `vite.config.js`, with three local choices kept:
+    the legacy build off, no `.br` files (Pages compresses), and the wasm
+    alias.
+  - **Removed:** the pinned `@rolldown/binding-darwin-arm64` and `rollup`.
+  - **Root cause of the missing native bindings (oxlint, oxfmt, rolldown):**
+    - `devEngines.runtime` allowed `^22.0.0`.
+    - pnpm 11 therefore skipped every binding needing node >=22.12.
+    - The floor is now `^22.12.0`, and lint and format work again.
+  - **Checks:**
+    - the build takes 1.2–1.35 s (it was about 4.6 s);
+    - wasm emitted, Worker URL present, no localhost;
+    - client 511 and utils 609 tests;
+    - typecheck shows only the 3 known errors;
+    - oxlint shows 0 warnings on the files touched this session, and oxfmt is
+      clean;
+    - browser checks: `check` 14, `members` 10, `activity` 11,
+      teleprompter 8.
+  - The 5 remaining vite and vitest alerts should close: none of the
+    vulnerable versions are installed.

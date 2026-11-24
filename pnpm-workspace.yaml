@@ -7,7 +7,7 @@ catalog:
   rimraf: 6.0.1
   ts-essentials: 10.1.1
   typescript: 7.0.2
-  vitest: 4.0.17
+  vitest: 5.0.5
 
 # Security fixes for dev-only tools whose own pins lag (Dependabot, 2026-11-24).
 # miniflare (local `wrangler dev`) pins undici and sharp inside the vulnerable

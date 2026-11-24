@@ -1,20 +1,22 @@
 import path from 'path';
 
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import legacy from '@vitejs/plugin-legacy';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import { compression } from 'vite-plugin-compression2';
 import svgrPlugin from 'vite-plugin-svgr';
 
-import { ONTIME_VERSION } from './src/ONTIME_VERSION';
+import { ONTIME_VERSION } from './src/ONTIME_VERSION.js';
 
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
 
-const ReactCompilerConfig = {
+const compiler = {
   compilationMode: 'annotation',
 };
 
+// Upstream's vite 8 config, with three local choices:
+// - the legacy build stays off, as it was before this upgrade
+// - no precompressed .br files: Cloudflare Pages compresses on its own
+// - the alias for the Rust timer engine, below
 export default defineConfig({
   base: './', // Ontime cloud: we use relative paths to allow them to reference a dynamic base set at runtime
   define: {
@@ -22,15 +24,25 @@ export default defineConfig({
     'import.meta.env.IS_DOCKER': process.env.NODE_ENV === 'docker',
   },
   plugins: [
-    // legacy({
-    //   targets: ['safari >= 14.1'],
-    // }),
-    react({
-      babel: {
-        plugins: [['babel-plugin-react-compiler', ReactCompilerConfig]],
-      },
-    }),
+    react({ compiler }),
     svgrPlugin(),
+    sentryAuthToken &&
+      sentryVitePlugin({
+        org: 'get-ontime',
+        project: 'ontime',
+        include: './build',
+        authToken: sentryAuthToken,
+        release: ONTIME_VERSION,
+        deploy: {
+          env: 'production',
+        },
+        bundleSizeOptimizations: {
+          excludeDebugStatements: true,
+          excludeReplayIframe: true,
+          excludeReplayShadowDom: true,
+          excludeReplayWorker: true,
+        },
+      }),
   ].filter(Boolean),
   server: {
     port: 3000,
@@ -70,15 +82,14 @@ export default defineConfig({
   build: {
     outDir: './build',
     sourcemap: true,
-    onLog: () => {},
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
       // Rust timer engine compiled to WebAssembly. Built by
       // packages/ontime-wasm/build.sh; aliased rather than installed so the
       // vendored client keeps its own dependency list untouched.
-      'ontime-timer-engine': path.resolve(__dirname, '../../packages/ontime-wasm/pkg/ontime_timer.js'),
+      'ontime-timer-engine': path.resolve(import.meta.dirname, '../../packages/ontime-wasm/pkg/ontime_timer.js'),
     },
   },
   css: {

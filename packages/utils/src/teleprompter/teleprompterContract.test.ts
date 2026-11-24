@@ -8,7 +8,6 @@ import type { TeleprompterScriptEvent, TeleprompterTransport } from 'ontime-type
 
 import positionFixture from '../../../ontime-core/tests/fixtures/teleprompter_position.json';
 import transportFixture from '../../../ontime-core/tests/fixtures/teleprompter_transport.json';
-
 import {
   anchorAtRow,
   eventAtRow,
@@ -65,31 +64,44 @@ describe('transport contract', () => {
     let current = scenario.initial as unknown as TeleprompterTransport;
     scenario.steps.forEach((raw, index) => {
       const step = raw as Step;
-      const want = scenario.results[index] as Outcome;
+      // the outcome of each step, in the shape upstream recorded it
+      const outcome: Outcome = {};
       if ('cmd' in step) {
         try {
-          current = applyTransportCommand(current, step.cmd as TeleprompterTransportCommand, layout, step.now as number);
+          current = applyTransportCommand(
+            current,
+            step.cmd as TeleprompterTransportCommand,
+            layout,
+            step.now as number,
+          );
         } catch (error) {
-          expect((error as Error).message).toBe(want.error);
+          outcome.error = (error as Error).message;
         }
+        outcome.transport = current;
       } else if ('settle' in step) {
-        current = settle(current, layout, step.settle as number);
+        outcome.transport = current = settle(current, layout, step.settle as number);
       } else if ('position' in step) {
-        expect(positionAt(current, layout, step.position as number)).toBe(want.position);
+        outcome.position = positionAt(current, layout, step.position as number);
       } else if ('describe' in step) {
-        expect(describeTransport(current, layout, step.describe as number)).toEqual(want.state);
+        outcome.state = describeTransport(current, layout, step.describe as number);
       } else if ('sync' in step) {
-        expect(describeSync(current, layout, step.sync as number)).toEqual(want.sync);
+        outcome.sync = describeSync(current, layout, step.sync as number);
       } else if ('syncAt' in step) {
-        expect(syncPositionAt(describeSync(current, layout, 1), step.syncAt as number)).toBe(want.position);
+        outcome.position = syncPositionAt(describeSync(current, layout, 1), step.syncAt as number);
       } else {
         const next = scripts[step.reanchor as string];
         const nextLayout = makeTeleprompterLayout(next);
-        current = reanchorTransport(current, { events, layout }, { events: next, layout: nextLayout }, step.now as number);
+        current = reanchorTransport(
+          current,
+          { events, layout },
+          { events: next, layout: nextLayout },
+          step.now as number,
+        );
         events = next;
         layout = nextLayout;
+        outcome.transport = current;
       }
-      if (want.transport) expect(current).toEqual(want.transport);
+      expect({ step: index, ...outcome }).toEqual({ step: index, ...scenario.results[index] });
     });
   });
 });
