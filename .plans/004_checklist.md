@@ -30,7 +30,9 @@ How to use it:
 ## Current state
 
 - **Worker:** `f366b3c1` (A1–A9). Rollback point: `1bf1ba98`.
-- **Client:** Pages `f2fcd906`, from branch `feature/upstream-4.15` (B1 + B2).
+- **Client:** Pages `33ac5d08` (B3). D3 and the studio text are merged but
+  not deployed: the deploy was refused by the agent's permission check.
+  Earlier: Pages `f2fcd906`, from branch `feature/upstream-4.15` (B1 + B2).
 - **Branch:** `feat/rust-cloud-backend` holds everything
   (`feature/upstream-4.15` is merged into it). Not pushed.
 
@@ -76,15 +78,22 @@ How to use it:
   - `getExpectedEnd` was ported into utils, with tests.
   - The countdown test is un-skipped.
   - Client tests: 454 pass, 0 skipped.
-- [ ] **D2, gap and schedule calculations shared through the wasm.** Write a plan
-  file first. **[ต้องถาม]** before starting.
+- [ ] **D2, gap and schedule calculations shared through the wasm.** Plan:
+  `005_d2_one_copy_of_schedule_math.md`. **[ต้องถาม]** approve it before
+  starting.
 - [ ] **D1, teleprompter.** Write a plan file (core model + wasm + shared
   transport in the room's Durable Object). **[ต้องถาม]** before starting.
 
+## Dioxus pilot
+
+- [ ] Try Dioxus on our own pages, `/admin`, `/join` and `/my-rooms`. Plan:
+  `006_dioxus_pilot_on_our_own_pages.md`. **[ต้องถาม]** approve it before
+  starting.
+
 ## Sign-in phase 3
 
-- [ ] **Audit log:** who changed what, in which room. Write the plan file first.
-  **[ต้องถาม]** before starting.
+- [ ] **Audit log:** who changed what, in which room. Plan: `007_audit_log.md`.
+  **[ต้องถาม]** approve it before starting.
 
 ## Housekeeping
 
@@ -99,7 +108,7 @@ How to use it:
     `silent-drop2.mjs`).
   - Result: no close event, the watchdog reconnects, and after the thaw the
     new socket answers.
-- [ ] Remove the trial worktree: `git worktree remove /tmp/ontime-pull-trial`.
+- [x] Removed the trial worktree `/tmp/ontime-pull-trial` (2026-11-24).
 - In `raknong_4ever`, one entry says it is in a group that does not list it (from
   the old `parent` bug). **Decided: leave it** (2026-11-24). Nothing is broken,
   and the room is not to be written.
