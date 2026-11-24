@@ -57,3 +57,7 @@
   - Contract: 39 cases in `runtime_offset.json`; 4 deliberate differences,
     each with a reason.
 - **Deployed 2026-11-25 (RIIR 4 + midnight fix):** Worker `da25059c` (rollback point `cf7dd63c`), Pages `3baf31ec` (master) and `ee7fd909` (main). Production smoke tests passed: `offset.mjs` 17/17 twice, `roll.mjs` 14/14.
+- **Correction, 2026-11-25:** the local e2e and browser runs reported for RIIR 4 had tested a stale `wrangler dev` left from an earlier run, not the new build.
+  - CI caught it: `timer.mjs` still expected the old `duration`.
+  - Fixed in 35cbe5c06. The runners now refuse a busy port and stop their whole worker tree.
+  - Rerun on the real build: all e2e suites and browser checks pass, and `timer.mjs` passes on production.
