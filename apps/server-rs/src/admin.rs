@@ -41,7 +41,10 @@ fn presented_token(req: &Request) -> Option<String> {
 
 pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response> {
     let Some(master) = master_token(env) else {
-        return Response::error("The admin page needs SESSION_PASSWORD to be set on the Worker", 403);
+        return Response::error(
+            "The admin page needs SESSION_PASSWORD to be set on the Worker",
+            403,
+        );
     };
 
     let method = req.method();
@@ -52,7 +55,10 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
             return Response::error("Method not allowed", 405);
         }
         let body = req.json::<Value>().await.unwrap_or(Value::Null);
-        let password = body.get("password").and_then(Value::as_str).unwrap_or_default();
+        let password = body
+            .get("password")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
         return match token_matches(&master, &hash_password(password)) {
             true => Response::from_json(&json!({ "token": master })),
             false => Response::error("Wrong password", 401),
@@ -74,7 +80,11 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
         if method != Method::Get {
             return Response::error("Method not allowed", 405);
         }
-        let query = req.url()?.query().map(|query| format!("?{query}")).unwrap_or_default();
+        let query = req
+            .url()?
+            .query()
+            .map(|query| format!("?{query}"))
+            .unwrap_or_default();
         return registry_host::forward(env, method, &format!("activity{query}"), None).await;
     }
 

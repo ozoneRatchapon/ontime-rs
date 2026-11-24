@@ -19,7 +19,9 @@ let failed = false;
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`,
+  );
 };
 
 const call = (path, { token, method = 'GET', body, headers = {} } = {}) =>
@@ -35,7 +37,8 @@ const call = (path, { token, method = 'GET', body, headers = {} } = {}) =>
 
 const suffix = Math.random().toString(36).slice(2, 10);
 const room = `people-${suffix}`;
-const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1';
+const iphone =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1';
 
 const { token: master } = await (await call('/admin/login', { method: 'POST', body: { password } })).json();
 
@@ -44,22 +47,41 @@ check('people without a token', (await call('/admin/people')).status, 401);
 check('people with the token', (await call('/admin/people', { token: master })).status, 200);
 
 console.log('== adding a person and an invite ==');
-check('a person needs a name', (await call('/admin/people', { token: master, method: 'POST', body: { name: ' ' } })).status, 400);
-const person = await (await call('/admin/people', { token: master, method: 'POST', body: { name: `สมศรี ${suffix}` } })).json();
+check(
+  'a person needs a name',
+  (await call('/admin/people', { token: master, method: 'POST', body: { name: ' ' } })).status,
+  400,
+);
+const person = await (
+  await call('/admin/people', { token: master, method: 'POST', body: { name: `สมศรี ${suffix}` } })
+).json();
 check('created', typeof person.id, 'string');
 const first = await (await call(`/admin/people/${person.id}/invite`, { token: master, method: 'POST' })).json();
 const invite = await (await call(`/admin/people/${person.id}/invite`, { token: master, method: 'POST' })).json();
 check('expires in 7 days', Math.round((invite.expiresAt - Date.now()) / 86_400_000), 7);
-check('an unknown person has no invite', (await call('/admin/people/not-a-person/invite', { token: master, method: 'POST' })).status, 404);
+check(
+  'an unknown person has no invite',
+  (await call('/admin/people/not-a-person/invite', { token: master, method: 'POST' })).status,
+  404,
+);
 
-const listed = async () => (await (await call('/admin/people', { token: master })).json()).people.find((p) => p.id === person.id);
+const listed = async () =>
+  (await (await call('/admin/people', { token: master })).json()).people.find((p) => p.id === person.id);
 check('listed with a pending invite', (await listed())?.inviteExpiresAt, invite.expiresAt);
 check('no hash leaks into the list', JSON.stringify(await listed()).includes('Hash'), false);
 
 console.log('== opening the link ==');
-check('the replaced link fails', (await call('/auth/redeem', { method: 'POST', body: { code: first.code } })).status, 401);
+check(
+  'the replaced link fails',
+  (await call('/auth/redeem', { method: 'POST', body: { code: first.code } })).status,
+  401,
+);
 check('a made-up code fails', (await call('/auth/redeem', { method: 'POST', body: { code: 'guess' } })).status, 401);
-const redeemed = await call('/auth/redeem', { method: 'POST', body: { code: invite.code }, headers: { 'User-Agent': iphone } });
+const redeemed = await call('/auth/redeem', {
+  method: 'POST',
+  body: { code: invite.code },
+  headers: { 'User-Agent': iphone },
+});
 check('the live link works', redeemed.status, 200);
 check('not cacheable', redeemed.headers.get('cache-control'), 'no-store');
 const { token: session, person: who } = await redeemed.json();
@@ -78,24 +100,46 @@ check('owns nothing yet', me.rooms, []);
 check('a session is not an admin', (await call('/admin/people', { token: session })).status, 401);
 
 console.log('== assigning an owner ==');
-check('a stranger cannot own a room', (await call(`/admin/rooms/${room}`, {
-  token: master, method: 'PUT', body: { owners: ['0190a000-0000-7000-8000-000000000000'] },
-})).status, 400);
-const assigned = await call(`/admin/rooms/${room}`, { token: master, method: 'PUT', body: { owners: [person.id], note: 'e2e' } });
+check(
+  'a stranger cannot own a room',
+  (
+    await call(`/admin/rooms/${room}`, {
+      token: master,
+      method: 'PUT',
+      body: { owners: ['0190a000-0000-7000-8000-000000000000'] },
+    })
+  ).status,
+  400,
+);
+const assigned = await call(`/admin/rooms/${room}`, {
+  token: master,
+  method: 'PUT',
+  body: { owners: [person.id], note: 'e2e' },
+});
 check('assigned', assigned.status, 200);
 const record = await assigned.json();
 check('owners on the room', record.owners, [person.id]);
 check('note saved with it', record.note, 'e2e');
 const mine = (await (await call('/auth/me', { token: session })).json()).rooms;
-check('the owner sees the room', mine.map((r) => r.name), [room]);
+check(
+  'the owner sees the room',
+  mine.map((r) => r.name),
+  [room],
+);
 
 console.log('== signing out ==');
 const second_invite = await (await call(`/admin/people/${person.id}/invite`, { token: master, method: 'POST' })).json();
-const { token: laptop } = await (await call('/auth/redeem', { method: 'POST', body: { code: second_invite.code } })).json();
+const { token: laptop } = await (
+  await call('/auth/redeem', { method: 'POST', body: { code: second_invite.code } })
+).json();
 check('logout', (await call('/auth/logout', { token: session, method: 'POST' })).status, 200);
 check('that device is out', (await call('/auth/me', { token: session })).status, 401);
 check('the other is still in', (await call('/auth/me', { token: laptop })).status, 200);
-check('sign out everywhere', (await call(`/admin/people/${person.id}/sessions`, { token: master, method: 'DELETE' })).status, 200);
+check(
+  'sign out everywhere',
+  (await call(`/admin/people/${person.id}/sessions`, { token: master, method: 'DELETE' })).status,
+  200,
+);
 check('the other is out too', (await call('/auth/me', { token: laptop })).status, 401);
 
 console.log('== removing the person ==');

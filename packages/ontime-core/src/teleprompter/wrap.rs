@@ -24,8 +24,10 @@ pub struct WrappedLine {
 /// the line and paragraph separators and the byte order mark. Unlike Rust's
 /// `char::is_whitespace`, it leaves out U+0085 and includes U+FEFF.
 fn is_js_space(c: char) -> bool {
-    matches!(c, '\t' | '\n' | '\u{b}' | '\u{c}' | '\r' | '\u{2028}' | '\u{2029}' | '\u{feff}')
-        || get_general_category(c) == GeneralCategory::SpaceSeparator
+    matches!(
+        c,
+        '\t' | '\n' | '\u{b}' | '\u{c}' | '\r' | '\u{2028}' | '\u{2029}' | '\u{feff}'
+    ) || get_general_category(c) == GeneralCategory::SpaceSeparator
 }
 
 /// A space a line may break at, which leaves out the no-break spaces.
@@ -94,10 +96,19 @@ struct Filling {
     width: usize,
 }
 
-fn wrap_typed_line(typed_line: &str, line_start: usize, chars_per_line: usize, lines: &mut Vec<WrappedLine>) {
+fn wrap_typed_line(
+    typed_line: &str,
+    line_start: usize,
+    chars_per_line: usize,
+    lines: &mut Vec<WrappedLine>,
+) {
     let trimmed = trim_end_js(typed_line);
     if trimmed.is_empty() {
-        lines.push(WrappedLine { text: String::new(), start: line_start, indent: 0 });
+        lines.push(WrappedLine {
+            text: String::new(),
+            start: line_start,
+            indent: 0,
+        });
         return;
     }
 
@@ -142,7 +153,11 @@ fn wrap_typed_line(typed_line: &str, line_start: usize, chars_per_line: usize, l
         }
 
         if fits(None, &chunk, 0) {
-            current = Some(Filling { start: chunk_start, end: chunk_end, width: chunk.width });
+            current = Some(Filling {
+                start: chunk_start,
+                end: chunk_end,
+                width: chunk.width,
+            });
             continue;
         }
 
@@ -158,7 +173,11 @@ fn wrap_typed_line(typed_line: &str, line_start: usize, chars_per_line: usize, l
         let mut from = 0;
         let mut offset = chunk_start;
         while graphemes.len() - from > width {
-            let end = offset + graphemes[from..from + width].iter().map(|g| g.len()).sum::<usize>();
+            let end = offset
+                + graphemes[from..from + width]
+                    .iter()
+                    .map(|g| g.len())
+                    .sum::<usize>();
             push_line(lines, offset, end);
             from += width;
             offset = end;
@@ -196,7 +215,9 @@ fn to_pieces(content: &str) -> Vec<Piece> {
     }
     match space_start {
         Some(start) => pieces.push(space_piece(content, start, content.len())),
-        None if word_start < content.len() => add_word(content, word_start, content.len(), &mut pieces),
+        None if word_start < content.len() => {
+            add_word(content, word_start, content.len(), &mut pieces)
+        }
         None => {}
     }
     pieces
@@ -204,7 +225,12 @@ fn to_pieces(content: &str) -> Vec<Piece> {
 
 /// A run of spaces is as wide as its length in UTF-16 units, as upstream measures it.
 fn space_piece(content: &str, start: usize, end: usize) -> Piece {
-    Piece { start, end, width: utf16_len(&content[start..end]), is_space: true }
+    Piece {
+        start,
+        end,
+        width: utf16_len(&content[start..end]),
+        is_space: true,
+    }
 }
 
 fn is_break_after(grapheme: &str) -> bool {
@@ -214,7 +240,12 @@ fn is_break_after(grapheme: &str) -> bool {
 fn add_word(content: &str, start: usize, end: usize, pieces: &mut Vec<Piece>) {
     let word = &content[start..end];
     if !word.contains(['-', '–', '—', '/']) {
-        pieces.push(Piece { start, end, width: grapheme_count(word), is_space: false });
+        pieces.push(Piece {
+            start,
+            end,
+            width: grapheme_count(word),
+            is_space: false,
+        });
         return;
     }
 
@@ -229,12 +260,22 @@ fn add_word(content: &str, start: usize, end: usize, pieces: &mut Vec<Piece>) {
         }
         let next = graphemes[i + 1];
         if is_break_after(grapheme) && !is_break_after(next) && !is_closing(next) {
-            pieces.push(Piece { start: from_offset, end: offset, width: i + 1 - from, is_space: false });
+            pieces.push(Piece {
+                start: from_offset,
+                end: offset,
+                width: i + 1 - from,
+                is_space: false,
+            });
             from = i + 1;
             from_offset = offset;
         }
     }
-    pieces.push(Piece { start: from_offset, end, width: graphemes.len() - from, is_space: false });
+    pieces.push(Piece {
+        start: from_offset,
+        end,
+        width: graphemes.len() - from,
+        is_space: false,
+    });
 }
 
 fn make_chunks(content: &str, pieces: &[Piece]) -> Vec<Chunk> {
@@ -246,7 +287,9 @@ fn make_chunks(content: &str, pieces: &[Piece]) -> Vec<Chunk> {
             continue;
         }
         let joins = match (chunks.last(), space_before) {
-            (Some(current), Some(_)) => !can_break_between(content, &current.pieces[current.pieces.len() - 1], piece),
+            (Some(current), Some(_)) => {
+                !can_break_between(content, &current.pieces[current.pieces.len() - 1], piece)
+            }
             _ => false,
         };
         match (joins, chunks.last_mut(), space_before) {
@@ -255,7 +298,11 @@ fn make_chunks(content: &str, pieces: &[Piece]) -> Vec<Chunk> {
                 current.pieces.push(*piece);
                 current.width += space.width + piece.width;
             }
-            _ => chunks.push(Chunk { pieces: vec![*piece], space_before, width: piece.width }),
+            _ => chunks.push(Chunk {
+                pieces: vec![*piece],
+                space_before,
+                width: piece.width,
+            }),
         }
         space_before = None;
     }
@@ -269,7 +316,11 @@ fn split_chunk(pieces: &[Piece]) -> Vec<Chunk> {
         match piece.is_space {
             true => space_before = Some(*piece),
             false => {
-                chunks.push(Chunk { pieces: vec![*piece], space_before, width: piece.width });
+                chunks.push(Chunk {
+                    pieces: vec![*piece],
+                    space_before,
+                    width: piece.width,
+                });
                 space_before = None;
             }
         }
@@ -312,7 +363,9 @@ fn is_opening(text: &str) -> bool {
 fn is_number(c: char) -> bool {
     matches!(
         get_general_category(c),
-        GeneralCategory::DecimalNumber | GeneralCategory::LetterNumber | GeneralCategory::OtherNumber
+        GeneralCategory::DecimalNumber
+            | GeneralCategory::LetterNumber
+            | GeneralCategory::OtherNumber
     )
 }
 
@@ -344,7 +397,10 @@ fn grapheme_count(text: &str) -> usize {
 
 fn graphemes_of(text: &str) -> Vec<&str> {
     match is_single_unit(text) {
-        true => text.char_indices().map(|(at, c)| &text[at..at + c.len_utf8()]).collect(),
+        true => text
+            .char_indices()
+            .map(|(at, c)| &text[at..at + c.len_utf8()])
+            .collect(),
         false => text.graphemes(true).collect(),
     }
 }

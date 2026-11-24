@@ -46,7 +46,13 @@ const builds: [string, ReturnType<typeof rundown>, ReturnType<typeof settings>][
   ['an inherited name gives nothing', rundown([event('a')]), settings({ script: 'custom-constructor' })],
   [
     'rundown order, no skipped events, no other entries',
-    rundown([event('b'), event('skipped', { skip: true }), { id: 'delay', type: 'delay', duration: 0 }, { id: 'ms', type: 'milestone', cue: 'M', title: 'Mile' }, event('a')]),
+    rundown([
+      event('b'),
+      event('skipped', { skip: true }),
+      { id: 'delay', type: 'delay', duration: 0 },
+      { id: 'ms', type: 'milestone', cue: 'M', title: 'Mile' },
+      event('a'),
+    ]),
     settings(),
   ],
   ['the title heading', rundown([event('a')]), settings({ heading: 'title' })],
@@ -54,13 +60,35 @@ const builds: [string, ReturnType<typeof rundown>, ReturnType<typeof settings>][
   ['both headings', rundown([event('a')]), settings({ heading: 'both' })],
   ['both headings without a cue', rundown([event('a', { cue: '' })]), settings({ heading: 'both' })],
   ['no cue, no cue heading', rundown([event('a', { cue: '' })]), settings({ heading: 'cue' })],
-  ['indentation and positions', rundown([event('a', { note: 'one\n  two three' })]), settings({ heading: 'none', charsPerLine: 12 })],
-  ['events without text are left out', rundown([event('a', { note: ' \n ' }), event('b', { note: undefined, custom: undefined }), event('c')]), settings()],
-  ['a custom field missing on the event', rundown([event('a', { custom: {} }), event('b')]), settings({ script: 'custom-script' })],
+  [
+    'indentation and positions',
+    rundown([event('a', { note: 'one\n  two three' })]),
+    settings({ heading: 'none', charsPerLine: 12 }),
+  ],
+  [
+    'events without text are left out',
+    rundown([event('a', { note: ' \n ' }), event('b', { note: undefined, custom: undefined }), event('c')]),
+    settings(),
+  ],
+  [
+    'a custom field missing on the event',
+    rundown([event('a', { custom: {} }), event('b')]),
+    settings({ script: 'custom-script' }),
+  ],
   ['a non-text value is no text', rundown([event('a', { note: 42 }), event('b')]), settings()],
   ['flat order decides, groups included', rundown([event('a'), event('b'), event('c')], ['c', 'a', 'b']), settings()],
-  ['long notes wrap', rundown([event('a', { note: 'Good evening and welcome to the 2026 awards, our first guest is a well-known face' })]), settings({ charsPerLine: 20 })],
-  ['thai', rundown([event('a', { title: 'เปิดงาน', cue: '1', note: 'สวัสดีครับ ยินดีต้อนรับทุกท่าน' })]), settings({ charsPerLine: 10, heading: 'both' })],
+  [
+    'long notes wrap',
+    rundown([
+      event('a', { note: 'Good evening and welcome to the 2026 awards, our first guest is a well-known face' }),
+    ]),
+    settings({ charsPerLine: 20 }),
+  ],
+  [
+    'thai',
+    rundown([event('a', { title: 'เปิดงาน', cue: '1', note: 'สวัสดีครับ ยินดีต้อนรับทุกท่าน' })]),
+    settings({ charsPerLine: 10, heading: 'both' }),
+  ],
   ['an empty rundown', rundown([]), settings()],
 ];
 
@@ -71,7 +99,11 @@ const parses: [string, unknown, unknown][] = [
   ['rounds a half up', { charsPerLine: 32.5 }, defaultTeleprompterSettings],
   ['rounds down', { charsPerLine: 32.4 }, defaultTeleprompterSettings],
   ['falls back on invalid values', { charsPerLine: 'many', heading: 'banner' }, defaultTeleprompterSettings],
-  ['a partial patch keeps the rest', { heading: 'cue' }, { script: 'custom-script', charsPerLine: 50, heading: 'both' }],
+  [
+    'a partial patch keeps the rest',
+    { heading: 'cue' },
+    { script: 'custom-script', charsPerLine: 50, heading: 'both' },
+  ],
   ['not an object', 'nope', defaultTeleprompterSettings],
   ['null', null, { script: 'title', charsPerLine: 20, heading: 'none' }],
   ['an array', ['title'], defaultTeleprompterSettings],
@@ -79,7 +111,17 @@ const parses: [string, unknown, unknown][] = [
   ['a numeric script is ignored', { script: 7 }, defaultTeleprompterSettings],
 ];
 
-const readables = ['note', 'title', 'custom-script', 'custom-poster', 'custom-missing', 'custom-constructor', 'skip', '', 'custom-'];
+const readables = [
+  'note',
+  'title',
+  'custom-script',
+  'custom-poster',
+  'custom-missing',
+  'custom-constructor',
+  'skip',
+  '',
+  'custom-',
+];
 
 const renames: [string, string, string | null][] = [
   ['custom-script', 'script', 'lines'],
@@ -91,9 +133,29 @@ const renames: [string, string, string | null][] = [
 
 process.stdout.write(
   JSON.stringify({
-    builds: builds.map(([name, rd, s]) => ({ name, rundown: rd, customFields, settings: s, events: buildScriptEvents(rd as never, customFields as never, s as never) })),
-    parses: parses.map(([name, data, fallback]) => ({ name, data, fallback, result: parseTeleprompterSettings(data, fallback as never) })),
-    readables: readables.map((script) => ({ script, customFields, readable: isReadableScriptSource(script, customFields as never) })),
-    renames: renames.map(([source, oldKey, newKey]) => ({ source, oldKey, newKey, result: renameScriptSource(source, oldKey, newKey) })),
+    builds: builds.map(([name, rd, s]) => ({
+      name,
+      rundown: rd,
+      customFields,
+      settings: s,
+      events: buildScriptEvents(rd as never, customFields as never, s as never),
+    })),
+    parses: parses.map(([name, data, fallback]) => ({
+      name,
+      data,
+      fallback,
+      result: parseTeleprompterSettings(data, fallback as never),
+    })),
+    readables: readables.map((script) => ({
+      script,
+      customFields,
+      readable: isReadableScriptSource(script, customFields as never),
+    })),
+    renames: renames.map(([source, oldKey, newKey]) => ({
+      source,
+      oldKey,
+      newKey,
+      result: renameScriptSource(source, oldKey, newKey),
+    })),
   }),
 );

@@ -48,15 +48,26 @@ function parseCsv(text) {
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (quoted) {
-      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
-      else if (c === '"') quoted = false;
+      if (c === '"' && text[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else if (c === '"') quoted = false;
       else field += c;
     } else if (c === '"') quoted = true;
-    else if (c === ',') { row.push(field); field = ''; }
-    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-    else if (c !== '\r') field += c;
+    else if (c === ',') {
+      row.push(field);
+      field = '';
+    } else if (c === '\n') {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+    } else if (c !== '\r') field += c;
   }
-  if (field || row.length) { row.push(field); rows.push(row); }
+  if (field || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
   return rows;
 }
 
@@ -119,7 +130,8 @@ console.log(`${title}: ${blocks.length} blocks, ${blocks.reduce((n, b) => n + b.
 
 if (values.dry) {
   for (const b of blocks) {
-    const hhmm = (ms) => `${String(Math.floor(ms / H)).padStart(2, '0')}:${String(Math.floor((ms % H) / M)).padStart(2, '0')}`;
+    const hhmm = (ms) =>
+      `${String(Math.floor(ms / H)).padStart(2, '0')}:${String(Math.floor((ms % H) / M)).padStart(2, '0')}`;
     console.log(`  ${hhmm(b.start)}–${hhmm(b.end)}  ${b.title}${b.children.length ? ` (${b.children.length})` : ''}`);
     for (const c of b.children) console.log(`      ${String(c.duration / M).padStart(3)}m  ${c.title}`);
   }
@@ -143,7 +155,12 @@ const api = (method, path, body) =>
 
 // the sheet's extra columns become cuesheet columns. Labels are ASCII because
 // the original validates them as alphanumeric-with-spaces.
-for (const [label, colour] of [['Mic', '#3b82f6'], ['Demon', '#a855f7'], ['Place', '#22c55e'], ['Note', '#64748b']]) {
+for (const [label, colour] of [
+  ['Mic', '#3b82f6'],
+  ['Demon', '#a855f7'],
+  ['Place', '#22c55e'],
+  ['Note', '#64748b'],
+]) {
   await api('POST', '/data/custom-fields', { type: 'text', colour, label }).catch(() => {});
 }
 

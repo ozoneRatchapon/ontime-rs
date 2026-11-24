@@ -13,7 +13,7 @@ import { openSocket, wait } from './support.mjs';
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
 const password = process.env.ADMIN_PASSWORD;
 if (!password) {
-  console.log('  skipped: set ADMIN_PASSWORD to the worker\'s SESSION_PASSWORD to run it');
+  console.log("  skipped: set ADMIN_PASSWORD to the worker's SESSION_PASSWORD to run it");
   process.exit(0);
 }
 
@@ -21,7 +21,9 @@ let failed = false;
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`,
+  );
 };
 
 const suffix = Math.random().toString(36).slice(2, 10);
@@ -96,7 +98,11 @@ check('bad room name refused', (await call('/admin/rooms/bad%20name', { token, m
 
 console.log('== a room older than the registry is added by hand ==');
 const old_room = `old-${suffix}`;
-check('register', (await call(`/admin/rooms/${old_room}`, { token, method: 'PUT', body: { owner: 'Ann' } })).status, 200);
+check(
+  'register',
+  (await call(`/admin/rooms/${old_room}`, { token, method: 'PUT', body: { owner: 'Ann' } })).status,
+  200,
+);
 const old_record = await find(token, old_room);
 check('listed, never seen in use', [old_record?.owner, old_record?.lastSeen], ['Ann', 0]);
 
@@ -116,12 +122,14 @@ check('clients of a room that does not exist', (await call(`/r/nope-${suffix}/da
 console.log('== a caller cannot choose the name a room reports under ==');
 check(
   'create with a spoofed header',
-  (await call(`/data/project?room=${second}`, {
-    token,
-    method: 'POST',
-    body: { title: 'Second' },
-    headers: { 'X-Ontime-Room': spoofed },
-  })).status,
+  (
+    await call(`/data/project?room=${second}`, {
+      token,
+      method: 'POST',
+      body: { title: 'Second' },
+      headers: { 'X-Ontime-Room': spoofed },
+    })
+  ).status,
   200,
 );
 check('listed under its real name', (await find(token, second))?.title, 'Second');

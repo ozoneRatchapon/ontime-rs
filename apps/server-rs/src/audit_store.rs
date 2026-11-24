@@ -16,12 +16,16 @@ pub struct Batch {
 
 impl Batch {
     pub fn new() -> Self {
-        Self { values: js_sys::Object::new(), delete: Vec::new() }
+        Self {
+            values: js_sys::Object::new(),
+            delete: Vec::new(),
+        }
     }
 
     /// Stores a value as a JSON string, the way every key here is stored.
     pub fn put<T: serde::Serialize>(&mut self, key: &str, value: &T) -> Result<()> {
-        let raw = serde_json::to_string(value).map_err(|e| Error::RustError(format!("Could not serialise {key}: {e}")))?;
+        let raw = serde_json::to_string(value)
+            .map_err(|e| Error::RustError(format!("Could not serialise {key}: {e}")))?;
         self.put_raw(key, raw)
     }
 
@@ -33,7 +37,8 @@ impl Batch {
     /// The chunk the log wrote, and the chunks it dropped.
     pub fn audit(&mut self, writes: &Writes) -> Result<()> {
         self.put(&chunk_key(writes.put.no), &writes.put)?;
-        self.delete.extend(writes.delete.iter().map(|no| chunk_key(*no)));
+        self.delete
+            .extend(writes.delete.iter().map(|no| chunk_key(*no)));
         Ok(())
     }
 
@@ -75,7 +80,11 @@ pub async fn page(
     now: i64,
     cached: Option<&Chunk>,
 ) -> Result<Response> {
-    let query = |key: &str| url.query_pairs().find(|(k, _)| k == key).map(|(_, v)| v.to_string());
+    let query = |key: &str| {
+        url.query_pairs()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.to_string())
+    };
     let before = query("before").and_then(|v| v.parse::<i64>().ok());
     let limit = query("limit").and_then(|v| v.parse::<usize>().ok());
 
@@ -94,5 +103,8 @@ pub async fn page(
     headers.set("content-type", "application/json")?;
     // names of the people who made changes
     headers.set("cache-control", "no-store")?;
-    Ok(Response::from_json(&json!({ "lines": page.lines, "before": page.next_before() }))?.with_headers(headers))
+    Ok(
+        Response::from_json(&json!({ "lines": page.lines, "before": page.next_before() }))?
+            .with_headers(headers),
+    )
 }

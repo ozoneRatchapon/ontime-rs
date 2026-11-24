@@ -7,18 +7,22 @@ let failed = false;
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`,
+  );
 };
-const wait = ms => new Promise(r => setTimeout(r, ms));
-const api = (m, p, b) => fetch(`${base}/r/${room}${p}`, {
-  method: m, headers: { 'content-type': 'application/json' },
-  body: b ? JSON.stringify(b) : undefined,
-}).then(r => r.status === 204 ? null : r.json().catch(() => null));
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const api = (m, p, b) =>
+  fetch(`${base}/r/${room}${p}`, {
+    method: m,
+    headers: { 'content-type': 'application/json' },
+    body: b ? JSON.stringify(b) : undefined,
+  }).then((r) => (r.status === 204 ? null : r.json().catch(() => null)));
 
 // two days, each with one short event
 const mk = async (title, evTitle) => {
   const list = await api('POST', '/data/rundowns', { title });
-  const rid = list.rundowns.filter(r => r.title === title).pop().id;
+  const rid = list.rundowns.filter((r) => r.title === title).pop().id;
   await api('POST', `/data/rundowns/${rid}/entry`, { title: evTitle, duration: 4000 });
   return rid;
 };
@@ -29,8 +33,15 @@ await api('POST', `/data/rundowns/${d1}/load`);
 const ws = new WebSocket(base.replace(/^http/, 'ws') + `/ws?room=${room}`);
 const send = (t, p) => ws.send(JSON.stringify({ tag: t, payload: p }));
 const runtime = [];
-ws.addEventListener('message', e => { const p = JSON.parse(e.data); if (p.tag === 'runtime-data') runtime.push(p.payload); });
-await new Promise((res, rej) => { ws.addEventListener('open', res); ws.addEventListener('error', () => rej(new Error('sock'))); setTimeout(() => rej(new Error('timeout')), 10000); });
+ws.addEventListener('message', (e) => {
+  const p = JSON.parse(e.data);
+  if (p.tag === 'runtime-data') runtime.push(p.payload);
+});
+await new Promise((res, rej) => {
+  ws.addEventListener('open', res);
+  ws.addEventListener('error', () => rej(new Error('sock')));
+  setTimeout(() => rej(new Error('timeout')), 10000);
+});
 await wait(400);
 
 console.log('== run day 1 for real ==');

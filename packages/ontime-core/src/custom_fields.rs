@@ -6,10 +6,10 @@
 
 use serde_json::Value;
 
-use crate::teleprompter::settings::rename_script_source;
 use crate::api::{ApiRequest, ApiResponse, Effect, HttpMethod};
 use crate::project::Project;
 use crate::rundown::Rundown;
+use crate::teleprompter::settings::rename_script_source;
 
 /// Spaces become underscores, as the client's `customFieldLabelToKey` does.
 pub fn key_for(label: &str) -> String {
@@ -64,7 +64,8 @@ fn for_each_value_map(
 
 fn rename_values(project: &mut Project, old: &str, new: &str) -> Vec<String> {
     // a teleprompter reading this field follows it to its new key
-    project.teleprompter.script = rename_script_source(&project.teleprompter.script, old, Some(new));
+    project.teleprompter.script =
+        rename_script_source(&project.teleprompter.script, old, Some(new));
     for_each_value_map(project, |values| match values.remove(old) {
         Some(value) => {
             values.insert(new.to_string(), value);

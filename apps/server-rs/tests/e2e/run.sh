@@ -79,6 +79,8 @@ suites=(
   "admin.mjs:node"    # room list, owners, live clients (needs ADMIN_PASSWORD)
   "people.mjs:node"   # people, invite links, room owners (needs ADMIN_PASSWORD)
   "members.mjs:node"  # operators, members-only rooms (needs ADMIN_PASSWORD, ~1 min)
+  "activity.mjs:node" # the audit log, who may read it (needs ADMIN_PASSWORD)
+  "teleprompter.mjs:node" # the shared teleprompter transport (plan 008)
 )
 
 echo

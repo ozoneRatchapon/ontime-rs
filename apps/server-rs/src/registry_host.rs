@@ -13,9 +13,9 @@ use worker::*;
 
 use ontime_core::audit::{AuditIndex, Retention, INDEX_KEY};
 use ontime_core::directory::{self, Directory};
-use ontime_core::registry_audit;
-use ontime_core::registry::{Member, Registry, RoomReport, REGISTRY_NAME};
 use ontime_core::identity::Identity;
+use ontime_core::registry::{Member, Registry, RoomReport, REGISTRY_NAME};
+use ontime_core::registry_audit;
 use uuid::Uuid;
 
 use crate::audit_store::{self, Batch};
@@ -82,12 +82,27 @@ pub async fn serve(state: &State, mut req: Request) -> Result<Response> {
     // the people events, for the admin only (the Worker checks that)
     if method == Method::Get && segments.as_slice() == ["activity"] {
         let index = load::<AuditIndex>(&storage, INDEX_KEY).await;
-        return audit_store::page(&storage, &index, &req.url()?, Retention::REGISTRY, now, None).await;
+        return audit_store::page(
+            &storage,
+            &index,
+            &req.url()?,
+            Retention::REGISTRY,
+            now,
+            None,
+        )
+        .await;
     }
 
     // described before it runs, so a removed person is still named
     let described = registry_audit::note(&document, method.as_ref(), &segments, &body, now);
-    let response = directory::handle(&mut document, method.as_ref(), &segments, &body, now, &mut fresh_secret);
+    let response = directory::handle(
+        &mut document,
+        method.as_ref(),
+        &segments,
+        &body,
+        now,
+        &mut fresh_secret,
+    );
 
     // each document is written only when it actually moved, and all of it at once
     let mut batch = Batch::new();
@@ -98,7 +113,8 @@ pub async fn serve(state: &State, mut req: Request) -> Result<Response> {
         batch.put(IDENTITY_KEY, &document.identity)?;
     }
     let line = match response.status < 400 && response.changed {
-        true => described.or_else(|| registry_audit::redeemed(method.as_ref(), &segments, &response.body)),
+        true => described
+            .or_else(|| registry_audit::redeemed(method.as_ref(), &segments, &response.body)),
         false => None,
     };
     if let Some((actor, note)) = line {
@@ -120,7 +136,12 @@ fn registry_stub(env: &Env) -> Result<Stub> {
 }
 
 /// Passes a request to the registry, at `/registry/<rest>`.
-pub async fn forward(env: &Env, method: Method, rest: &str, body: Option<String>) -> Result<Response> {
+pub async fn forward(
+    env: &Env,
+    method: Method,
+    rest: &str,
+    body: Option<String>,
+) -> Result<Response> {
     forward_as(env, method, rest, body, None).await
 }
 
@@ -138,7 +159,10 @@ pub async fn forward_as(
         headers.set(SESSION_HEADER, session)?;
     }
     let request = Request::new_with_init(
-        &format!("https://registry.internal{REGISTRY_PATH}{}", rest.trim_start_matches('/')),
+        &format!(
+            "https://registry.internal{REGISTRY_PATH}{}",
+            rest.trim_start_matches('/')
+        ),
         &RequestInit {
             method,
             headers,

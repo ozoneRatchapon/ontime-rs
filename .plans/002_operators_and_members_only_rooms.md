@@ -4,11 +4,12 @@ Status: **done — committed in `2fda18ef`, deployed 2026-11-23 (Worker `1bf1ba9
 All three decisions were approved as drafted.
 
 Notes from building it:
+
 - A refused socket command is answered with a `log` packet, which the editor
   already shows.
 - An owner removing an operator they invited, who is then in no room at all,
   removes that person entirely instead of only signing them out. Builds on 001, which is live in
-production. Its Worker version `53bef09b` is the rollback point.
+  production. Its Worker version `53bef09b` is the rollback point.
 
 ## Goal
 
@@ -34,12 +35,12 @@ switch is what closes that gap.
 
 ## Roles
 
-| who | can |
-|---|---|
-| admin (master password) | everything, as today |
-| owner | control the room, manage its operators, flip the switch |
-| operator | control the room |
-| viewer (no sign-in) | watch: connect, read, set their own screen name/path |
+| who                     | can                                                     |
+| ----------------------- | ------------------------------------------------------- |
+| admin (master password) | everything, as today                                    |
+| owner                   | control the room, manage its operators, flip the switch |
+| operator                | control the room                                        |
+| viewer (no sign-in)     | watch: connect, read, set their own screen name/path    |
 
 `RoomRecord` gains `operators: Vec<Uuid>` (`#[serde(default)]`).
 
@@ -47,12 +48,12 @@ switch is what closes that gap.
 
 ## Owner endpoints (session token, scoped to rooms the caller owns)
 
-| method | path | |
-|---|---|---|
-| GET | `/auth/rooms/<room>/team` | owners + operators: name, devices, pending invite |
-| POST | `/auth/rooms/<room>/operators` | `{ name }` → new person, added as operator, invite link |
-| POST | `/auth/rooms/<room>/operators/<id>/invite` | a new link for an operator **this owner invited** |
-| DELETE | `/auth/rooms/<room>/operators/<id>` | remove them from this room only |
+| method | path                                       |                                                         |
+| ------ | ------------------------------------------ | ------------------------------------------------------- |
+| GET    | `/auth/rooms/<room>/team`                  | owners + operators: name, devices, pending invite       |
+| POST   | `/auth/rooms/<room>/operators`             | `{ name }` → new person, added as operator, invite link |
+| POST   | `/auth/rooms/<room>/operators/<id>/invite` | a new link for an operator **this owner invited**       |
+| DELETE | `/auth/rooms/<room>/operators/<id>`        | remove them from this room only                         |
 
 **Security rule:** an owner may make links only for people they invited
 themselves. Otherwise owner A could make a new link for someone who owns other
@@ -91,6 +92,7 @@ owner, also signs them out of every device.
     What stays **viewing**: GET requests, opening the socket, and the
     client-identity messages (`client-set-path`, rename, ping). The exact list
     of websocket message types is taken from `room.rs` and covered by a test.
+
 - **The switch:**
   - `project.members_only: bool`, stored in the room next to `password_hash`.
   - Set by `POST /data/members-only { on }`, which only an owner or the master
@@ -138,6 +140,7 @@ owner, also signs them out of every device.
 ## Rollout
 
 Same as 001:
+
 1. Record the Worker version.
 2. Deploy the Worker, then the client.
 3. Smoke-test production with a throwaway person.

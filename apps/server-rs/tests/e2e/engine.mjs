@@ -3,8 +3,8 @@
 //
 // It also measures how many packets the server actually sends, which is the cost model.
 import { readFile } from 'node:fs/promises';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
 // its own room: a stray aux timer or a half-finished run in the shared default
@@ -44,7 +44,10 @@ const list = await api('POST', '/data/rundowns', { title: '__engine__' });
 const rid = list.rundowns.filter((r) => r.title === '__engine__').pop().id;
 await api('POST', `/data/rundowns/${rid}/load`);
 await api('POST', `/data/rundowns/${rid}/entry`, {
-  title: 'ENGINE_A', duration: 600000, timeWarning: 120000, timeDanger: 60000,
+  title: 'ENGINE_A',
+  duration: 600000,
+  timeWarning: 120000,
+  timeDanger: 60000,
 });
 
 // --- drive playback -----------------------------------------------
@@ -114,8 +117,11 @@ check('server sent a later packet', packets.length > before);
   mirror.update(JSON.stringify(later.payload._engine), later.at);
   const local = JSON.parse(mirror.tick(later.at));
   const drift = Math.abs(local.current - later.payload.timer.current);
-  check(`identical to the server (drift ${drift}ms)`, drift <= 2,
-    `local ${local.current} vs server ${later.payload.timer.current}`);
+  check(
+    `identical to the server (drift ${drift}ms)`,
+    drift <= 2,
+    `local ${local.current} vs server ${later.payload.timer.current}`,
+  );
   check('phase matches', local.phase === later.payload.timer.phase);
 }
 {

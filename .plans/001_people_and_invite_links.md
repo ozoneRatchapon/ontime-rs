@@ -17,6 +17,7 @@ The name `session.ts` was already taken by the app-info API.
 4. A signed-in owner opens `/my-rooms` and sees the rooms they own, with links.
 
 Out of scope here:
+
 - Phase 2: owners invite operators, and the Editor requires sign-in.
 - Phase 3: the audit log.
 
@@ -55,6 +56,7 @@ struct Identity { people: BTreeMap<Uuid, Person>, invites: Vec<Invite>, sessions
     cleared, so no data is lost.
 
 Pure functions, so all of them can be tested without a Worker:
+
 - `create_person`
 - `issue_invite(person, now, random) -> (code, Invite)`
 - `redeem(code, now, random, device) -> Result<(token, Person)>`
@@ -67,22 +69,22 @@ Pure functions, so all of them can be tested without a Worker:
 
 Admin endpoints, behind the master token as today:
 
-| method | path | body / result |
-|---|---|---|
-| GET | `/admin/people` | people, with session count + last seen + whether an invite is pending |
-| POST | `/admin/people` | `{ name }` → person |
-| POST | `/admin/people/<id>/invite` | → `{ code, expiresAt }` (the client builds the link) |
-| DELETE | `/admin/people/<id>/sessions` | sign that person out everywhere |
-| DELETE | `/admin/people/<id>` | remove person |
-| PUT | `/admin/rooms/<name>` | now also accepts `{ owners: [id] }` |
+| method | path                          | body / result                                                         |
+| ------ | ----------------------------- | --------------------------------------------------------------------- |
+| GET    | `/admin/people`               | people, with session count + last seen + whether an invite is pending |
+| POST   | `/admin/people`               | `{ name }` → person                                                   |
+| POST   | `/admin/people/<id>/invite`   | → `{ code, expiresAt }` (the client builds the link)                  |
+| DELETE | `/admin/people/<id>/sessions` | sign that person out everywhere                                       |
+| DELETE | `/admin/people/<id>`          | remove person                                                         |
+| PUT    | `/admin/rooms/<name>`         | now also accepts `{ owners: [id] }`                                   |
 
 Public endpoints:
 
-| method | path | body / result |
-|---|---|---|
-| POST | `/auth/redeem` | `{ code }` → `{ token, person }` |
-| GET | `/auth/me` | Bearer session → `{ person, rooms: [RoomRecord] }` (owned rooms only) |
-| POST | `/auth/logout` | Bearer session → deletes that one session |
+| method | path           | body / result                                                         |
+| ------ | -------------- | --------------------------------------------------------------------- |
+| POST   | `/auth/redeem` | `{ code }` → `{ token, person }`                                      |
+| GET    | `/auth/me`     | Bearer session → `{ person, rooms: [RoomRecord] }` (owned rooms only) |
+| POST   | `/auth/logout` | Bearer session → deletes that one session                             |
 
 - A wrong or expired code returns 401 with a single, uniform message, so it is
   impossible to tell "never existed" from "already used".

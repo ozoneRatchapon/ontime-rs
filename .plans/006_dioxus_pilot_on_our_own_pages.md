@@ -13,11 +13,11 @@ https://github.com/dioxuslabs/dioxus.
     equivalents.
 - **These pages are ours and have no upstream counterpart:**
 
-  | page | files | lines |
-  |---|---|---|
-  | `/admin` | Admin, AdminLogin, RoomRow, OwnerPicker, PeoplePanel | 573 |
-  | `/join`, `/my-rooms` | Join, MyRooms, TeamPanel | 362 |
-  | their API code | `admin.ts`, `personSession.ts` | 293 |
+  | page                 | files                                                | lines |
+  | -------------------- | ---------------------------------------------------- | ----- |
+  | `/admin`             | Admin, AdminLogin, RoomRow, OwnerPicker, PeoplePanel | 573   |
+  | `/join`, `/my-rooms` | Join, MyRooms, TeamPanel                             | 362   |
+  | their API code       | `admin.ts`, `personSession.ts`                       | 293   |
 
 - **What Rust gains here:**
   - The types already live in `ontime-core`: `Role`, `MemberRoom`,
@@ -45,13 +45,13 @@ https://github.com/dioxuslabs/dioxus.
 
 ## What gets measured
 
-| measure | React today | Dioxus pilot | acceptable |
-|---|---|---|---|
-| first load of `/my-rooms` (bytes, gzip) | measure | measure | ≤ 2× React |
-| time to interactive on a mid-range laptop | measure | measure | ≤ React + 100 ms |
-| lines of code for the same pages | 1,228 | measure | — |
-| type definitions duplicated between Rust and TS | 4 | 0 | 0 |
-| e2e and browser checks | pass | must pass unchanged | all |
+| measure                                         | React today | Dioxus pilot        | acceptable       |
+| ----------------------------------------------- | ----------- | ------------------- | ---------------- |
+| first load of `/my-rooms` (bytes, gzip)         | measure     | measure             | ≤ 2× React       |
+| time to interactive on a mid-range laptop       | measure     | measure             | ≤ React + 100 ms |
+| lines of code for the same pages                | 1,228       | measure             | —                |
+| type definitions duplicated between Rust and TS | 4           | 0                   | 0                |
+| e2e and browser checks                          | pass        | must pass unchanged | all              |
 
 ## Steps
 

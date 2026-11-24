@@ -11,7 +11,8 @@ const check = (label, ok, detail = '') => {
   console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok || !detail ? '' : ` -> ${detail}`}`);
 };
 
-const get = (path) => fetch(`${base}${path}`).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) }));
+const get = (path) =>
+  fetch(`${base}${path}`).then(async (r) => ({ status: r.status, body: await r.json().catch(() => null) }));
 
 /** Every field the client reads, with the type it expects. */
 const contracts = [
@@ -21,9 +22,15 @@ const contracts = [
   ['/data/custom-views', { views: 'array' }],
   ['/data/settings', { version: 'string', timeFormat: 'string', language: 'string' }],
   ['/data/project', { title: 'string', description: 'string', url: 'string', info: 'string', custom: 'array' }],
-  ['/data/view-settings', { overrideStyles: 'boolean', normalColor: 'string', warningColor: 'string', dangerColor: 'string' }],
+  [
+    '/data/view-settings',
+    { overrideStyles: 'boolean', normalColor: 'string', warningColor: 'string', dangerColor: 'string' },
+  ],
   ['/data/rundowns', { loaded: 'string', rundowns: 'array' }],
-  ['/data/rundowns/current', { id: 'string', order: 'array', flatOrder: 'array', entries: 'object', revision: 'number' }],
+  [
+    '/data/rundowns/current',
+    { id: 'string', order: 'array', flatOrder: 'array', entries: 'object', revision: 'number' },
+  ],
   ['/data/automations', { enabledAutomations: 'boolean', triggers: 'array', automations: 'object' }],
   ['/data/url-presets', null], // a bare array
   ['/data/report', null],

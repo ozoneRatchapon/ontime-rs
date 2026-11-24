@@ -8,12 +8,16 @@ let failed = false;
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`,
+  );
 };
 const near = (label, actual, expected, tolerance) => {
   const ok = typeof actual === 'number' && Math.abs(actual - expected) <= tolerance;
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ~${expected} (±${tolerance})`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ~${expected} (±${tolerance})`}`,
+  );
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -68,7 +72,6 @@ ws.addEventListener('message', (e) => {
   if (p.tag === 'runtime-data') runtime.push(p.payload);
 });
 
-
 /// Waits until a packet satisfying `predicate` arrives.
 ///
 /// Waiting for "the next packet" is not enough: a heartbeat can land between
@@ -101,10 +104,14 @@ await wait(400);
 const clockNow = latest().clock;
 const startA = clockNow + 4000;
 await api('PUT', `/data/rundowns/${rid}/entry`, {
-  id: a.id, timeStart: startA, timeEnd: startA + 5000,
+  id: a.id,
+  timeStart: startA,
+  timeEnd: startA + 5000,
 });
 await api('PUT', `/data/rundowns/${rid}/entry`, {
-  id: b.id, timeStart: startA + 5000, timeEnd: startA + 10000,
+  id: b.id,
+  timeStart: startA + 5000,
+  timeEnd: startA + 10000,
 });
 await wait(300);
 

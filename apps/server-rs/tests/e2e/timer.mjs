@@ -25,7 +25,9 @@ const check = (label, actual, expected) => {
 const near = (label, actual, expected, tolerance) => {
   const ok = typeof actual === 'number' && Math.abs(actual - expected) <= tolerance;
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ~${expected} (±${tolerance})`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ~${expected} (±${tolerance})`}`,
+  );
 };
 
 const api = (method, path, body) =>
@@ -41,7 +43,10 @@ const rid = list.rundowns.filter((r) => r.title === '__timer__').pop().id;
 await api('POST', `/data/rundowns/${rid}/load`);
 
 const a = await api('POST', `/data/rundowns/${rid}/entry`, {
-  title: 'TIMER_A', duration: 6000, timeWarning: 4000, timeDanger: 2000,
+  title: 'TIMER_A',
+  duration: 6000,
+  timeWarning: 4000,
+  timeDanger: 2000,
 });
 const b = await api('POST', `/data/rundowns/${rid}/entry`, { title: 'TIMER_B', duration: 60000 });
 

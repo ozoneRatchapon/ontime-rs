@@ -3,7 +3,6 @@ import { FormEvent, useState } from 'react';
 import { PersonSummary, addPerson, createInvite, removePerson, signOutPerson } from '../../common/api/admin';
 import Button from '../../common/components/buttons/Button';
 import Input from '../../common/components/input/input/Input';
-
 import { formatDate, formatLastSeen } from './adminUtils';
 
 import style from './Admin.module.scss';
@@ -21,7 +20,13 @@ interface PeoplePanelProps {
 export default function PeoplePanel({ people, onChanged, onError }: PeoplePanelProps) {
   const [name, setName] = useState('');
   // the link exists in the clear only in the response that made it
-  const [invite, setInvite] = useState<{ id: string; name: string; link: string; expiresAt: number; copied: boolean } | null>(null);
+  const [invite, setInvite] = useState<{
+    id: string;
+    name: string;
+    link: string;
+    expiresAt: number;
+    copied: boolean;
+  } | null>(null);
 
   const add = async (event: FormEvent) => {
     event.preventDefault();

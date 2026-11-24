@@ -4,7 +4,9 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::settings::{custom_field_of_script_source, is_readable_script_source, Heading, TeleprompterSettings};
+use super::settings::{
+    custom_field_of_script_source, is_readable_script_source, Heading, TeleprompterSettings,
+};
 use super::wrap::wrap_text;
 use crate::rundown::Rundown;
 
@@ -46,9 +48,17 @@ pub struct Script {
 }
 
 impl Script {
-    pub fn build(rundown: &Rundown, custom_fields: &Value, settings: &TeleprompterSettings) -> Self {
+    pub fn build(
+        rundown: &Rundown,
+        custom_fields: &Value,
+        settings: &TeleprompterSettings,
+    ) -> Self {
         let events = build_script_events(rundown, custom_fields, settings);
-        Self { revision: revision_of(&events, settings.chars_per_line), chars_per_line: settings.chars_per_line, events }
+        Self {
+            revision: revision_of(&events, settings.chars_per_line),
+            chars_per_line: settings.chars_per_line,
+            events,
+        }
     }
 }
 
@@ -68,7 +78,11 @@ pub fn revision_of(events: &[ScriptEvent], chars_per_line: u32) -> u64 {
 /// The events of the rundown with text to read, in running order. Skipped
 /// events, entries which are not events, and events whose text is empty are
 /// left out.
-pub fn build_script_events(rundown: &Rundown, custom_fields: &Value, settings: &TeleprompterSettings) -> Vec<ScriptEvent> {
+pub fn build_script_events(
+    rundown: &Rundown,
+    custom_fields: &Value,
+    settings: &TeleprompterSettings,
+) -> Vec<ScriptEvent> {
     if !is_readable_script_source(&settings.script, custom_fields) {
         return Vec::new();
     }
@@ -101,7 +115,12 @@ pub fn build_script_events(rundown: &Rundown, custom_fields: &Value, settings: &
                 indent: (line.indent > 0).then_some(line.indent),
             }));
             lines.push(Line::Blank);
-            Some(ScriptEvent { id: id.clone(), cue, title, lines })
+            Some(ScriptEvent {
+                id: id.clone(),
+                cue,
+                title,
+                lines,
+            })
         })
         .collect()
 }
@@ -122,14 +141,22 @@ fn read_text<'a>(entry: &'a Value, script: &str) -> Option<&'a str> {
 }
 
 fn text_of(entry: &Value, key: &str) -> String {
-    entry.get(key).and_then(Value::as_str).unwrap_or_default().to_string()
+    entry
+        .get(key)
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string()
 }
 
 fn make_heading(heading: Heading, cue: &str, title: &str) -> String {
     match heading {
         Heading::Title => title.to_string(),
         Heading::Cue => cue.to_string(),
-        Heading::Both => [cue, title].into_iter().filter(|part| !part.is_empty()).collect::<Vec<_>>().join(" · "),
+        Heading::Both => [cue, title]
+            .into_iter()
+            .filter(|part| !part.is_empty())
+            .collect::<Vec<_>>()
+            .join(" · "),
         Heading::None => String::new(),
     }
 }

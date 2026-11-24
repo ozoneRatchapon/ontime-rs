@@ -78,7 +78,9 @@ fn chunk_path(data_dir: &Path, room: &str, no: u64) -> PathBuf {
 
 /// One stored chunk, or `None` when it is missing or unreadable.
 pub async fn load_chunk(data_dir: &Path, room: &str, no: u64) -> Option<Chunk> {
-    let raw = tokio::fs::read_to_string(chunk_path(data_dir, room, no)).await.ok()?;
+    let raw = tokio::fs::read_to_string(chunk_path(data_dir, room, no))
+        .await
+        .ok()?;
     serde_json::from_str(&raw).ok()
 }
 
@@ -90,8 +92,8 @@ pub async fn save_audit(data_dir: &Path, room: &str, writes: &Writes) -> std::io
     tokio::fs::create_dir_all(audit_dir(data_dir, room)).await?;
     let path = chunk_path(data_dir, room, writes.put.no);
     let temporary = path.with_extension("json.tmp");
-    let serialised =
-        serde_json::to_string(&writes.put).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    let serialised = serde_json::to_string(&writes.put)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
     tokio::fs::write(&temporary, serialised).await?;
     tokio::fs::rename(&temporary, &path).await?;
     for no in &writes.delete {

@@ -15,24 +15,45 @@ use crate::directory::Directory;
 ///
 /// `people/*` and `rooms/*` only reach the registry through the admin route,
 /// which has already checked the master password.
-pub fn note(before: &Directory, method: &str, segments: &[&str], body: &Value, now: i64) -> Option<(Actor, Note)> {
+pub fn note(
+    before: &Directory,
+    method: &str,
+    segments: &[&str],
+    body: &Value,
+    now: i64,
+) -> Option<(Actor, Note)> {
     let name_of = |id: &str| -> Option<Subject> {
         let id = Uuid::parse_str(id).ok()?;
-        before.identity.person(&id).map(|person| Subject::titled(person.name.clone()))
+        before
+            .identity
+            .person(&id)
+            .map(|person| Subject::titled(person.name.clone()))
     };
     let caller = || {
         let token = body.get("token").and_then(Value::as_str)?;
         let id = before.identity.person_of(token, now)?;
-        let name = before.identity.person(&id).map(|person| person.name.clone()).unwrap_or_default();
+        let name = before
+            .identity
+            .person(&id)
+            .map(|person| person.name.clone())
+            .unwrap_or_default();
         Some(Actor::Person { id, name })
     };
-    let named = || body.get("name").and_then(Value::as_str).map(|name| Subject::titled(name.trim()));
+    let named = || {
+        body.get("name")
+            .and_then(Value::as_str)
+            .map(|name| Subject::titled(name.trim()))
+    };
 
     let admin = |note: Note| Some((Actor::Admin, note));
     match (method, segments) {
         ("POST", ["people"]) => admin(Note::new(Action::PersonCreate).about(named())),
-        ("POST", ["people", id, "invite"]) => admin(Note::new(Action::InviteIssue).about(name_of(id))),
-        ("DELETE", ["people", id, "sessions"]) => admin(Note::new(Action::SignOut).about(name_of(id))),
+        ("POST", ["people", id, "invite"]) => {
+            admin(Note::new(Action::InviteIssue).about(name_of(id)))
+        }
+        ("DELETE", ["people", id, "sessions"]) => {
+            admin(Note::new(Action::SignOut).about(name_of(id)))
+        }
         ("DELETE", ["people", id]) => admin(Note::new(Action::PersonRemove).about(name_of(id))),
         ("PUT", ["rooms", room]) => {
             let fields: Vec<String> = ["owners", "operators"]
@@ -42,20 +63,37 @@ pub fn note(before: &Directory, method: &str, segments: &[&str], body: &Value, n
                 .collect();
             match fields.is_empty() {
                 true => None,
-                false => admin(Note::new(Action::MembersChange).with_fields(fields).in_room(room)),
+                false => admin(
+                    Note::new(Action::MembersChange)
+                        .with_fields(fields)
+                        .in_room(room),
+                ),
             }
         }
         // the person is only known once the code is spent: see [`redeemed`]
         ("POST", ["auth", "logout"]) => caller().map(|actor| (actor, Note::new(Action::SignOut))),
-        ("POST", ["auth", "rooms", room, "operators"]) => {
-            caller().map(|actor| (actor, Note::new(Action::OperatorAdd).about(named()).in_room(room)))
-        }
-        ("POST", ["auth", "rooms", room, "operators", id, "invite"]) => {
-            caller().map(|actor| (actor, Note::new(Action::InviteIssue).about(name_of(id)).in_room(room)))
-        }
-        ("DELETE", ["auth", "rooms", room, "operators", id]) => {
-            caller().map(|actor| (actor, Note::new(Action::OperatorRemove).about(name_of(id)).in_room(room)))
-        }
+        ("POST", ["auth", "rooms", room, "operators"]) => caller().map(|actor| {
+            (
+                actor,
+                Note::new(Action::OperatorAdd).about(named()).in_room(room),
+            )
+        }),
+        ("POST", ["auth", "rooms", room, "operators", id, "invite"]) => caller().map(|actor| {
+            (
+                actor,
+                Note::new(Action::InviteIssue)
+                    .about(name_of(id))
+                    .in_room(room),
+            )
+        }),
+        ("DELETE", ["auth", "rooms", room, "operators", id]) => caller().map(|actor| {
+            (
+                actor,
+                Note::new(Action::OperatorRemove)
+                    .about(name_of(id))
+                    .in_room(room),
+            )
+        }),
         _ => None,
     }
 }
@@ -67,7 +105,14 @@ pub fn redeemed(method: &str, segments: &[&str], response: &Value) -> Option<(Ac
         return None;
     }
     let person = response.get("person")?;
-    let id = person.get("id").and_then(Value::as_str).and_then(|id| Uuid::parse_str(id).ok())?;
-    let name = person.get("name").and_then(Value::as_str).unwrap_or_default().to_string();
+    let id = person
+        .get("id")
+        .and_then(Value::as_str)
+        .and_then(|id| Uuid::parse_str(id).ok())?;
+    let name = person
+        .get("name")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string();
     Some((Actor::Person { id, name }, Note::new(Action::InviteRedeem)))
 }

@@ -9,12 +9,16 @@ let failed = false;
 const near = (label, actual, expected, tolerance) => {
   const ok = typeof actual === 'number' && Math.abs(actual - expected) <= tolerance;
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ~${expected} (±${tolerance})`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ~${expected} (±${tolerance})`}`,
+  );
 };
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`,
+  );
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -51,7 +55,9 @@ await api('POST', `/data/rundowns/${rid}/load`);
 
 const a = await api('POST', `/data/rundowns/${rid}/entry`, { title: 'OFF_A', duration: 60000 });
 const b = await api('POST', `/data/rundowns/${rid}/entry`, {
-  title: 'OFF_B', duration: 60000, linkStart: true,
+  title: 'OFF_B',
+  duration: 60000,
+  linkStart: true,
 });
 
 const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}`);
@@ -104,10 +110,14 @@ await wait(400);
 // otherwise the setup time itself reads as the show running late
 const plannedStart = latest().clock + 1500;
 await api('PUT', `/data/rundowns/${rid}/entry`, {
-  id: a.id, timeStart: plannedStart, timeEnd: plannedStart + 60000,
+  id: a.id,
+  timeStart: plannedStart,
+  timeEnd: plannedStart + 60000,
 });
 await api('PUT', `/data/rundowns/${rid}/entry`, {
-  id: b.id, timeStart: plannedStart + 60000, timeEnd: plannedStart + 120000,
+  id: b.id,
+  timeStart: plannedStart + 60000,
+  timeEnd: plannedStart + 120000,
 });
 await wait(300);
 

@@ -11,6 +11,7 @@ Upstream Ontime's backend is ~20,000 lines of TypeScript/Node. This fork ports i
 One engine, every host.
 
 > ### Credit & scope
+>
 > Ontime is designed and built by **[Carlos Valente](https://github.com/cpvalente) and contributors** ([GPLv3](https://www.gnu.org/licenses/gpl-3.0)). This repository is an **independent reimplementation of its backend** — not an official release and not affiliated with the project. Upstream's original README is preserved at **[README-upstream.md](README-upstream.md)**.
 >
 > The React client (`apps/client`) is upstream's, carried with ~190 lines of local patches. The reimplementation is the Rust backend and the shared timer engine.
@@ -18,7 +19,7 @@ One engine, every host.
 ## Why
 
 - **0 baht to run.** Cloudflare Workers + Durable Objects have a genuine free tier: an idle Durable Object costs nothing and its storage survives code deploys. A whole live-event backend, hosted for free.
-- **One core, many hosts.** All the scheduling and timer logic lives in `ontime-core` and is transport-agnostic — it takes a request and a project and returns a response plus a list of *effects*. The Worker and the native server are thin adapters that carry those effects out. Workers-vs-VM becomes a per-deployment choice, not a rewrite.
+- **One core, many hosts.** All the scheduling and timer logic lives in `ontime-core` and is transport-agnostic — it takes a request and a project and returns a response plus a list of _effects_. The Worker and the native server are thin adapters that carry those effects out. Workers-vs-VM becomes a per-deployment choice, not a rewrite.
 - **The timer runs in the browser too.** The same Rust engine is compiled to WASM and shipped to the client, which advances the countdown locally between server packets. The server sends only on change or heartbeat — and because both sides run identical code, they compute identical numbers. Zero drift.
 
 ## Architecture
@@ -33,7 +34,7 @@ flowchart TD
     worker <-->|"REST + WebSocket"| client
 ```
 
-The seam is an **`Effect`** enum: the core returns *what must happen* — persist, tell clients, reschedule — and each host decides *how*, because a Durable Object alarm and a `tokio` interval have nothing in common. Whenever behaviour lived in a host instead of the core, the other host silently lacked it — so the routing, the auth rule, the wake policy and the socket handling all moved into `ontime-core`, and the e2e suites run against **both** hosts to keep them in step.
+The seam is an **`Effect`** enum: the core returns _what must happen_ — persist, tell clients, reschedule — and each host decides _how_, because a Durable Object alarm and a `tokio` interval have nothing in common. Whenever behaviour lived in a host instead of the core, the other host silently lacked it — so the routing, the auth rule, the wake policy and the socket handling all moved into `ontime-core`, and the e2e suites run against **both** hosts to keep them in step.
 
 ## What works
 
@@ -49,15 +50,15 @@ Live on Cloudflare (Worker + Pages):
 
 ## Repo layout
 
-| Path | What it is |
-|---|---|
-| `packages/ontime-core` | **the reimplementation** — the portable Rust engine (~4,100 lines) |
-| `apps/server-rs` | Cloudflare Worker adapter (~670 lines) — the 0-baht host |
-| `apps/server-native` | `axum` adapter (~680 lines) — the native host |
-| `packages/ontime-wasm` | browser bindings for the timer engine |
-| `apps/client` | upstream's React UI + minimal patches for rooms and tokens |
-| `apps/server`, `cli`, `electron`, … | upstream's original apps, kept as the porting reference |
-| `.handovers/` | dated notes on each step, ending in [`011_roadmap.md`](.handovers/011_roadmap.md) |
+| Path                                | What it is                                                                        |
+| ----------------------------------- | --------------------------------------------------------------------------------- |
+| `packages/ontime-core`              | **the reimplementation** — the portable Rust engine (~4,100 lines)                |
+| `apps/server-rs`                    | Cloudflare Worker adapter (~670 lines) — the 0-baht host                          |
+| `apps/server-native`                | `axum` adapter (~680 lines) — the native host                                     |
+| `packages/ontime-wasm`              | browser bindings for the timer engine                                             |
+| `apps/client`                       | upstream's React UI + minimal patches for rooms and tokens                        |
+| `apps/server`, `cli`, `electron`, … | upstream's original apps, kept as the porting reference                           |
+| `.handovers/`                       | dated notes on each step, ending in [`011_roadmap.md`](.handovers/011_roadmap.md) |
 
 ## Testing
 

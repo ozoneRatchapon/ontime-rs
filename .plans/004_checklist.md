@@ -3,6 +3,7 @@
 Updated: 2026-11-24. Details live in 003 (upstream) and 001/002 (sign-in).
 
 How to use it:
+
 - Work top to bottom.
 - Tick `[x]` only when the item's **done when** is true and its tests have run.
 - Items marked **[ต้องถาม]** need the user. Stop and ask; never do them
@@ -61,12 +62,12 @@ How to use it:
   - browser: 10 views with no console errors; upstream 9, people 14 and
     members 10 checks pass.
 - [x] Client deployed 2026-11-24 (Pages `33ac5d08`). The read-only production
-  check passed.
+      check passed.
 
 ## B4 — new features from upstream (chosen 2026-11-24)
 
 - [x] **A sound when the timer ends.** It was already in from B1 (f3156b02):
-  Timer view → "Play sound on timer end".
+      Timer view → "Play sound on timer end".
 - [x] **Secondary text in the studio and timeline cards.**
   - Timeline (5c7f3732): done in B3.
   - Studio (e7237950): done 2026-11-24.
@@ -79,7 +80,7 @@ How to use it:
   - The countdown test is un-skipped.
   - Client tests: 454 pass, 0 skipped.
 - [ ] **D2, gap and schedule calculations shared through the wasm.** Plan:
-  `005_d2_one_copy_of_schedule_math.md`.
+      `005_d2_one_copy_of_schedule_math.md`.
   - Step 1 (the shared contract, test only) is done: 36 cases, run by both
     cargo and vitest. The copies agree.
   - Step 2 (the browser uses the wasm) is deferred, as recommended and
@@ -87,7 +88,7 @@ How to use it:
     - The copies agree and the contract guards them, so it isn't urgent.
     - Pick it up when the timeline or countdown math changes next.
 - [ ] **D1, teleprompter.** Plan written: `008_d1_teleprompter.md`
-  (2026-11-24).
+      (2026-11-24).
   - T0 contract, T1 core, T2 Durable Object, T4 upstream client, T5 tests.
   - Its 4 decisions use the recommended answers.
   - It is the largest remaining item (about 9 days), on `feature/teleprompter`.
@@ -105,7 +106,7 @@ How to use it:
 ## Dioxus pilot
 
 - [ ] Try Dioxus on our own pages, `/admin`, `/join` and `/my-rooms`. Plan:
-  `006_dioxus_pilot_on_our_own_pages.md`.
+      `006_dioxus_pilot_on_our_own_pages.md`.
   - Deferred, as recommended and approved on 2026-11-24.
   - The React pages work, and the bundle-size risk isn't worth it now.
   - The audit log UI was built in React.
@@ -121,7 +122,7 @@ How to use it:
 ## Housekeeping
 
 - [x] `upstream.mjs` waits for the packet it expects instead of a fixed pause.
-  Three runs on production all passed.
+      Three runs on production all passed.
   - **Correction:** the suite has 25 checks, not 26. The run earlier reported
     as "one failed" had in fact passed completely; that was a miscount.
 - [x] Browser test for a **truly** silent socket drop.
@@ -136,7 +137,7 @@ How to use it:
   the old `parent` bug). **Decided: leave it** (2026-11-24). Nothing is broken,
   and the room is not to be written.
 - [x] Merge `feature/upstream-4.15` into `feat/rust-cloud-backend`: fast-forward
-  to `58ba3d97`, 2026-11-24. Work on `feat/rust-cloud-backend` from now on.
+      to `58ba3d97`, 2026-11-24. Work on `feat/rust-cloud-backend` from now on.
 - [x] Push to `backup`: done 2026-11-24 (`f56c8fd4`). Later pushes: `git push backup <branch>` is allowed in `.claude/settings.local.json`; pushes to `origin` are denied there.
   - `origin` (ontime-rs) is **PUBLIC**. Never push to it.
 - [ ] `scripts/split-project-sharing.mjs` is not ours. Leave it alone.
@@ -144,24 +145,24 @@ How to use it:
 ## Publishing (2026-11-24)
 
 - [x] A pre-push check, `scripts/hooks/check-push.mjs`, turned on with
-  `git config core.hooksPath scripts/hooks`.
+      `git config core.hooksPath scripts/hooks`.
   - For a public remote it refuses real schedule files and personal values
     taken from them.
   - For every remote it refuses the master password and token-shaped text.
   - Tested by planting all three; each was refused.
   - **Never bypass it:** no `--no-verify`.
 - [x] A "Source code of this deployment" link in Settings → About, for
-  AGPL-3.0. Committed, not deployed.
+      AGPL-3.0. Committed, not deployed.
 - [x] The user edited `.claude/settings.local.json` (2026-11-24) to allow
-  `git push origin *` and to deny force pushes and `--no-verify`. The agent's
-  permission check refuses to widen its own permissions.
+      `git push origin *` and to deny force pushes and `--no-verify`. The agent's
+      permission check refuses to widen its own permissions.
 - [x] Pushed `feat/rust-cloud-backend` to `origin` (public), 2026-11-24, at
-  `ba61bdd6`. The hook checked 113 commits and found them clean. From now on push to both remotes,
-  and let the hook run.
+      `ba61bdd6`. The hook checked 113 commits and found them clean. From now on push to both remotes,
+      and let the hook run.
 - [x] Client deployed 2026-11-24 (Pages `1e580e95`). The source link on production opens github.com/ozoneRatchapon/ontime-rs. Previously:
-  points at current source.
+      points at current source.
 - [x] Real schedules backed up by the user to `ozoneRatchapon/ontime-ops`,
-  2026-11-24. Checked: the repo is PRIVATE. Copy new schedule files there too.
+      2026-11-24. Checked: the repo is PRIVATE. Copy new schedule files there too.
 
 ## Dependabot (2026-11-24): 206 open alerts on the default branch `feat/rust-cloud-backend`
 
@@ -179,7 +180,7 @@ How to use it:
     8.5.2 anyway (`cc025051`): tests and browser walk-throughs pass. It reaches
     production with the next client deploy.
 - [x] **Alerts that come only from `apps/electron` or `apps/server` were
-  dismissed** on 2026-11-24.
+      dismissed** on 2026-11-24.
   - 156 of 206, dismissed as `not_used` with a comment.
   - **How they were sorted:**
     - `pnpm why -r` traced each installed version back to the workspace

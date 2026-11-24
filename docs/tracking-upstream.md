@@ -21,18 +21,18 @@ Measured, not estimated:
 apps/client: 8 files changed, 176 insertions(+), 11 deletions(-), 2 new files
 ```
 
-| File | ± | What it does, and why upstream cannot provide it |
-|---|---|---|
-| `src/externals.ts` | +74 | `activeRoom`, `getRoom()`, `getToken()`; puts `/r/<room>` in `serverURL` and the token in the websocket query. Our backend is multi-tenant and on a different origin from the client — upstream is neither. |
-| `src/common/stores/savedViewParams.ts` | +34 | `stickyParams` and `withStickyParams()`, so `?room=` survives navigation. Upstream has no room concept. |
-| `src/common/stores/__tests__/savedViewParams.test.ts` | +34 | tests for the above |
-| `src/common/api/axios.config.ts` | +22 | request interceptor attaching `Authorization: Bearer <token>`, scoped to our own `serverURL` |
-| `src/common/utils/socket.ts` | +9 | starts the local WASM timer engine and feeds it each `runtime-data` packet |
-| `src/common/components/.../ClientLink.tsx` | +7/-2 | carries sticky params to the destination view |
-| `vite.config.js` | +4 | alias for `ontime-timer-engine` → `packages/ontime-wasm/pkg` |
-| `src/AppRouter.tsx` | +3 | mounts `useStickyRoom()` |
-| `src/common/utils/timerEngine.ts` | new | the WASM timer engine wrapper |
-| `src/common/hooks/useStickyRoom.ts` | new | keeps `?room=` in the URL after any navigation |
+| File                                                  | ±     | What it does, and why upstream cannot provide it                                                                                                                                                            |
+| ----------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/externals.ts`                                    | +74   | `activeRoom`, `getRoom()`, `getToken()`; puts `/r/<room>` in `serverURL` and the token in the websocket query. Our backend is multi-tenant and on a different origin from the client — upstream is neither. |
+| `src/common/stores/savedViewParams.ts`                | +34   | `stickyParams` and `withStickyParams()`, so `?room=` survives navigation. Upstream has no room concept.                                                                                                     |
+| `src/common/stores/__tests__/savedViewParams.test.ts` | +34   | tests for the above                                                                                                                                                                                         |
+| `src/common/api/axios.config.ts`                      | +22   | request interceptor attaching `Authorization: Bearer <token>`, scoped to our own `serverURL`                                                                                                                |
+| `src/common/utils/socket.ts`                          | +9    | starts the local WASM timer engine and feeds it each `runtime-data` packet                                                                                                                                  |
+| `src/common/components/.../ClientLink.tsx`            | +7/-2 | carries sticky params to the destination view                                                                                                                                                               |
+| `vite.config.js`                                      | +4    | alias for `ontime-timer-engine` → `packages/ontime-wasm/pkg`                                                                                                                                                |
+| `src/AppRouter.tsx`                                   | +3    | mounts `useStickyRoom()`                                                                                                                                                                                    |
+| `src/common/utils/timerEngine.ts`                     | new   | the WASM timer engine wrapper                                                                                                                                                                               |
+| `src/common/hooks/useStickyRoom.ts`                   | new   | keeps `?room=` in the URL after any navigation                                                                                                                                                              |
 
 The two new files are additive — they cannot conflict. Realistically only
 `externals.ts` and `socket.ts` are likely to move under upstream churn.

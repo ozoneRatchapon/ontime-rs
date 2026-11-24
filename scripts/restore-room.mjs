@@ -5,8 +5,8 @@
 //
 //   node scripts/restore-room.mjs <room> <backup.json> [--base URL] [--token T]
 
-import { parseArgs } from 'node:util';
 import { readFile } from 'node:fs/promises';
+import { parseArgs } from 'node:util';
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,

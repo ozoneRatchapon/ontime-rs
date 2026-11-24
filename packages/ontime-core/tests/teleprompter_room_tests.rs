@@ -1,6 +1,8 @@
 //! Plan 008, T2: the room's teleprompter as hosts drive it through `api`.
 
-use ontime_core::api::{apply_socket_command, handle, next_wake_in, on_alarm, runtime_payload, ApiRequest, HttpMethod};
+use ontime_core::api::{
+    apply_socket_command, handle, next_wake_in, on_alarm, runtime_payload, ApiRequest, HttpMethod,
+};
 use ontime_core::project::Project;
 use ontime_core::rundown::{Insert, Rundown};
 use ontime_core::teleprompter::transport::{Playback, Stop};
@@ -11,7 +13,11 @@ const NOW: i64 = 1_800_000_000_000;
 fn room() -> Project {
     let mut project = Project::default();
     let mut rundown = Rundown::new("show", "Show");
-    for (id, cue, note) in [("a", "1", "one two three four"), ("b", "2", "five six seven eight"), ("c", "3", "nine ten")] {
+    for (id, cue, note) in [
+        ("a", "1", "one two three four"),
+        ("b", "2", "five six seven eight"),
+        ("c", "3", "nine ten"),
+    ] {
         rundown.add_entry(&json!({ "id": id, "type": "event", "cue": cue, "title": id, "note": note, "duration": 60000 }), Insert::End);
     }
     project.rundowns.insert("show".into(), rundown);
@@ -22,7 +28,15 @@ fn room() -> Project {
 }
 
 fn call(project: &mut Project, method: HttpMethod, path: &str, body: Value) -> (u16, Value) {
-    let req = ApiRequest { method, path: path.into(), body, token: None, master_token: None, room_is_new: false, member: None };
+    let req = ApiRequest {
+        method,
+        path: path.into(),
+        body,
+        token: None,
+        master_token: None,
+        room_is_new: false,
+        member: None,
+    };
     let response = handle(project, &req, NOW);
     (response.status, response.body.unwrap_or(Value::Null))
 }
@@ -32,7 +46,9 @@ fn prompt(project: &mut Project, payload: Value, now: i64) -> bool {
 }
 
 fn reading(project: &Project) -> Option<String> {
-    runtime_payload(project, NOW)?["teleprompter"]["event"]["id"].as_str().map(str::to_string)
+    runtime_payload(project, NOW)?["teleprompter"]["event"]["id"]
+        .as_str()
+        .map(str::to_string)
 }
 
 #[test]
@@ -43,7 +59,12 @@ fn nothing_follows_until_the_script_is_read() {
     assert_eq!(reading(&project), None);
 
     // the first read follows the event loaded before it
-    let (status, script) = call(&mut project, HttpMethod::Get, "/data/teleprompter/script", Value::Null);
+    let (status, script) = call(
+        &mut project,
+        HttpMethod::Get,
+        "/data/teleprompter/script",
+        Value::Null,
+    );
     assert_eq!(status, 200);
     assert_eq!(script["events"].as_array().map(Vec::len), Some(3));
     assert!(project.prompter.built);
@@ -98,15 +119,27 @@ fn the_alarm_wakes_at_the_end_of_the_event_and_stops_playback_there() {
     assert!(!on_alarm(&mut project, NOW + 1_000), "still reading");
     assert!(on_alarm(&mut project, NOW + wake));
     let transport = &project.prompter.transport;
-    assert_eq!((transport.playback, transport.ended), (Playback::Pause, Some(Stop::Event)));
-    assert_eq!(next_wake_in(&project, NOW + wake, false), None, "nothing more to wake for");
+    assert_eq!(
+        (transport.playback, transport.ended),
+        (Playback::Pause, Some(Stop::Event))
+    );
+    assert_eq!(
+        next_wake_in(&project, NOW + wake, false),
+        None,
+        "nothing more to wake for"
+    );
 }
 
 #[test]
 fn a_restore_pauses_shared_playback() {
     let mut project = room();
     prompt(&mut project, json!("play"), NOW);
-    let (_, backup) = call(&mut project, HttpMethod::Post, "/data/db/download", Value::Null);
+    let (_, backup) = call(
+        &mut project,
+        HttpMethod::Post,
+        "/data/db/download",
+        Value::Null,
+    );
     let (status, _) = call(&mut project, HttpMethod::Post, "/data/db/restore", backup);
     assert_eq!(status, 200);
     assert_eq!(project.prompter.transport.playback, Playback::Pause);
@@ -115,8 +148,22 @@ fn a_restore_pauses_shared_playback() {
 #[test]
 fn settings_refuse_and_accept_like_upstream() {
     let mut project = room();
-    assert_eq!(call(&mut project, HttpMethod::Post, "/data/teleprompter/settings", json!({ "heading": "banner" })).0, 422);
-    let (status, settings) = call(&mut project, HttpMethod::Post, "/data/teleprompter/settings", json!({ "heading": "both" }));
+    assert_eq!(
+        call(
+            &mut project,
+            HttpMethod::Post,
+            "/data/teleprompter/settings",
+            json!({ "heading": "banner" })
+        )
+        .0,
+        422
+    );
+    let (status, settings) = call(
+        &mut project,
+        HttpMethod::Post,
+        "/data/teleprompter/settings",
+        json!({ "heading": "both" }),
+    );
     assert_eq!((status, settings["heading"].as_str()), (200, Some("both")));
     assert_eq!(settings["charsPerLine"], 10);
 }
@@ -124,11 +171,35 @@ fn settings_refuse_and_accept_like_upstream() {
 #[test]
 fn the_script_source_follows_its_custom_field() {
     let mut project = room();
-    call(&mut project, HttpMethod::Post, "/data/custom-fields", json!({ "label": "Lines", "type": "text", "colour": "" }));
-    assert_eq!(call(&mut project, HttpMethod::Post, "/data/teleprompter/settings", json!({ "script": "custom-Lines" })).0, 200);
-    call(&mut project, HttpMethod::Put, "/data/custom-fields/Lines", json!({ "label": "Speech" }));
+    call(
+        &mut project,
+        HttpMethod::Post,
+        "/data/custom-fields",
+        json!({ "label": "Lines", "type": "text", "colour": "" }),
+    );
+    assert_eq!(
+        call(
+            &mut project,
+            HttpMethod::Post,
+            "/data/teleprompter/settings",
+            json!({ "script": "custom-Lines" })
+        )
+        .0,
+        200
+    );
+    call(
+        &mut project,
+        HttpMethod::Put,
+        "/data/custom-fields/Lines",
+        json!({ "label": "Speech" }),
+    );
     assert_eq!(project.teleprompter.script, "custom-Speech");
-    call(&mut project, HttpMethod::Delete, "/data/custom-fields/Speech", Value::Null);
+    call(
+        &mut project,
+        HttpMethod::Delete,
+        "/data/custom-fields/Speech",
+        Value::Null,
+    );
     assert_eq!(project.teleprompter.script, "note");
 }
 
@@ -137,7 +208,11 @@ fn refused_commands_change_nothing() {
     let mut project = room();
     prompt(&mut project, json!("top"), NOW);
     let before = project.prompter.clone();
-    assert!(!prompt(&mut project, json!({ "goto": { "cue": "99" } }), NOW + 1));
+    assert!(!prompt(
+        &mut project,
+        json!({ "goto": { "cue": "99" } }),
+        NOW + 1
+    ));
     assert!(!prompt(&mut project, json!("dance"), NOW + 1));
     assert_eq!(project.prompter, before);
 }
@@ -148,7 +223,10 @@ fn the_sync_is_the_same_for_every_screen_at_any_moment() {
     prompt(&mut project, json!("play"), NOW);
     let early = runtime_payload(&project, NOW + 100).unwrap()["teleprompterSync"].clone();
     let later = runtime_payload(&project, NOW + 900).unwrap()["teleprompterSync"].clone();
-    assert_eq!(early, later, "the sync changes with commands, not with time");
+    assert_eq!(
+        early, later,
+        "the sync changes with commands, not with time"
+    );
 }
 
 mod cache {
@@ -174,7 +252,10 @@ mod cache {
         rundown.entries.get_mut("b").unwrap()["note"] = json!("changed words");
         let edited = script(&project);
         assert!(!Arc::ptr_eq(&first, &edited));
-        assert!(format!("{:?}", edited.events).contains("changed"), "the new text is in it");
+        assert!(
+            format!("{:?}", edited.events).contains("changed"),
+            "the new text is in it"
+        );
 
         project.teleprompter.chars_per_line = 20;
         assert!(!Arc::ptr_eq(&edited, &script(&project)));
@@ -193,7 +274,12 @@ mod cache {
     fn a_restore_starts_without_one() {
         let mut project = room();
         let first = script(&project);
-        let (_, backup) = call(&mut project, HttpMethod::Post, "/data/db/download", Value::Null);
+        let (_, backup) = call(
+            &mut project,
+            HttpMethod::Post,
+            "/data/db/download",
+            Value::Null,
+        );
         call(&mut project, HttpMethod::Post, "/data/db/restore", backup);
         let restored = script(&project);
         assert!(!Arc::ptr_eq(&first, &restored));

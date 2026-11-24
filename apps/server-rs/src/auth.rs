@@ -30,14 +30,21 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
             Method::Get | Method::Delete => None,
             _ => return Response::error("Method not allowed", 405),
         };
-        let response = registry_host::forward_as(env, method, &format!("auth/{rest}"), body, Some(&session)).await?;
+        let response =
+            registry_host::forward_as(env, method, &format!("auth/{rest}"), body, Some(&session))
+                .await?;
         return private(response).await;
     }
 
     let body = match (method, rest) {
         (Method::Post, "redeem") => {
             let sent = req.json::<Value>().await.unwrap_or(Value::Null);
-            let user_agent = req.headers().get("User-Agent").ok().flatten().unwrap_or_default();
+            let user_agent = req
+                .headers()
+                .get("User-Agent")
+                .ok()
+                .flatten()
+                .unwrap_or_default();
             json!({ "code": sent.get("code"), "device": device_label(&user_agent) })
         }
         (Method::Get, "me") | (Method::Post, "logout") => match bearer_token(&req) {
@@ -49,7 +56,8 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
     };
 
     let target = format!("auth/{rest}");
-    let response = registry_host::forward(env, Method::Post, &target, Some(body.to_string())).await?;
+    let response =
+        registry_host::forward(env, Method::Post, &target, Some(body.to_string())).await?;
     private(response).await
 }
 

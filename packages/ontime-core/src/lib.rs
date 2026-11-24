@@ -16,9 +16,9 @@ pub mod registry;
 pub mod registry_audit;
 pub mod rundown;
 pub mod rundown_routes;
-pub mod teleprompter;
 pub mod runtime;
 pub mod socket;
+pub mod teleprompter;
 pub mod types;
 
 pub use aux_timer::AuxTimers;

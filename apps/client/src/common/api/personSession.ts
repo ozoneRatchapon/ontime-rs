@@ -1,5 +1,4 @@
 import { PERSON_SESSION_KEY, getPersonSession, getWorkerOrigin } from '../../externals';
-
 import { AdminError, MemberRoom, Person, PersonSummary, inviteLink, workerRequest } from './admin';
 
 /**
@@ -74,7 +73,10 @@ export function getTeam(room: string): Promise<{ owners: TeamMember[]; operators
 }
 
 /** Makes a new operator for the room and their first invite link. */
-export async function addOperator(room: string, name: string): Promise<{ person: Person; link: string; expiresAt: number }> {
+export async function addOperator(
+  room: string,
+  name: string,
+): Promise<{ person: Person; link: string; expiresAt: number }> {
   const made = await asMe<{ person: Person; code: string; expiresAt: number }>(`${teamPath(room)}/operators`, {
     method: 'POST',
     body: JSON.stringify({ name }),

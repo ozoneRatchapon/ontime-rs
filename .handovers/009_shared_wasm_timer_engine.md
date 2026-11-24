@@ -12,7 +12,7 @@ could only ever be as smooth as the network. The client is a passive renderer: i
 draws whatever the last `runtime-data` packet said.
 
 Moving the per-frame maths into the browser fixes both, and it is only safe to do
-because it is the *same code*, not a reimplementation in TypeScript that would
+because it is the _same code_, not a reimplementation in TypeScript that would
 quietly diverge.
 
 ## 2. What changed
@@ -139,18 +139,18 @@ Two comparisons are made deliberately. Seeding a fresh engine from the packet un
 test isolates the invariant — same inputs, same instant, same answer — while the
 long-lived engine measures what a real client experiences between packets. An
 earlier version of this test compared the long-lived engine against a packet
-timestamped by the *server*, which reported 95 ms of "drift" that was really one-way
+timestamped by the _server_, which reported 95 ms of "drift" that was really one-way
 network latency; the engine was never wrong.
 
 Full suite against production, all passing:
 
-| Suite | Result |
-|---|---|
-| `cargo test -p ontime-core` | 49 |
-| REST smoke | 40 checks |
-| WebSocket | 6 checks |
-| Timer over websocket | 20 checks |
-| Browser engine vs server | 18 checks |
+| Suite                       | Result    |
+| --------------------------- | --------- |
+| `cargo test -p ontime-core` | 49        |
+| REST smoke                  | 40 checks |
+| WebSocket                   | 6 checks  |
+| Timer over websocket        | 20 checks |
+| Browser engine vs server    | 18 checks |
 
 `apps/client` builds and emits `ontime_timer_bg-*.wasm` as an asset.
 
@@ -158,21 +158,21 @@ Full suite against production, all passing:
 
 Measured, by setting `heartbeatMs` and counting packets:
 
-| `heartbeatMs` | DO requests + rows / hour | Playback headroom / day |
-|---|---|---|
-| 1000 (default) | 3,600 | ~27 h |
-| 5000 | 720 | ~138 h |
-| 0 (end-of-event only) | ~1 per event | effectively unbounded |
+| `heartbeatMs`         | DO requests + rows / hour | Playback headroom / day |
+| --------------------- | ------------------------- | ----------------------- |
+| 1000 (default)        | 3,600                     | ~27 h                   |
+| 5000                  | 720                       | ~138 h                  |
+| 0 (end-of-event only) | ~1 per event              | effectively unbounded   |
 
 Idle is 0 at every setting.
 
 What the WASM engine changes regardless of the heartbeat:
 
-| | Before (008) | Now |
-|---|---|---|
-| Timer smoothness | 1 Hz | frame rate |
-| Survives a network gap | no | yes |
-| Timer maths | server only | one engine, both hosts |
+|                        | Before (008) | Now                    |
+| ---------------------- | ------------ | ---------------------- |
+| Timer smoothness       | 1 Hz         | frame rate             |
+| Survives a network gap | no           | yes                    |
+| Timer maths            | server only  | one engine, both hosts |
 
 The default trades cost for safety: at 1000 ms the running cost is the same as
 before, but the timer is now smooth and gap-tolerant, and the cost can be cut 5x
@@ -181,7 +181,7 @@ whenever you decide every client runs the engine.
 ## 5. Build and deploy
 
 Use `./deploy-cloud.sh` rather than running the steps by hand — the ordering has two
-traps that both produce a *silently* broken deploy:
+traps that both produce a _silently_ broken deploy:
 
 1. `packages/ontime-wasm` must be built before `apps/client`. The client resolves
    `ontime-timer-engine` to its `pkg/` output through a vite alias, and `pkg/` is a
@@ -209,9 +209,9 @@ client.
 The first real browser session surfaced two endpoints returning 404 in a React Query
 retry loop — noisy, and each retry is a billable request:
 
-| Path | Cause | Fix |
-|---|---|---|
-| `/data/automations` | the router was written singular; the original mounts `/automations` | renamed to plural |
+| Path                                   | Cause                                                                    | Fix                                                                            |
+| -------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `/data/automations`                    | the router was written singular; the original mounts `/automations`      | renamed to plural                                                              |
 | `/user/translations/translations.json` | the original serves `/user` from a static directory; ours had no handler | returns `{}` — "no custom translations", which the client merges over `langEn` |
 
 A systematic diff of `apps/server/src/api-data/index.ts` against `room.rs` confirmed

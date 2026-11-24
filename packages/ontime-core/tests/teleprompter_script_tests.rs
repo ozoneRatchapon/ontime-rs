@@ -62,7 +62,9 @@ struct Fixture {
 }
 
 fn fixture() -> Cases {
-    serde_json::from_str::<Fixture>(include_str!("fixtures/teleprompter_script.json")).unwrap().cases
+    serde_json::from_str::<Fixture>(include_str!("fixtures/teleprompter_script.json"))
+        .unwrap()
+        .cases
 }
 
 #[test]
@@ -72,7 +74,12 @@ fn scripts_match_upstream() {
         .iter()
         .filter_map(|case| {
             let actual = build_script_events(&case.rundown, &case.custom_fields, &case.settings);
-            (actual != case.events).then(|| format!("{}:\n  want {:?}\n  got  {actual:?}", case.name, case.events))
+            (actual != case.events).then(|| {
+                format!(
+                    "{}:\n  want {:?}\n  got  {actual:?}",
+                    case.name, case.events
+                )
+            })
         })
         .collect();
     assert!(failures.is_empty(), "{}", failures.join("\n"));
@@ -81,21 +88,34 @@ fn scripts_match_upstream() {
 #[test]
 fn settings_parse_like_upstream() {
     for case in fixture().parses {
-        assert_eq!(parse_settings(&case.data, &case.fallback), case.result, "{}", case.name);
+        assert_eq!(
+            parse_settings(&case.data, &case.fallback),
+            case.result,
+            "{}",
+            case.name
+        );
     }
 }
 
 #[test]
 fn readable_sources_match_upstream() {
     for case in fixture().readables {
-        assert_eq!(is_readable_script_source(&case.script, &case.custom_fields), case.readable, "{:?}", case.script);
+        assert_eq!(
+            is_readable_script_source(&case.script, &case.custom_fields),
+            case.readable,
+            "{:?}",
+            case.script
+        );
     }
 }
 
 #[test]
 fn renamed_fields_carry_the_source_like_upstream() {
     for case in fixture().renames {
-        assert_eq!(rename_script_source(&case.source, &case.old_key, case.new_key.as_deref()), case.result);
+        assert_eq!(
+            rename_script_source(&case.source, &case.old_key, case.new_key.as_deref()),
+            case.result
+        );
     }
 }
 
@@ -136,11 +156,27 @@ fn the_route_refuses_what_upstream_refuses() {
 
 #[test]
 fn the_revision_follows_the_lines() {
-    let case = fixture().builds.into_iter().find(|case| case.name == "long notes wrap").unwrap();
+    let case = fixture()
+        .builds
+        .into_iter()
+        .find(|case| case.name == "long notes wrap")
+        .unwrap();
     let events = build_script_events(&case.rundown, &case.custom_fields, &case.settings);
     let revision = revision_of(&events, case.settings.chars_per_line);
-    assert_eq!(revision, revision_of(&events.clone(), case.settings.chars_per_line), "stable");
+    assert_eq!(
+        revision,
+        revision_of(&events.clone(), case.settings.chars_per_line),
+        "stable"
+    );
     assert!(revision < 1 << 48, "fits a JavaScript number exactly");
-    assert_ne!(revision, revision_of(&events, case.settings.chars_per_line + 1), "the line length counts");
-    assert_ne!(revision, revision_of(&events[..0], case.settings.chars_per_line), "the lines count");
+    assert_ne!(
+        revision,
+        revision_of(&events, case.settings.chars_per_line + 1),
+        "the line length counts"
+    );
+    assert_ne!(
+        revision,
+        revision_of(&events[..0], case.settings.chars_per_line),
+        "the lines count"
+    );
 }

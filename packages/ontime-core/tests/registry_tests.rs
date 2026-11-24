@@ -28,8 +28,16 @@ fn a_room_reports_once_per_interval() {
     let same = report("exam", "Exam");
     let sent = (1_000, same.clone());
     assert!(should_report(None, &same, 0));
-    assert!(!should_report(Some(&sent), &same, 1_000 + REPORT_INTERVAL_MS - 1));
-    assert!(should_report(Some(&sent), &same, 1_000 + REPORT_INTERVAL_MS));
+    assert!(!should_report(
+        Some(&sent),
+        &same,
+        1_000 + REPORT_INTERVAL_MS - 1
+    ));
+    assert!(should_report(
+        Some(&sent),
+        &same,
+        1_000 + REPORT_INTERVAL_MS
+    ));
 }
 
 #[test]
@@ -39,7 +47,10 @@ fn a_change_reports_without_waiting_for_the_interval() {
     let sent = (1_000, report("exam", ""));
     assert!(should_report(Some(&sent), &report("exam", "Exam"), 1_001));
 
-    let locked = RoomReport { protected: true, ..report("exam", "") };
+    let locked = RoomReport {
+        protected: true,
+        ..report("exam", "")
+    };
     assert!(should_report(Some(&sent), &locked, 1_001));
 }
 
@@ -58,7 +69,11 @@ fn a_report_registers_a_room_and_keeps_its_first_sighting() {
 #[test]
 fn a_report_never_touches_owner_or_note() {
     let mut registry = Registry::default();
-    registry.set_labels("exam", &json!({ "owner": "อ.สมชาย", "note": "IS exam" }), 50);
+    registry.set_labels(
+        "exam",
+        &json!({ "owner": "อ.สมชาย", "note": "IS exam" }),
+        50,
+    );
     registry.apply_report(&report("exam", "Exam"), 100);
 
     let record = &registry.rooms["exam"];
@@ -119,7 +134,13 @@ fn routing_covers_list_label_forget_and_report() {
     );
     assert_eq!((reported.status, reported.changed), (200, true));
 
-    let labelled = handle(&mut registry, "PUT", &["rooms", "exam"], &json!({ "owner": "Ann" }), 200);
+    let labelled = handle(
+        &mut registry,
+        "PUT",
+        &["rooms", "exam"],
+        &json!({ "owner": "Ann" }),
+        200,
+    );
     assert_eq!(labelled.status, 200);
     assert_eq!(labelled.body["owner"], "Ann");
     assert_eq!(labelled.body["protected"], true);
@@ -129,17 +150,49 @@ fn routing_covers_list_label_forget_and_report() {
     assert_eq!(listed.body["rooms"][0]["name"], "exam");
     assert_eq!(listed.body["rooms"][0]["firstSeen"], 100);
 
-    let forgotten = handle(&mut registry, "DELETE", &["rooms", "exam"], &json!(null), 400);
+    let forgotten = handle(
+        &mut registry,
+        "DELETE",
+        &["rooms", "exam"],
+        &json!(null),
+        400,
+    );
     assert_eq!((forgotten.status, forgotten.changed), (200, true));
-    assert_eq!(handle(&mut registry, "DELETE", &["rooms", "exam"], &json!(null), 500).status, 404);
+    assert_eq!(
+        handle(
+            &mut registry,
+            "DELETE",
+            &["rooms", "exam"],
+            &json!(null),
+            500
+        )
+        .status,
+        404
+    );
 }
 
 #[test]
 fn routing_refuses_bad_input() {
     let mut registry = Registry::default();
-    assert_eq!(handle(&mut registry, "PUT", &["rooms", "bad name"], &json!({}), 1).status, 400);
-    assert_eq!(handle(&mut registry, "POST", &["report"], &json!({ "room": "" }), 1).status, 400);
-    assert_eq!(handle(&mut registry, "GET", &["nope"], &json!(null), 1).status, 404);
+    assert_eq!(
+        handle(&mut registry, "PUT", &["rooms", "bad name"], &json!({}), 1).status,
+        400
+    );
+    assert_eq!(
+        handle(
+            &mut registry,
+            "POST",
+            &["report"],
+            &json!({ "room": "" }),
+            1
+        )
+        .status,
+        400
+    );
+    assert_eq!(
+        handle(&mut registry, "GET", &["nope"], &json!(null), 1).status,
+        404
+    );
     assert!(registry.rooms.is_empty());
 }
 

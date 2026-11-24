@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react';
 
-import { activeRoom, baseURI, clientURL } from '../../externals';
+import { activeRoom, baseURI, clientURL, serverURL } from '../../externals';
 
 type ElectronWindow = Window & {
   process?: { type?: string };

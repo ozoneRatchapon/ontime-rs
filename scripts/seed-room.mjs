@@ -61,11 +61,15 @@ for (const entry of entries) {
   }
 }
 
-console.log(`${schedule.rundown}: ${entries.length} cues (${schedule.template ?? 'linked'}) → room "${room}" on ${base}`);
+console.log(
+  `${schedule.rundown}: ${entries.length} cues (${schedule.template ?? 'linked'}) → room "${room}" on ${base}`,
+);
 
 if (values.dry) {
   for (const entry of entries) {
-    console.log(`  ${entry.cue.padEnd(4)} ${hhmm(entry.start)}–${hhmm(entry.end)} ${entry.pinned ? '⏱' : '↳'} ${entry.title}`);
+    console.log(
+      `  ${entry.cue.padEnd(4)} ${hhmm(entry.start)}–${hhmm(entry.end)} ${entry.pinned ? '⏱' : '↳'} ${entry.title}`,
+    );
   }
   console.log('  ⏱ pinned to the clock   ↳ follows the previous cue');
   process.exit(0);
@@ -123,8 +127,14 @@ if (previous.length > 0) {
   const target = previous.find((rundown) => rundown.id === existing.loaded) ?? previous[0];
   rid = target.id;
   const current = await api('GET', `/data/rundowns/${rid}`);
-  const id_of_cue = new Map(Object.values(current.entries).filter((e) => e.cue).map((e) => [e.cue, e.id]));
-  await api('PUT', `/data/rundowns/${rid}`, { entries: entries.map((entry) => payload(entry, id_of_cue.get(entry.cue))) });
+  const id_of_cue = new Map(
+    Object.values(current.entries)
+      .filter((e) => e.cue)
+      .map((e) => [e.cue, e.id]),
+  );
+  await api('PUT', `/data/rundowns/${rid}`, {
+    entries: entries.map((entry) => payload(entry, id_of_cue.get(entry.cue))),
+  });
   await api('POST', `/data/rundowns/${rid}/load`);
   // same-titled leftovers from the old create-then-delete replace
   for (const rundown of previous.filter((rundown) => rundown.id !== rid)) {
@@ -166,7 +176,9 @@ for (const [index, id] of loaded.order.entries()) {
   const planned = entries[index];
   const agrees = entry.timeStart === planned.start && entry.timeEnd === planned.end;
   if (!agrees) mismatches += 1;
-  console.log(`  ${entry.cue.padEnd(4)} ${hhmm(entry.timeStart)}–${hhmm(entry.timeEnd)} ${agrees ? ' ' : '!'} ${entry.title}`);
+  console.log(
+    `  ${entry.cue.padEnd(4)} ${hhmm(entry.timeStart)}–${hhmm(entry.timeEnd)} ${agrees ? ' ' : '!'} ${entry.title}`,
+  );
 }
 
 const client = schedule.client ?? 'https://master.ontime-team.pages.dev';

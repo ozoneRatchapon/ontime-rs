@@ -213,13 +213,14 @@ impl DurableObject for OntimeProject {
         let now = now_ms();
         let before = self.project.runtime.selected_id.clone();
         if api::apply_socket_command(&mut self.project, tag, payload, now) {
-            let writes = match audit_describe::socket_note(&self.project, tag, payload, before.as_deref()) {
-                Some(note) => {
-                    let actor = info.map_or(Actor::Anyone, |info| info.actor);
-                    Some(self.audit(actor, note, now).await)
-                }
-                None => None,
-            };
+            let writes =
+                match audit_describe::socket_note(&self.project, tag, payload, before.as_deref()) {
+                    Some(note) => {
+                        let actor = info.map_or(Actor::Anyone, |info| info.actor);
+                        Some(self.audit(actor, note, now).await)
+                    }
+                    None => None,
+                };
             self.persist(writes).await?;
             self.broadcast_runtime(now);
             self.sync_alarm().await?;
@@ -321,8 +322,16 @@ impl OntimeProject {
 
     /// Adds a line to the log in memory. The returned writes go to [`persist`].
     async fn audit(&mut self, actor: Actor, note: Note, now: i64) -> Writes {
-        let head = audit_store::head(&self.state.storage(), &self.project.audit, self.audit_head.take()).await;
-        let writes = self.project.audit.record(head, actor, note, now, Retention::ROOM);
+        let head = audit_store::head(
+            &self.state.storage(),
+            &self.project.audit,
+            self.audit_head.take(),
+        )
+        .await;
+        let writes = self
+            .project
+            .audit
+            .record(head, actor, note, now, Retention::ROOM);
         self.audit_head = Some(writes.put.clone());
         writes
     }
@@ -512,7 +521,8 @@ impl OntimeProject {
     async fn member(&mut self, session: Option<String>, room_name: &str) -> Option<Member> {
         let session = session?;
         let now = now_ms();
-        self.members.retain(|_, (asked, _)| now - *asked < MEMBER_CACHE_MS);
+        self.members
+            .retain(|_, (asked, _)| now - *asked < MEMBER_CACHE_MS);
         if let Some((_, member)) = self.members.get(&session) {
             return member.clone();
         }
@@ -537,7 +547,11 @@ impl OntimeProject {
     async fn handle(&mut self, req: &mut Request) -> Result<Response> {
         let path = req.path();
         // the core reads query parameters off the path, as `?source=` for a script
-        let path_and_query = match req.url().ok().and_then(|url| url.query().map(str::to_string)) {
+        let path_and_query = match req
+            .url()
+            .ok()
+            .and_then(|url| url.query().map(str::to_string))
+        {
             Some(query) => format!("{path}?{query}"),
             None => path.clone(),
         };
@@ -571,7 +585,8 @@ impl OntimeProject {
             if !api::may_create_room(&api_request) {
                 return Response::error("This room does not exist", 403);
             }
-            let upgraded = self.open_websocket(api::is_privileged(&self.project, &api_request), actor)?;
+            let upgraded =
+                self.open_websocket(api::is_privileged(&self.project, &api_request), actor)?;
             // there is somebody to broadcast to again, so the heartbeat that was
             // stood down when the last client left has to come back
             self.sync_alarm().await?;

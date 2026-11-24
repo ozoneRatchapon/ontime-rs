@@ -19,14 +19,25 @@ const check = (label, ok, detail = '') => {
   console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` ${detail}`}`);
 };
 const call = (path, { method = 'GET', body } = {}) =>
-  fetch(`${api}/r/${room}${path}`, { method, headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  fetch(`${api}/r/${room}${path}`, {
+    method,
+    headers: { 'content-type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
 
 // a room with three events and long enough notes to scroll
 const created = await (await call('/data/rundowns', { method: 'POST', body: { title: 'Prompt' } })).json();
 const rundown = created.rundowns.find((r) => r.title === 'Prompt').id;
 const long = (word) => Array.from({ length: 40 }, (_, i) => `${word} ${i + 1}`).join(' ');
-for (const [id, cue, note] of [['ev-a', '1', long('Welcome')], ['ev-b', '2', long('Guest')], ['ev-c', '3', 'Good night everyone']]) {
-  await call(`/data/rundowns/${rundown}/entry`, { method: 'POST', body: { id, type: 'event', cue, title: `Part ${cue}`, note, duration: 600000 } });
+for (const [id, cue, note] of [
+  ['ev-a', '1', long('Welcome')],
+  ['ev-b', '2', long('Guest')],
+  ['ev-c', '3', 'Good night everyone'],
+]) {
+  await call(`/data/rundowns/${rundown}/entry`, {
+    method: 'POST',
+    body: { id, type: 'event', cue, title: `Part ${cue}`, note, duration: 600000 },
+  });
 }
 await call(`/data/rundowns/${rundown}/load`, { method: 'POST' });
 
@@ -73,13 +84,23 @@ check('pausing stops both', Math.abs((await readingRow(remote)) - paused) < 0.05
 
 const late = await open('remote');
 await late.waitForTimeout(800);
-check('a screen joining late lands on the same line', Math.abs((await readingRow(late)) - paused) < 0.6, `${await readingRow(late)} vs ${paused}`);
-
-await call(`/data/rundowns/${rundown}/entry`, { method: 'PUT', body: { id: 'ev-c', note: 'Thank you and safe travels home' } });
-await remote.getByText('safe travels home', { exact: false }).waitFor({ timeout: 8000 }).then(
-  () => check('an edit reaches the screens', true),
-  () => check('an edit reaches the screens', false),
+check(
+  'a screen joining late lands on the same line',
+  Math.abs((await readingRow(late)) - paused) < 0.6,
+  `${await readingRow(late)} vs ${paused}`,
 );
+
+await call(`/data/rundowns/${rundown}/entry`, {
+  method: 'PUT',
+  body: { id: 'ev-c', note: 'Thank you and safe travels home' },
+});
+await remote
+  .getByText('safe travels home', { exact: false })
+  .waitFor({ timeout: 8000 })
+  .then(
+    () => check('an edit reaches the screens', true),
+    () => check('an edit reaches the screens', false),
+  );
 
 await remote.screenshot({ path: '/tmp/teleprompter-remote.png' });
 await controller.mouse.move(640, 650);

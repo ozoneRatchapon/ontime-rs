@@ -166,7 +166,9 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     let result = match routed.path.as_str() {
         "/" | "/api/health" => Response::ok("ontime-server-rs online"),
         // the room list is not inside any room, so it is matched on the raw path
-        _ if path == "/admin" || path.starts_with("/admin/") => admin::handle(req, &env, &path).await,
+        _ if path == "/admin" || path.starts_with("/admin/") => {
+            admin::handle(req, &env, &path).await
+        }
         _ if path.starts_with("/auth/") => auth::handle(req, &env, &path).await,
         // everything the client talks to is project state, so it all goes to the DO
         p if p == "/ws" || p.starts_with("/data/") || p.starts_with("/user/") => {

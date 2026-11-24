@@ -130,7 +130,10 @@ export function saveRoomLabels(name: string, labels: { owner?: string; note?: st
 }
 
 /** Replaces who owns, or who runs, a room. */
-export function saveRoomMembers(name: string, members: { owners?: string[]; operators?: string[] }): Promise<RoomRecord> {
+export function saveRoomMembers(
+  name: string,
+  members: { owners?: string[]; operators?: string[] },
+): Promise<RoomRecord> {
   return request<RoomRecord>(`/admin/rooms/${encodeURIComponent(name)}`, {
     method: 'PUT',
     body: JSON.stringify(members),

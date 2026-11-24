@@ -6,7 +6,9 @@ let failed = false;
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`,
+  );
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -45,9 +47,11 @@ console.log('== the token also travels as a query param and a cookie ==');
 check('query param', (await fetch(`${base}/r/${room}/data/settings?token=${token}`)).status, 200);
 check(
   'cookie',
-  (await fetch(`${base}/r/${room}/data/settings`, {
-    headers: { Cookie: `token=${JSON.stringify({ token, scope: 'rw' })}` },
-  })).status,
+  (
+    await fetch(`${base}/r/${room}/data/settings`, {
+      headers: { Cookie: `token=${JSON.stringify({ token, scope: 'rw' })}` },
+    })
+  ).status,
   200,
 );
 
@@ -62,7 +66,12 @@ console.log('== the websocket is gated too ==');
 const tryWs = (query) =>
   new Promise((resolve) => {
     const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?room=${room}${query}`);
-    const done = (result) => { try { ws.close(); } catch {} resolve(result); };
+    const done = (result) => {
+      try {
+        ws.close();
+      } catch {}
+      resolve(result);
+    };
     ws.addEventListener('message', () => done('connected'));
     ws.addEventListener('error', () => done('rejected'));
     ws.addEventListener('close', () => done('rejected'));

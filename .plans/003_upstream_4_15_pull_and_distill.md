@@ -1,6 +1,7 @@
 # 003 — What to take from upstream ontime v4.11 → v4.15.2
 
 Status (2026-11-24):
+
 - **A1–A9 deployed.** Worker version `f366b3c1`; the rollback point is `1bf1ba98`.
 - **B1 + B2 deployed (client, 2026-11-24, Pages `f2fcd906`)** from branch `feature/upstream-4.15`, which is not merged or pushed.
 
@@ -36,6 +37,7 @@ Status (2026-11-24):
   - An Excel-upload message test, which needs 979de757.
 
 Tests:
+
 - client typecheck: only the 3 known errors;
 - client unit tests: 386 pass, 2 skipped;
 - utils unit tests: 428 pass;
@@ -48,19 +50,20 @@ Tests:
 
 ## A — what was done
 
-| # | result | where |
-|---|---|---|
-| A1 | Pong carries `clock`, the room's time of day (its `timezoneOffset`) | `socket.rs`, `room.rs` |
-| A2 | `settings.auxTimerNames` (3, trimmed, ≤30 chars); each aux timer state has `name` | `aux_timer.rs`, `project.rs` |
-| A3 | `PUT /data/rundowns/:id {title?, entries}` replaces in place; playback continues while the loaded event is still playable. `seed-room --replace` uses it and keeps each cue's entry id | `project.rs`, `rundown_routes.rs`, `scripts/seed-room.mjs` |
-| A4 | edits drop values for unknown fields; renaming a field moves its values and deleting removes them, in every rundown; unknown field → 404, type change / rename onto another field → 400 | `custom_fields.rs` |
-| A5 | upstream's refusal table (409 duplicate id, 422 bad parent / nested group / type change / wrong-type applydelay or ungroup, 404 missing anchor); `parent` now places an entry in its group | `rundown.rs`, `rundown_routes.rs` |
-| A6 | share URL needs `scheme://host` and a path → otherwise 422 | `api.rs` |
-| A7 | refetches were already sent; added: a settings write keeps the stored `version`; any write that leaves the loaded event unplayable (deleted, skipped, cleared) stops playback | `api.rs`, `project.rs` |
-| A8 | already correct (search by id in playable order); pinned with tests | `lookahead_tests.rs` |
-| A9 | rundown titles: any script, ≤64 chars, at least one letter/number → otherwise 422 | `rundown.rs` |
+| #   | result                                                                                                                                                                                     | where                                                      |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| A1  | Pong carries `clock`, the room's time of day (its `timezoneOffset`)                                                                                                                        | `socket.rs`, `room.rs`                                     |
+| A2  | `settings.auxTimerNames` (3, trimmed, ≤30 chars); each aux timer state has `name`                                                                                                          | `aux_timer.rs`, `project.rs`                               |
+| A3  | `PUT /data/rundowns/:id {title?, entries}` replaces in place; playback continues while the loaded event is still playable. `seed-room --replace` uses it and keeps each cue's entry id     | `project.rs`, `rundown_routes.rs`, `scripts/seed-room.mjs` |
+| A4  | edits drop values for unknown fields; renaming a field moves its values and deleting removes them, in every rundown; unknown field → 404, type change / rename onto another field → 400    | `custom_fields.rs`                                         |
+| A5  | upstream's refusal table (409 duplicate id, 422 bad parent / nested group / type change / wrong-type applydelay or ungroup, 404 missing anchor); `parent` now places an entry in its group | `rundown.rs`, `rundown_routes.rs`                          |
+| A6  | share URL needs `scheme://host` and a path → otherwise 422                                                                                                                                 | `api.rs`                                                   |
+| A7  | refetches were already sent; added: a settings write keeps the stored `version`; any write that leaves the loaded event unplayable (deleted, skipped, cleared) stops playback              | `api.rs`, `project.rs`                                     |
+| A8  | already correct (search by id in playable order); pinned with tests                                                                                                                        | `lookahead_tests.rs`                                       |
+| A9  | rundown titles: any script, ≤64 chars, at least one letter/number → otherwise 422                                                                                                          | `rundown.rs`                                               |
 
 Bugs found on the way, all fixed:
+
 - `PATCH …/renumber` ignored the client's `{ids, prefix, start, increment}` and
   renumbered **every** cue from 1.
 - A badly typed `POST /data/settings`, `/data/project` or `/data/view-settings`
@@ -100,27 +103,27 @@ The trial ran in a throwaway worktree at `/tmp/ontime-pull-trial`.
 
 ## Already fine in our Rust (checked, no action)
 
-| upstream fix | why ours is unaffected |
-|---|---|
-| paused countdown breaks across midnight | our runtime counts in epoch ms, not time-of-day |
+| upstream fix                                           | why ours is unaffected                                               |
+| ------------------------------------------------------ | -------------------------------------------------------------------- |
+| paused countdown breaks across midnight                | our runtime counts in epoch ms, not time-of-day                      |
 | moving an entry "before" a later one lands one too far | `rundown.rs` unlinks then re-links by id, so there is no index shift |
-| unauthenticated websocket gets data | our upgrade is refused before the socket opens (`room.rs`) |
+| unauthenticated websocket gets data                    | our upgrade is refused before the socket opens (`room.rs`)           |
 
 ## A. Server behaviour to distill into Rust
 
 Upstream is the spec. Each item gets a core test first.
 
-| # | upstream change | why it matters to us | size |
-|---|---|---|---|
-| A1 | Ping is answered with the server time of day | newer clients compensate the displayed clock with it | S |
-| A2 | name aux timers | client feature needs the field stored | S |
-| A3 | replace a rundown without stopping playback | exactly what `seed-room --replace --live` wants | M |
-| A4 | drop unknown custom-field values on edits, and keep custom fields in step on import and patch | data hygiene | S |
-| A5 | bad rundown input → 400, not 500 | correctness | S |
-| A6 | reject invalid share URLs before generating | correctness | S |
-| A7 | a matching refetch after every project-data write; broadcast all changed entries | other screens go stale otherwise | S–M |
-| A8 | find flag and group end in **playable** order | to verify against `runtime.rs`; may already be fine | S |
-| A9 | rundown title parsing fix (#2300) | importer | S |
+| #   | upstream change                                                                               | why it matters to us                                 | size |
+| --- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ---- |
+| A1  | Ping is answered with the server time of day                                                  | newer clients compensate the displayed clock with it | S    |
+| A2  | name aux timers                                                                               | client feature needs the field stored                | S    |
+| A3  | replace a rundown without stopping playback                                                   | exactly what `seed-room --replace --live` wants      | M    |
+| A4  | drop unknown custom-field values on edits, and keep custom fields in step on import and patch | data hygiene                                         | S    |
+| A5  | bad rundown input → 400, not 500                                                              | correctness                                          | S    |
+| A6  | reject invalid share URLs before generating                                                   | correctness                                          | S    |
+| A7  | a matching refetch after every project-data write; broadcast all changed entries              | other screens go stale otherwise                     | S–M  |
+| A8  | find flag and group end in **playable** order                                                 | to verify against `runtime.rs`; may already be fine  | S    |
+| A9  | rundown title parsing fix (#2300)                                                             | importer                                             | S    |
 
 ## B. Client: pull as patches
 
@@ -168,8 +171,8 @@ The client stays TypeScript; a UI is not worth rewriting.
 Move logic into `ontime-core` and share it with the browser through `ontime-wasm`.
 
 1. **Teleprompter.**
-   - Upstream modelled the script, the reading position and a *shared
-     transport* in `packages/utils` and the TS server.
+   - Upstream modelled the script, the reading position and a _shared
+     transport_ in `packages/utils` and the TS server.
    - Shared transport across screens is a natural fit for the room's Durable
      Object.
    - The model fits the core plus wasm, like the timer engine.

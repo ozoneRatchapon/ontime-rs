@@ -20,7 +20,8 @@ struct Fixture {
 
 #[test]
 fn wrapping_matches_upstream_case_by_case() {
-    let fixture: Fixture = serde_json::from_str(include_str!("fixtures/teleprompter_wrap.json")).unwrap();
+    let fixture: Fixture =
+        serde_json::from_str(include_str!("fixtures/teleprompter_wrap.json")).unwrap();
     assert!(fixture.cases.len() > 50);
     let failures: Vec<String> = fixture
         .cases
@@ -28,8 +29,15 @@ fn wrapping_matches_upstream_case_by_case() {
         .filter_map(|case| {
             let actual = wrap_text(&case.text, case.chars_per_line);
             let name = &case.name;
-            (actual != case.lines).then(|| format!("{name}:\n  want {:?}\n  got  {actual:?}", case.lines))
+            (actual != case.lines)
+                .then(|| format!("{name}:\n  want {:?}\n  got  {actual:?}", case.lines))
         })
         .collect();
-    assert!(failures.is_empty(), "{} of {} differ:\n{}", failures.len(), fixture.cases.len(), failures.join("\n"));
+    assert!(
+        failures.is_empty(),
+        "{} of {} differ:\n{}",
+        failures.len(),
+        fixture.cases.len(),
+        failures.join("\n")
+    );
 }

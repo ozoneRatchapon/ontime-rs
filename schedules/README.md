@@ -18,17 +18,17 @@ real schedules carry people's names and student IDs.
 
 ## Fields
 
-| key | meaning |
-|---|---|
-| `room` | room name (`A-Z a-z 0-9 - _`, max 64) |
-| `owner`, `note` | optional — shown on the `/admin` room list |
-| `project` | `{ "title", "description" }` shown in the room |
-| `rundown` | rundown title; `--replace` swaps the one with this title |
-| `template` | `linked` or `exam-slot` (below) |
-| `parts` | `exam-slot` only: `[{ "label", "minutes", "colour" }]`, default 7-min presentation + 10-min Q&A |
-| `fields` | extra columns: `[{ "label", "colour" }]` — every `custom` key must be one of these labels |
-| `rows` | `{ "start": "HH:MM", "end": "HH:MM", "title", "note"?, "cue"?, "colour"?, "custom"? }` |
-| `timezoneHours` | default `7` (Bangkok) |
+| key             | meaning                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `room`          | room name (`A-Z a-z 0-9 - _`, max 64)                                                           |
+| `owner`, `note` | optional — shown on the `/admin` room list                                                      |
+| `project`       | `{ "title", "description" }` shown in the room                                                  |
+| `rundown`       | rundown title; `--replace` swaps the one with this title                                        |
+| `template`      | `linked` or `exam-slot` (below)                                                                 |
+| `parts`         | `exam-slot` only: `[{ "label", "minutes", "colour" }]`, default 7-min presentation + 10-min Q&A |
+| `fields`        | extra columns: `[{ "label", "colour" }]` — every `custom` key must be one of these labels       |
+| `rows`          | `{ "start": "HH:MM", "end": "HH:MM", "title", "note"?, "cue"?, "colour"?, "custom"? }`          |
+| `timezoneHours` | default `7` (Bangkok)                                                                           |
 
 A `custom` value may be an array; it becomes one `a • b • c` line.
 

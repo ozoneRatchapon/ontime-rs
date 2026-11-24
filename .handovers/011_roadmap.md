@@ -20,20 +20,20 @@ Measured size: 2,948 lines of Rust against 20,046 lines of the TypeScript server
 
 ### The cost table that drives everything below
 
-| Module (`apps/server/src`) | LOC | Status |
-|---|---|---|
-| `api-data/rundown` | 3,314 | core done, edge cases remain |
-| `api-data/automation` | 1,299 | **impossible on Workers** — OSC/UDP |
-| `api-data/excel` | 1,122 | **impossible on Workers** — filesystem |
-| `stores` | 1,084 | not started — the offset/roll core |
-| `api-data/sheets` | 1,076 | **impossible on Workers** — OAuth session |
-| `api-data/db` | 1,064 | **impossible on Workers** — filesystem |
-| `services/runtime-service` | 952 | ~60% |
-| `api-data/custom-views` | 333 | not started |
-| `services/aux-timer-service` | 165 | not started |
-| `api-data/session` | 150 | partial |
-| `services/message-service` | 101 | not started |
-| `api-data/report` | 85 | not started |
+| Module (`apps/server/src`)   | LOC   | Status                                    |
+| ---------------------------- | ----- | ----------------------------------------- |
+| `api-data/rundown`           | 3,314 | core done, edge cases remain              |
+| `api-data/automation`        | 1,299 | **impossible on Workers** — OSC/UDP       |
+| `api-data/excel`             | 1,122 | **impossible on Workers** — filesystem    |
+| `stores`                     | 1,084 | not started — the offset/roll core        |
+| `api-data/sheets`            | 1,076 | **impossible on Workers** — OAuth session |
+| `api-data/db`                | 1,064 | **impossible on Workers** — filesystem    |
+| `services/runtime-service`   | 952   | ~60%                                      |
+| `api-data/custom-views`      | 333   | not started                               |
+| `services/aux-timer-service` | 165   | not started                               |
+| `api-data/session`           | 150   | partial                                   |
+| `services/message-service`   | 101   | not started                               |
+| `api-data/report`            | 85    | not started                               |
 
 Two conclusions fall straight out:
 
@@ -62,13 +62,13 @@ than weakens, the case against rewriting the UI in Dioxus.
 Nothing here adds a feature. It is what stops the next phases from being slower than
 they need to be.
 
-| Item | Where |
-|---|---|
-| e2e suites in the repo, with a runner | `apps/server-rs/tests/e2e/` + `run.sh` |
-| upstream remote and rebase procedure | `docs/tracking-upstream.md` |
-| CI | `.github/workflows/test_rust.yml` |
-| timer flake made diagnosable | `tests/e2e/timer.mjs` detects socket closure |
-| share links | `apps/client/src/common/utils/linkUtils.ts` |
+| Item                                  | Where                                        |
+| ------------------------------------- | -------------------------------------------- |
+| e2e suites in the repo, with a runner | `apps/server-rs/tests/e2e/` + `run.sh`       |
+| upstream remote and rebase procedure  | `docs/tracking-upstream.md`                  |
+| CI                                    | `.github/workflows/test_rust.yml`            |
+| timer flake made diagnosable          | `tests/e2e/timer.mjs` detects socket closure |
+| share links                           | `apps/client/src/common/utils/linkUtils.ts`  |
 
 Also done while getting CI green: clippy clean at `-D warnings` across all three
 crates, and `cargo fmt` applied (a large mechanical diff — verified by re-running
@@ -201,8 +201,8 @@ CI runs them against both.
 the websocket command handling. The Worker went from **1,345 lines to 487** and is
 an adapter: translate the request, call the core, carry out the effects.
 
-`Effect` is the seam. The core returns *what must happen* — persist, tell clients,
-reschedule — and each host decides *how*, because a Durable Object alarm and a
+`Effect` is the seam. The core returns _what must happen_ — persist, tell clients,
+reschedule — and each host decides _how_, because a Durable Object alarm and a
 tokio interval have nothing in common.
 
 ### Three drifts the work exposed
@@ -210,11 +210,11 @@ tokio interval have nothing in common.
 Each was a behaviour that lived in the Worker rather than the core, and each meant
 the second host silently lacked it. Each was caught by the suites, not by reading:
 
-| Drift | Consequence |
-|---|---|
-| the websocket upgrade bypassed the auth check | `/ws` was briefly unauthenticated |
-| the tick cadence ignored `heartbeat_ms` | the native host broadcast twice a second regardless of configuration |
-| `record_report` sat in the Worker | the run report was never recorded natively |
+| Drift                                         | Consequence                                                          |
+| --------------------------------------------- | -------------------------------------------------------------------- |
+| the websocket upgrade bypassed the auth check | `/ws` was briefly unauthenticated                                    |
+| the tick cadence ignored `heartbeat_ms`       | the native host broadcast twice a second regardless of configuration |
+| `record_report` sat in the Worker             | the run report was never recorded natively                           |
 
 All three were fixed by moving the behaviour into the core. `next_wake_in` and
 `apply_socket_command` exist because of them.

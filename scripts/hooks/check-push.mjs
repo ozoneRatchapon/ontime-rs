@@ -42,7 +42,8 @@ function personalValues() {
     for (const row of schedule.rows ?? []) {
       const values = [row.title, row.note, ...Object.values(row.custom ?? {})];
       for (const value of values) {
-        if (typeof value === 'string' && value.trim().length >= 5) found.push({ value: value.trim(), from: `schedules/${name}` });
+        if (typeof value === 'string' && value.trim().length >= 5)
+          found.push({ value: value.trim(), from: `schedules/${name}` });
       }
     }
   }
@@ -74,10 +75,15 @@ const TOKEN_SHAPES = [
 function commitsFor(localSha, remoteSha) {
   if (ZERO.test(localSha)) return []; // a branch delete sends nothing
   const range = ZERO.test(remoteSha) ? [localSha, '--not', `--remotes=${remoteName}`] : [`${remoteSha}..${localSha}`];
-  return git('rev-list', ...range).split('\n').filter(Boolean);
+  return git('rev-list', ...range)
+    .split('\n')
+    .filter(Boolean);
 }
 
-const refs = readFileSync(0, 'utf8').split('\n').filter(Boolean).map((line) => line.split(' '));
+const refs = readFileSync(0, 'utf8')
+  .split('\n')
+  .filter(Boolean)
+  .map((line) => line.split(' '));
 const commits = new Set(refs.flatMap(([, localSha, , remoteSha]) => commitsFor(localSha, remoteSha)));
 
 const problems = [];
@@ -89,7 +95,8 @@ for (const commit of commits) {
   if (!isPrivate) {
     const paths = git('diff-tree', '--no-commit-id', '--name-only', '-r', '--root', commit).split('\n').filter(Boolean);
     for (const path of paths) {
-      if (path.startsWith('schedules/') && !ALLOWED_IN_SCHEDULES.has(path)) problems.push(`${short}: a real schedule file (${path})`);
+      if (path.startsWith('schedules/') && !ALLOWED_IN_SCHEDULES.has(path))
+        problems.push(`${short}: a real schedule file (${path})`);
     }
   }
   const added = git('show', '--format=', '--no-color', '--unified=0', commit)

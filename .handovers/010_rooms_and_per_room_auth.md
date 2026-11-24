@@ -33,10 +33,10 @@ rundowns, settings, playback and password.
 
 Two mechanisms, because the client has two very different call styles:
 
-| Transport | How the room travels | Why |
-|---|---|---|
-| REST | `/r/<room>/data/…` path prefix | the client composes paths by appending to `serverURL`; a query string would land in the middle of the composed path |
-| WebSocket | `?room=<room>` | a single URL with no path to spare |
+| Transport | How the room travels           | Why                                                                                                                 |
+| --------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| REST      | `/r/<room>/data/…` path prefix | the client composes paths by appending to `serverURL`; a query string would land in the middle of the composed path |
+| WebSocket | `?room=<room>`                 | a single URL with no path to spare                                                                                  |
 
 `lib.rs::route()` resolves the room in that order and **strips the prefix before
 forwarding**, so every room's Durable Object sees identical paths and never has to
@@ -68,7 +68,7 @@ https://ontime-client.example.pages.dev/editor?room=proj-alpha
 - Each room stores `password_hash: Option<String>`. `None` means open — matching
   upstream with `SESSION_PASSWORD` unset, so this could not lock anyone out of the
   existing deployment.
-- The hash *is* the bearer token, exactly as upstream uses `hashPassword(password)`
+- The hash _is_ the bearer token, exactly as upstream uses `hashPassword(password)`
   as its token. blake3, domain-separated with an `ontime-room-v1:` prefix.
 - Comparison is constant-time, so a token cannot be recovered by timing responses.
 - `SESSION_PASSWORD`, if set as a Cloudflare secret, is a master key. Without one a
@@ -97,11 +97,11 @@ The token is returned **once**, at claim time; it cannot be recovered from the h
 
 Accepted from three places, so every client shape works:
 
-| Form | Used by |
-|---|---|
-| `Authorization: Bearer <token>` | REST, via an axios interceptor |
-| `?token=<token>` | the websocket, which cannot set headers |
-| `token` cookie | compatibility with a browser already logged in to `apps/server` |
+| Form                            | Used by                                                         |
+| ------------------------------- | --------------------------------------------------------------- |
+| `Authorization: Bearer <token>` | REST, via an axios interceptor                                  |
+| `?token=<token>`                | the websocket, which cannot set headers                         |
+| `token` cookie                  | compatibility with a browser already logged in to `apps/server` |
 
 The client reads `?token=` once and keeps it in `sessionStorage` keyed by room, so
 it does not have to stay in the address bar where screen shares and history would
@@ -127,7 +127,7 @@ https://ontime-client.example.pages.dev/editor?room=proj-alpha&token=<hash>
 `scratchpad/auth-test.mjs` — 20 checks, all passing on production:
 
 - a fresh room is open; claiming it returns a token
-- every read *and* write is 401 without a token, and with a wrong token
+- every read _and_ write is 401 without a token, and with a wrong token
 - the token works as a header, a query param and a cookie
 - the room cannot be re-claimed without the token
 - the websocket is refused without a token and connects with one
@@ -160,11 +160,11 @@ The endpoint sweep had been passing all along: it only asserted status codes, an
 the client destructures turned up two more of the same mistake, one of which had not
 been reached yet:
 
-| Endpoint | Client expects | Was returning |
-|---|---|---|
-| `/data/db/all` | `{files, lastLoadedProject}` | the whole `Project` |
-| `/data/settings/serverport` | `PortInfo` `{port, pendingRestart}` | a bare `443` |
-| `/data/session/info` | `GetInfo` `{networkInterfaces, version, serverPort, publicDir}` | two fields missing |
+| Endpoint                    | Client expects                                                  | Was returning       |
+| --------------------------- | --------------------------------------------------------------- | ------------------- |
+| `/data/db/all`              | `{files, lastLoadedProject}`                                    | the whole `Project` |
+| `/data/settings/serverport` | `PortInfo` `{port, pendingRestart}`                             | a bare `443`        |
+| `/data/session/info`        | `GetInfo` `{networkInterfaces, version, serverPort, publicDir}` | two fields missing  |
 
 `/data/session/url` now answers 501: share links are built from the client's own
 origin, which a Worker serving no HTML cannot know.
@@ -177,6 +177,6 @@ that would have caught all three.
 
 - Roll mode, aux timers, message service, report, custom views
 - The rundown-wide offset calculation (the shipped one is a single-event approximation)
-- Nothing enforces *which* rooms exist: any name creates a room on first use. If
+- Nothing enforces _which_ rooms exist: any name creates a room on first use. If
   rooms should be provisioned rather than self-service, that needs a registry and
   the master key gating creation.

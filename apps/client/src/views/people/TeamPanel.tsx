@@ -92,7 +92,8 @@ export default function TeamPanel({ room, onChanged }: TeamPanelProps) {
     const explain = on
       ? 'Only the owners and operators listed here (and anyone with the room password) will be able to edit and run the timer.\n\nTimer and backstage screens keep working without sign-in.'
       : 'Anyone who can open the room will be able to edit it again.';
-    if (!window.confirm(`${on ? 'Turn on' : 'Turn off'} "editing needs sign-in" for ${room.name}?\n\n${explain}`)) return;
+    if (!window.confirm(`${on ? 'Turn on' : 'Turn off'} "editing needs sign-in" for ${room.name}?\n\n${explain}`))
+      return;
     try {
       await setMembersOnly(room.name, on);
       onChanged();

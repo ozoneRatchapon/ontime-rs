@@ -115,19 +115,19 @@ rebuilds the response, skipping websocket upgrades (status 101).
 Not ported — these answer `501` with a message rather than a bare 404, so the client shows
 something meaningful:
 
-| Module | Why |
-|---|---|
-| `/data/db/*` | project files need a filesystem |
-| `/data/excel/*` | import/export needs a filesystem |
-| `/data/sheets/*` | Google Sheets sync needs OAuth + a long-lived session |
-| `POST /data/automation/*` | automations drive OSC/UDP, which Workers cannot open |
-| `POST /data/rundowns/import` | depends on the spreadsheet parser |
+| Module                       | Why                                                   |
+| ---------------------------- | ----------------------------------------------------- |
+| `/data/db/*`                 | project files need a filesystem                       |
+| `/data/excel/*`              | import/export needs a filesystem                      |
+| `/data/sheets/*`             | Google Sheets sync needs OAuth + a long-lived session |
+| `POST /data/automation/*`    | automations drive OSC/UDP, which Workers cannot open  |
+| `POST /data/rundowns/import` | depends on the spreadsheet parser                     |
 
 Also still missing:
 
 - **No runtime/playback.** There is no timer engine, so `runtime-data` is never broadcast.
-  *(Resolved in handover 008 — playback, countdown and end actions now work. Roll mode,
-  aux timers and the message service are still missing.)*
+  _(Resolved in handover 008 — playback, countdown and end actions now work. Roll mode,
+  aux timers and the message service are still missing.)_
 - **No report, no custom views.** Both return empty stubs.
 - **One shared room.** Every visitor without `?room=` lands on `default_room`, so all users
   share one project. There is no auth.

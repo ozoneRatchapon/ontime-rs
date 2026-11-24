@@ -38,7 +38,11 @@ pub struct TeleprompterSettings {
 
 impl Default for TeleprompterSettings {
     fn default() -> Self {
-        Self { script: "note".into(), chars_per_line: 32, heading: Heading::Title }
+        Self {
+            script: "note".into(),
+            chars_per_line: 32,
+            heading: Heading::Title,
+        }
     }
 }
 
@@ -67,11 +71,13 @@ pub fn rename_script_source(source: &str, old_key: &str, new_key: Option<&str>) 
 pub fn is_readable_script_source(script: &str, custom_fields: &Value) -> bool {
     match script {
         "note" | "title" => true,
-        _ => custom_field_of_script_source(script)
-            .and_then(|key| custom_fields.get(key))
-            .and_then(|field| field.get("type"))
-            .and_then(Value::as_str)
-            == Some("text"),
+        _ => {
+            custom_field_of_script_source(script)
+                .and_then(|key| custom_fields.get(key))
+                .and_then(|field| field.get("type"))
+                .and_then(Value::as_str)
+                == Some("text")
+        }
     }
 }
 
@@ -82,9 +88,15 @@ pub fn parse_settings(data: &Value, fallback: &TeleprompterSettings) -> Teleprom
         return fallback.clone();
     };
     TeleprompterSettings {
-        script: input.get("script").and_then(Value::as_str).map_or_else(|| fallback.script.clone(), str::to_string),
+        script: input
+            .get("script")
+            .and_then(Value::as_str)
+            .map_or_else(|| fallback.script.clone(), str::to_string),
         chars_per_line: parse_chars_per_line(input.get("charsPerLine"), fallback.chars_per_line),
-        heading: input.get("heading").and_then(Heading::parse).unwrap_or(fallback.heading),
+        heading: input
+            .get("heading")
+            .and_then(Heading::parse)
+            .unwrap_or(fallback.heading),
     }
 }
 
@@ -110,8 +122,12 @@ impl SettingsError {
     pub fn message(self) -> &'static str {
         match self {
             SettingsError::NotAnObject => "Teleprompter settings have to be an object",
-            SettingsError::UnreadableScript => "The script has to be the note, the title or a text custom field",
-            SettingsError::InvalidCharsPerLine => "Characters per line has to be a whole number from 10 to 80",
+            SettingsError::UnreadableScript => {
+                "The script has to be the note, the title or a text custom field"
+            }
+            SettingsError::InvalidCharsPerLine => {
+                "Characters per line has to be a whole number from 10 to 80"
+            }
             SettingsError::InvalidHeading => "The heading has to be title, cue, both or none",
         }
     }
@@ -124,7 +140,9 @@ pub fn validate_patch(body: &Value, custom_fields: &Value) -> Result<(), Setting
         return Err(SettingsError::NotAnObject);
     };
     if let Some(script) = input.get("script") {
-        let readable = script.as_str().is_some_and(|script| is_readable_script_source(script, custom_fields));
+        let readable = script
+            .as_str()
+            .is_some_and(|script| is_readable_script_source(script, custom_fields));
         if !readable {
             return Err(SettingsError::UnreadableScript);
         }
@@ -133,7 +151,9 @@ pub fn validate_patch(body: &Value, custom_fields: &Value) -> Result<(), Setting
         let whole = chars
             .as_f64()
             .filter(|n| n.fract() == 0.0)
-            .is_some_and(|n| (f64::from(CHARS_PER_LINE_MIN)..=f64::from(CHARS_PER_LINE_MAX)).contains(&n));
+            .is_some_and(|n| {
+                (f64::from(CHARS_PER_LINE_MIN)..=f64::from(CHARS_PER_LINE_MAX)).contains(&n)
+            });
         if !whole {
             return Err(SettingsError::InvalidCharsPerLine);
         }

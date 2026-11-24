@@ -62,7 +62,9 @@ struct Fixture {
 }
 
 fn fixture() -> Cases {
-    serde_json::from_str::<Fixture>(include_str!("fixtures/teleprompter_position.json")).unwrap().cases
+    serde_json::from_str::<Fixture>(include_str!("fixtures/teleprompter_position.json"))
+        .unwrap()
+        .cases
 }
 
 #[test]
@@ -81,8 +83,16 @@ fn rows_and_anchors_match_upstream_at_every_quarter_row() {
             let anchor = layout.anchor_at(row.row);
             let label = format!("{} at row {}", sweep.name, row.row);
             assert_eq!(anchor, row.anchor, "anchor: {label}");
-            assert_eq!(anchor.as_ref().and_then(|a| layout.row_of(a)), row.back, "back: {label}");
-            assert_eq!(layout.event_at(row.row).map(|e| e.id.clone()), row.event_at, "event: {label}");
+            assert_eq!(
+                anchor.as_ref().and_then(|a| layout.row_of(a)),
+                row.back,
+                "back: {label}"
+            );
+            assert_eq!(
+                layout.event_at(row.row).map(|e| e.id.clone()),
+                row.event_at,
+                "event: {label}"
+            );
             checked += 1;
         }
     }
@@ -92,7 +102,12 @@ fn rows_and_anchors_match_upstream_at_every_quarter_row() {
 #[test]
 fn anchors_resolve_like_upstream() {
     for case in fixture().anchors {
-        assert_eq!(Layout::new(&case.events).row_of(&case.anchor), case.row, "{}", case.name);
+        assert_eq!(
+            Layout::new(&case.events).row_of(&case.anchor),
+            case.row,
+            "{}",
+            case.name
+        );
     }
 }
 
@@ -101,13 +116,23 @@ fn offsets_move_through_edits_like_upstream() {
     for case in fixture().edits {
         let previous: Vec<u16> = case.previous.encode_utf16().collect();
         let next: Vec<u16> = case.next.encode_utf16().collect();
-        assert_eq!(map_offset_through_edit(&previous, &next, case.offset), case.result, "{}", case.name);
+        assert_eq!(
+            map_offset_through_edit(&previous, &next, case.offset),
+            case.result,
+            "{}",
+            case.name
+        );
     }
 }
 
 #[test]
 fn readers_follow_edits_like_upstream() {
     for case in fixture().reanchors {
-        assert_eq!(reanchor(&case.previous, &case.next, case.anchor.as_ref()), case.result, "{}", case.name);
+        assert_eq!(
+            reanchor(&case.previous, &case.next, case.anchor.as_ref()),
+            case.result,
+            "{}",
+            case.name
+        );
     }
 }

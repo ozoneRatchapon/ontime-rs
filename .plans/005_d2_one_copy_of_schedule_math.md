@@ -29,12 +29,12 @@ Status: **step 1 done (2026-11-24); step 2 waiting for approval.**
 
 The same calculations exist twice, and nothing checks that the copies agree:
 
-| calculation | Rust (server, `ontime-core`) | TypeScript (browser) |
-|---|---|---|
-| expected start of an event | `offset::expected_start` | `getExpectedStart` (`packages/utils`) |
-| expected end | not yet | `getExpectedEnd`, ported on 2026-11-24 for D3 |
+| calculation                  | Rust (server, `ontime-core`)                                       | TypeScript (browser)                                            |
+| ---------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
+| expected start of an event   | `offset::expected_start`                                           | `getExpectedStart` (`packages/utils`)                           |
+| expected end                 | not yet                                                            | `getExpectedEnd`, ported on 2026-11-24 for D3                   |
 | gap / linked-to-loaded chain | `runtime.rs` look-ahead (`accumulated_gap`, `is_linked_to_loaded`) | `getLinksToLoaded` and `rundownMetadata.ts` (upstream d9d0237c) |
-| day offset | `offset::find_day_offset` | inside the same TS helpers |
+| day offset                   | `offset::find_day_offset`                                          | inside the same TS helpers                                      |
 
 - The server uses its copy for runtime-data: offset, the flag and the group end.
 - The browser uses its copy for the countdown, timeline and overview screens.

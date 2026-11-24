@@ -138,11 +138,13 @@ impl Registry {
     /// The record for a room, registering it if it is not known yet — that is
     /// how a room older than the registry is added.
     fn entry(&mut self, name: &str, now: i64) -> &mut RoomRecord {
-        self.rooms.entry(name.to_string()).or_insert_with(|| RoomRecord {
-            name: name.to_string(),
-            first_seen: now,
-            ..RoomRecord::default()
-        })
+        self.rooms
+            .entry(name.to_string())
+            .or_insert_with(|| RoomRecord {
+                name: name.to_string(),
+                first_seen: now,
+                ..RoomRecord::default()
+            })
     }
 
     /// Records a room's own report. Owner and note are left alone — the room
@@ -178,7 +180,13 @@ impl Registry {
 
     /// Replaces a room's owners or operators, registering the room if it is
     /// not known yet. The caller has already checked every id is a real person.
-    pub fn set_members(&mut self, name: &str, role: Role, people: Vec<Uuid>, now: i64) -> Option<&RoomRecord> {
+    pub fn set_members(
+        &mut self,
+        name: &str,
+        role: Role,
+        people: Vec<Uuid>,
+        now: i64,
+    ) -> Option<&RoomRecord> {
         if !is_valid_room(name) {
             return None;
         }
@@ -236,7 +244,11 @@ pub struct RegistryResponse {
 
 impl RegistryResponse {
     pub fn ok(body: Value, changed: bool) -> Self {
-        Self { status: 200, body, changed }
+        Self {
+            status: 200,
+            body,
+            changed,
+        }
     }
 
     pub fn error(status: u16, message: &str) -> Self {
@@ -278,7 +290,9 @@ pub fn handle(
         }
 
         ("POST", ["report"]) => match serde_json::from_value::<RoomReport>(body.clone()) {
-            Ok(report) if registry.apply_report(&report, now) => RegistryResponse::ok(json!({}), true),
+            Ok(report) if registry.apply_report(&report, now) => {
+                RegistryResponse::ok(json!({}), true)
+            }
             _ => RegistryResponse::error(400, "not a valid report"),
         },
 

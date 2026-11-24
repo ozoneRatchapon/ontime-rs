@@ -16,16 +16,30 @@ use serde_json::Value;
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 enum Step {
-    Command { cmd: TransportCommand, now: f64 },
-    Settle { settle: f64 },
-    Position { position: f64 },
-    Describe { describe: f64 },
-    Sync { sync: u64 },
+    Command {
+        cmd: TransportCommand,
+        now: f64,
+    },
+    Settle {
+        settle: f64,
+    },
+    Position {
+        position: f64,
+    },
+    Describe {
+        describe: f64,
+    },
+    Sync {
+        sync: u64,
+    },
     SyncAt {
         #[serde(rename = "syncAt")]
         sync_at: f64,
     },
-    Reanchor { reanchor: String, now: f64 },
+    Reanchor {
+        reanchor: String,
+        now: f64,
+    },
 }
 
 #[derive(Deserialize, Debug, Default)]
@@ -72,7 +86,9 @@ struct Fixture {
 }
 
 fn fixture() -> Cases {
-    serde_json::from_str::<Fixture>(include_str!("fixtures/teleprompter_transport.json")).unwrap().cases
+    serde_json::from_str::<Fixture>(include_str!("fixtures/teleprompter_transport.json"))
+        .unwrap()
+        .cases
 }
 
 #[test]
@@ -91,16 +107,30 @@ fn every_scenario_step_matches_upstream() {
                         assert_eq!(want.error, None, "{label}: upstream refused");
                         transport = next;
                     }
-                    Err(error) => assert_eq!(want.error.as_deref(), Some(error.message()), "{label}"),
+                    Err(error) => {
+                        assert_eq!(want.error.as_deref(), Some(error.message()), "{label}")
+                    }
                 },
                 Step::Settle { settle: now } => transport = settle(&transport, &layout, *now),
                 Step::Position { position: now } => {
-                    assert_eq!(Some(position_at(&transport, &layout, *now)), want.position, "{label}")
+                    assert_eq!(
+                        Some(position_at(&transport, &layout, *now)),
+                        want.position,
+                        "{label}"
+                    )
                 }
                 Step::Describe { describe: now } => {
-                    assert_eq!(Some(describe(&transport, &layout, *now)), want.state, "{label}")
+                    assert_eq!(
+                        Some(describe(&transport, &layout, *now)),
+                        want.state,
+                        "{label}"
+                    )
                 }
-                Step::Sync { sync } => assert_eq!(Some(describe_sync(&transport, &layout, *sync)), want.sync, "{label}"),
+                Step::Sync { sync } => assert_eq!(
+                    Some(describe_sync(&transport, &layout, *sync)),
+                    want.sync,
+                    "{label}"
+                ),
                 Step::SyncAt { sync_at } => {
                     let at = sync_position_at(&describe_sync(&transport, &layout, 1), *sync_at);
                     assert_eq!(Some(Some(at)), want.position, "{label}");
@@ -108,7 +138,12 @@ fn every_scenario_step_matches_upstream() {
                 Step::Reanchor { reanchor, now } => {
                     let next = cases.scripts[reanchor].clone();
                     let next_layout = Layout::new(&next);
-                    transport = reanchor_transport(&transport, (&events, &layout), (&next, &next_layout), *now);
+                    transport = reanchor_transport(
+                        &transport,
+                        (&events, &layout),
+                        (&next, &next_layout),
+                        *now,
+                    );
                     events = next;
                     layout = next_layout;
                 }
@@ -129,7 +164,10 @@ fn commands_parse_like_upstream() {
         match (parse_command(&case.payload), &case.command, &case.error) {
             (Ok(command), Some(want), None) => assert_eq!(&command, want, "{}", case.payload),
             (Err(error), None, Some(want)) => assert_eq!(error.message(), want, "{}", case.payload),
-            (got, want, error) => panic!("{}: got {got:?}, upstream {want:?} / {error:?}", case.payload),
+            (got, want, error) => panic!(
+                "{}: got {got:?}, upstream {want:?} / {error:?}",
+                case.payload
+            ),
         }
     }
 }

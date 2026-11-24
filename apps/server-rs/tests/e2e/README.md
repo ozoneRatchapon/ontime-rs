@@ -23,15 +23,15 @@ to be built first — `run.sh` builds it if it is missing.
 
 ## The suites
 
-| Suite | Covers |
-|---|---|
-| `rest.sh` | CRUD round trips: create/edit/delete actually persist, link timing, reorder, group/ungroup, clone, settings, custom fields, url presets, rundown lifecycle |
-| `shapes.mjs` | the **type of every field the client destructures**, taken from `packages/types` |
-| `ws.mjs` | websocket handshake, ping/pong, and that a REST mutation broadcasts a refetch |
-| `timer.mjs` | playback driven over the websocket exactly as the client drives it |
-| `engine.mjs` | the browser WASM engine computes the same numbers as the server |
-| `rooms.mjs` | two rooms are fully isolated — data, settings and playback |
-| `auth.mjs` | per-room password over REST and websocket |
+| Suite        | Covers                                                                                                                                                     |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rest.sh`    | CRUD round trips: create/edit/delete actually persist, link timing, reorder, group/ungroup, clone, settings, custom fields, url presets, rundown lifecycle |
+| `shapes.mjs` | the **type of every field the client destructures**, taken from `packages/types`                                                                           |
+| `ws.mjs`     | websocket handshake, ping/pong, and that a REST mutation broadcasts a refetch                                                                              |
+| `timer.mjs`  | playback driven over the websocket exactly as the client drives it                                                                                         |
+| `engine.mjs` | the browser WASM engine computes the same numbers as the server                                                                                            |
+| `rooms.mjs`  | two rooms are fully isolated — data, settings and playback                                                                                                 |
+| `auth.mjs`   | per-room password over REST and websocket                                                                                                                  |
 
 `coverage.sh` is a diagnostic sweep, not a test — it prints the status code of every
 endpoint the client can call. Useful when adding endpoints; it is deliberately not
@@ -70,7 +70,6 @@ inconclusive and re-run; treat a repeated one as real.
 - Tolerances in `engine.mjs` distinguish two things: same-instant agreement between
   server and browser (must be exact) and the gap a client accumulates between
   packets (network jitter, not drift).
-
 
 ## Testing against a gated deployment
 

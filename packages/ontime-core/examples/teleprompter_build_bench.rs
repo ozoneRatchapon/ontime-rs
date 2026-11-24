@@ -8,7 +8,9 @@ use ontime_core::teleprompter::settings::TeleprompterSettings;
 use serde_json::json;
 
 fn main() {
-    let note = "Good evening and welcome to the 2026 awards, our first guest is a well-known face. ".repeat(6);
+    let note =
+        "Good evening and welcome to the 2026 awards, our first guest is a well-known face. "
+            .repeat(6);
     let thai = "สวัสดีครับ ยินดีต้อนรับทุกท่านเข้าสู่งานประกาศรางวัล ".repeat(8);
     let mut rundown = Rundown::new("show", "Show");
     for i in 0..100 {
@@ -25,7 +27,11 @@ fn main() {
     let start = Instant::now();
     let mut lines = 0;
     for _ in 0..runs {
-        lines = Script::build(&rundown, &fields, &settings).events.iter().map(|e| e.lines.len()).sum::<usize>();
+        lines = Script::build(&rundown, &fields, &settings)
+            .events
+            .iter()
+            .map(|e| e.lines.len())
+            .sum::<usize>();
     }
     let per = start.elapsed() / runs;
     println!("100 events, {lines} lines: {per:?} per build");

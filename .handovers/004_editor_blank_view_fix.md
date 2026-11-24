@@ -1,6 +1,7 @@
 # Handover 004: Editor Page Blank View Resolution & Full Query Key Support
 
 ## Summary of Fixes & Verification
+
 1. **Editor Page Blank View Issue Identified:**
    The React Editor component uses TanStack Query hook `useRundownById(rundownId)`. When a rundown is selected from the list or loaded by ID (`default_rundown`), the client fetches `GET /data/rundowns/${rundownId}` (`/data/rundowns/default_rundown`).
    Previously, `/data/rundowns/:id` returned an empty JSON object `{}` which caused `isValidRundown` check to fail and rendered a blank page view in Editor.
@@ -15,4 +16,5 @@
    **Response:** `HTTP/2 200 OK` returning full Rundown entries (`Welcome & Intro`, `Keynote Presentation`, `Q&A Session`).
 
 ## Live Web App
+
 👉 **[https://ontime-client.example.pages.dev/editor](https://ontime-client.example.pages.dev/editor)**

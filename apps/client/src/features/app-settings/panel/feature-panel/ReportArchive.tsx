@@ -52,8 +52,7 @@ function ArchivedRunTable({ run }: { run: ArchivedRun }) {
         </thead>
         <tbody>
           {run.events.map((event, index) => {
-            const actual =
-              event.startedAt != null && event.endedAt != null ? event.endedAt - event.startedAt : null;
+            const actual = event.startedAt != null && event.endedAt != null ? event.endedAt - event.startedAt : null;
             const diff = actual != null ? actual - event.plannedDuration : null;
             const diffLabel =
               diff === null ? '—' : diff === 0 ? 'on time' : `${diff > 0 ? '+' : '-'}${millisToString(Math.abs(diff))}`;

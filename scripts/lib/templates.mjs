@@ -35,7 +35,9 @@ function linked(schedule) {
     const end = parse_hhmm(row.end);
     if (end <= start) throw new Error(`row ${index + 1} ("${row.title}") ends before it starts`);
     if (cursor !== null && start !== cursor) {
-      throw new Error(`row ${index + 1} ("${row.title}") starts at ${hhmm(start)}, but the previous one ends at ${hhmm(cursor)}`);
+      throw new Error(
+        `row ${index + 1} ("${row.title}") starts at ${hhmm(start)}, but the previous one ends at ${hhmm(cursor)}`,
+      );
     }
     cursor = end;
     return {
@@ -71,7 +73,9 @@ function exam_slot(schedule) {
     const slot_start = parse_hhmm(row.start);
     const slot_end = parse_hhmm(row.end);
     if (used > slot_end - slot_start) {
-      throw new Error(`row ${index + 1} ("${row.title}"): parts take ${used / M} min but the slot is ${(slot_end - slot_start) / M} min`);
+      throw new Error(
+        `row ${index + 1} ("${row.title}"): parts take ${used / M} min but the slot is ${(slot_end - slot_start) / M} min`,
+      );
     }
     const cue = row.cue ?? String(index + 1);
     let cursor = slot_start;

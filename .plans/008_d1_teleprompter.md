@@ -1,6 +1,7 @@
 # 008 — D1: the teleprompter, in the Rust core
 
 Status: **done and deployed (2026-11-24).**
+
 - Fast-forwarded into `feat/rust-cloud-backend` (70b8b383).
 - **Worker:** `c9560deb`. The rollback point is `02b203be`.
 - **Client:** Pages `1ca3aa2c`, Production at `ontime-team.pages.dev`.
@@ -10,17 +11,18 @@ Status: **done and deployed (2026-11-24).**
 - **The `master.` alias** was briefly stuck on the previous client, because
   a Production deploy doesn't move a branch alias. It is current since the
   two-branch deploy (`81aa811c` and `89924a11`).
-Its 4 decisions use the recommended answers, so the user's standing approval
-applies.
+  Its 4 decisions use the recommended answers, so the user's standing approval
+  applies.
 
 ## Progress
 
 **T0 and T1, the contract and the core:**
+
 - Done in commits de884be0, edc4f759, 91ecd415 and 45501194.
 - `ontime-core/src/teleprompter/` holds `wrap`, `settings`, `script`,
   `position` and `transport`.
 - **How the fixtures are made:** `scripts/teleprompter-oracle/generate.sh
-  [ref]` extracts upstream with `git archive`, bundles its TypeScript with
+[ref]` extracts upstream with `git archive`, bundles its TypeScript with
   esbuild, and runs it over our case lists. So every expected value is
   upstream's own output, not our reading of it.
 - **What they cover:**
@@ -40,12 +42,13 @@ Breaking at real Thai words would need a dictionary (ICU), so it is a later
 improvement and must be added to both sides.
 
 **T2, the hosts:**
+
 - **The core facade, `teleprompter/room.rs`:** builds the script, the first
   read follows the loaded event, resolves goto targets (cue, id, index,
   loaded), keeps the reader in place after a change, settles on the alarm,
   gives the wake time, pauses on restore, and produces the runtime fields.
 - **Routes, `teleprompter/routes.rs`:** `GET` and `POST
-  /data/teleprompter/settings` (422 on invalid input), and
+/data/teleprompter/settings` (422 on invalid input), and
   `GET /data/teleprompter/script?source=`.
 - **Hooks in `api`:**
   - the script from before a change, then `after_change`;
@@ -66,6 +69,7 @@ improvement and must be added to both sides.
   - native activity 9/9, and native serves `?source=`.
 
 **T4, the client from upstream:**
+
 - **14 upstream commits cherry-picked with `-x`.** `5757ebed0` was skipped:
   it only adapts upstream's Playwright spec to a router prefix.
 - **What was left out:** every `apps/server` and `docs` part. Our vendored TS
@@ -88,6 +92,7 @@ improvement and must be added to both sides.
   - the build works.
 
 **T5, the browser:**
+
 - `apps/server-rs/tests/browser/teleprompter.mjs` passes 8/8 against a local
   Worker and a built client.
 - A controller and a remote screen scroll together and read the same line.
@@ -99,6 +104,7 @@ improvement and must be added to both sides.
   event loaded the first play paused at once.
 
 **Differences from upstream, all deliberate:**
+
 - **No 304 or ETag on the script:** the script carries its revision, which is
   what screens compare.
 - **A body that isn't an object (`[]`)** reads as an empty patch (200, no
@@ -108,6 +114,7 @@ improvement and must be added to both sides.
   have.
 
 **For later:**
+
 - **Script cache:** done on 2026-11-24.
   - It is keyed on a blake3 fingerprint of exactly what the script reads, so
     it stays correct even for a write that skips `recompute`.
@@ -118,7 +125,6 @@ improvement and must be added to both sides.
   own area and actions. Quick repeated taps merge into one line.
 - **`api.rs` split by responsibility:** done on 2026-11-24 into `api/`. The
   largest file is 304 lines, and the public paths are unchanged.
-
 
 ## T2 design notes (written before building it)
 
@@ -148,6 +154,7 @@ improvement and must be added to both sides.
 Source: `upstream/master`, read 2026-11-24.
 
 **A shared prompter.** Screens in a room scroll one script together:
+
 - the `controller` role drives it;
 - `remote` screens follow;
 - a `local` screen runs on its own.
@@ -157,6 +164,7 @@ title or a text custom field. The text is wrapped into lines of
 `charsPerLine` characters, under a heading of title and/or cue.
 
 **The server is authoritative.** It holds a transport:
+
 - `playback`, `mode` (`event` or `script`), `speed` in lines per minute
   (negative reads back), `anchor`, `at`, `ended` and `blackout`;
 - the anchor is a place in the text (event id, character offset, fractional
@@ -169,6 +177,7 @@ clock. There is no per-tick position broadcast: sync changes only on commands
 and at boundaries.
 
 **Where upstream keeps things:**
+
 - Settings `{ script, charsPerLine, heading }` are stored in the project.
 - The transport is in memory only.
 - The pure logic is in `packages/utils/src/teleprompter/`:
@@ -190,10 +199,12 @@ transport. The client view comes from upstream almost unchanged.
 Port upstream's test tables to a fixture,
 `packages/ontime-core/tests/fixtures/teleprompter.json`, and run it from both
 sides:
+
 - `cargo test`;
 - vitest against upstream's TS functions, once they are pulled in T4.
 
 **What the fixture covers:**
+
 - **wrap:** graphemes, break points, NBSP, punctuation and number gluing, long
   words, indent, tab and CRLF, offsets;
 - **position:** layout rows, the anchor and row round trip, edits and

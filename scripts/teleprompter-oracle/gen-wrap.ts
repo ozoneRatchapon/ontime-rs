@@ -3,5 +3,10 @@ import { wrapText } from '@upstream/apps/server/src/services/teleprompter-servic
 
 import { cases } from './wrap-cases.mjs';
 
-const out = cases.map(([name, text, charsPerLine]) => ({ name, text, charsPerLine, lines: wrapText(text, charsPerLine) }));
+const out = cases.map(([name, text, charsPerLine]) => ({
+  name,
+  text,
+  charsPerLine,
+  lines: wrapText(text, charsPerLine),
+}));
 process.stdout.write(JSON.stringify(out));

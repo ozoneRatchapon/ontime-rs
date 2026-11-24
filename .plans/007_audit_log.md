@@ -1,6 +1,7 @@
 # 007 — Audit log: who changed what, in which room (sign-in phase 3 of 3)
 
 Status: **done and deployed (2026-11-24).** Builds on 001 and 002.
+
 - **Worker:** `02b203be`. The rollback point is `f366b3c1`.
 - **Client:** Pages `781e445f`, live on `master.ontime-team.pages.dev`.
 - **Smoke test:** `activity.mjs` against production, 25/25, run twice. Both
@@ -15,6 +16,7 @@ or 90 days per room and 365 days for the registry, owners and admin read,
 names kept as they were.
 
 **Where the code is:**
+
 - `ontime-core`:
   - `audit.rs`: the line, actor and action types, plus chunked storage,
     pruning, merging and paging;
@@ -31,6 +33,7 @@ names kept as they were.
     and the admin "People activity" section.
 
 **Changes from the plan:**
+
 - **Storage is chunked, not one key.**
   - `worker` 0.4.2 has no SQL API.
   - With a single 300 KB key, every change would have rewritten 300 KB.
@@ -59,6 +62,7 @@ names kept as they were.
   log out.
 
 **`server-native` (the LAN host)** records the same lines (added the same day).
+
 - Chunks live beside the room's file, in `<room>.audit/`.
 - The chunk is written before the project. A crash in between can leave a
   line for a change that was not kept, but never a kept change without its
@@ -71,6 +75,7 @@ names kept as they were.
 ## Rollout
 
 Done on 2026-11-24, see the status above.
+
 - A forgotten smoke room drops out of the list, but its Durable Object
   storage stays, as with every forgotten room.
 
@@ -85,12 +90,12 @@ Done on 2026-11-24, see the status above.
 
 ## Who counts as the actor
 
-| how the request was allowed | recorded as |
-|---|---|
-| a person's session | the person: id, plus their name at that moment |
-| the room password | "room password" |
-| the master password | "admin" |
-| nothing, in an open room | "anyone with the link" |
+| how the request was allowed | recorded as                                    |
+| --------------------------- | ---------------------------------------------- |
+| a person's session          | the person: id, plus their name at that moment |
+| the room password           | "room password"                                |
+| the master password         | "admin"                                        |
+| nothing, in an open room    | "anyone with the link"                         |
 
 - **No IP addresses, no user agents.**
   - The sessions already hold a device label, which is enough to tell "Somchai
@@ -105,13 +110,13 @@ Done on 2026-11-24, see the status above.
 
 **Room-side** (in the room's Durable Object), one line per change:
 
-| kind | examples | detail kept |
-|---|---|---|
-| playback | start, pause, stop, load, roll, add time | cue and title of the event |
-| rundown | add, edit, delete, reorder, replace, renumber | cue and title; for an edit, the field **names** that changed (not values) |
-| rundown list | create, rename, delete, load | title |
-| room | settings, project data, custom fields, password set or cleared, members-only on or off | which section |
-| report | archive, clear | — |
+| kind         | examples                                                                               | detail kept                                                               |
+| ------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| playback     | start, pause, stop, load, roll, add time                                               | cue and title of the event                                                |
+| rundown      | add, edit, delete, reorder, replace, renumber                                          | cue and title; for an edit, the field **names** that changed (not values) |
+| rundown list | create, rename, delete, load                                                           | title                                                                     |
+| room         | settings, project data, custom fields, password set or cleared, members-only on or off | which section                                                             |
+| report       | archive, clear                                                                         | —                                                                         |
 
 - **Not recorded:**
   - aux timer ticks and the message overlay text;
@@ -123,6 +128,7 @@ Done on 2026-11-24, see the status above.
   into one line, so double-taps don't flood it.
 
 **Registry-side**, for the admin only:
+
 - a person created or removed;
 - an invite made or redeemed;
 - a session signed out;
@@ -140,11 +146,11 @@ Done on 2026-11-24, see the status above.
 
 ## Who may read
 
-| endpoint | who |
-|---|---|
+| endpoint                                                | who                 |
+| ------------------------------------------------------- | ------------------- |
 | `GET /auth/rooms/<room>/activity?before=<ts>&limit=100` | owners of that room |
-| `GET /admin/rooms/<room>/activity` | admin |
-| `GET /admin/activity` (registry events) | admin |
+| `GET /admin/rooms/<room>/activity`                      | admin               |
+| `GET /admin/activity` (registry events)                 | admin               |
 
 Operators and viewers can't read it.
 
@@ -178,6 +184,7 @@ React.
 ## Rollout
 
 Same as 001 and 002:
+
 1. Record the Worker version.
 2. Deploy the Worker, then the client.
 3. Smoke test with a throwaway person and room.

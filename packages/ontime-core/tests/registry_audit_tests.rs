@@ -15,7 +15,10 @@ struct World {
 
 impl World {
     fn new() -> Self {
-        Self { directory: Directory::default(), n: 0 }
+        Self {
+            directory: Directory::default(),
+            n: 0,
+        }
     }
 
     /// Runs a request the way the host does: describe first, then handle, and
@@ -28,7 +31,14 @@ impl World {
             *n += 1;
             format!("secret-{n}")
         };
-        let response = directory::handle(&mut self.directory, method, &segments, &body, NOW, &mut secrets);
+        let response = directory::handle(
+            &mut self.directory,
+            method,
+            &segments,
+            &body,
+            NOW,
+            &mut secrets,
+        );
         let line = match response.status < 400 && response.changed {
             true => described.or_else(|| redeemed(method, &segments, &response.body)),
             false => None,
@@ -57,15 +67,24 @@ fn the_admin_making_and_removing_people_is_recorded() {
     let mut world = World::new();
     let (person, line) = world.call("POST", "people", json!({ "name": "Somchai" }));
     let (actor, made) = line.unwrap();
-    assert_eq!((actor, made.action, made.subject), (Actor::Admin, Action::PersonCreate, titled("Somchai")));
+    assert_eq!(
+        (actor, made.action, made.subject),
+        (Actor::Admin, Action::PersonCreate, titled("Somchai"))
+    );
 
     let id = person["id"].as_str().unwrap();
     let (_, line) = world.call("POST", &format!("people/{id}/invite"), Value::Null);
-    assert_eq!(line.map(|(_, n)| (n.action, n.subject)), Some((Action::InviteIssue, titled("Somchai"))));
+    assert_eq!(
+        line.map(|(_, n)| (n.action, n.subject)),
+        Some((Action::InviteIssue, titled("Somchai")))
+    );
 
     let (_, line) = world.call("DELETE", &format!("people/{id}"), Value::Null);
     // named from before the removal
-    assert_eq!(line.map(|(_, n)| (n.action, n.subject)), Some((Action::PersonRemove, titled("Somchai"))));
+    assert_eq!(
+        line.map(|(_, n)| (n.action, n.subject)),
+        Some((Action::PersonRemove, titled("Somchai")))
+    );
 }
 
 #[test]
@@ -86,22 +105,39 @@ fn an_owner_managing_operators_is_recorded_with_the_room() {
     world.call("POST", "report", json!({ "room": "gala" }));
     let (_, line) = world.call("PUT", "rooms/gala", json!({ "owners": [owner] }));
     let (actor, set) = line.unwrap();
-    assert_eq!((actor, set.action, set.fields.clone(), set.room.clone()), (
-        Actor::Admin,
-        Action::MembersChange,
-        vec!["owners".to_string()],
-        Some("gala".to_string())
-    ));
+    assert_eq!(
+        (actor, set.action, set.fields.clone(), set.room.clone()),
+        (
+            Actor::Admin,
+            Action::MembersChange,
+            vec!["owners".to_string()],
+            Some("gala".to_string())
+        )
+    );
 
     let session = world.sign_in(&owner);
-    let (made, line) = world.call("POST", "auth/rooms/gala/operators", json!({ "token": session, "name": "Op" }));
+    let (made, line) = world.call(
+        "POST",
+        "auth/rooms/gala/operators",
+        json!({ "token": session, "name": "Op" }),
+    );
     let (actor, added) = line.unwrap();
     assert!(matches!(actor, Actor::Person { ref name, .. } if name == "Owner"));
-    assert_eq!((added.action, added.subject, added.room), (Action::OperatorAdd, titled("Op"), Some("gala".into())));
+    assert_eq!(
+        (added.action, added.subject, added.room),
+        (Action::OperatorAdd, titled("Op"), Some("gala".into()))
+    );
 
     let op = made["person"]["id"].as_str().unwrap();
-    let (_, line) = world.call("DELETE", &format!("auth/rooms/gala/operators/{op}"), json!({ "token": session }));
-    assert_eq!(line.map(|(_, n)| (n.action, n.subject)), Some((Action::OperatorRemove, titled("Op"))));
+    let (_, line) = world.call(
+        "DELETE",
+        &format!("auth/rooms/gala/operators/{op}"),
+        json!({ "token": session }),
+    );
+    assert_eq!(
+        line.map(|(_, n)| (n.action, n.subject)),
+        Some((Action::OperatorRemove, titled("Op")))
+    );
 }
 
 #[test]
@@ -125,11 +161,23 @@ fn reads_reports_labels_and_refusals_are_not_recorded() {
         ("POST", "report", json!({ "room": "gala" })),
         ("PUT", "rooms/gala", json!({ "note": "main hall" })),
         ("POST", "auth/me", json!({ "token": session })),
-        ("POST", "auth/check", json!({ "token": session, "room": "gala" })),
+        (
+            "POST",
+            "auth/check",
+            json!({ "token": session, "room": "gala" }),
+        ),
         // not an owner
-        ("POST", "auth/rooms/gala/operators", json!({ "token": session, "name": "x" })),
+        (
+            "POST",
+            "auth/rooms/gala/operators",
+            json!({ "token": session, "name": "x" }),
+        ),
         // no such person
-        ("DELETE", "people/00000000-0000-0000-0000-000000000000", Value::Null),
+        (
+            "DELETE",
+            "people/00000000-0000-0000-0000-000000000000",
+            Value::Null,
+        ),
     ] {
         let (_, line) = world.call(method, path, body);
         assert_eq!(line, None, "{method} {path}");

@@ -23,7 +23,10 @@ use crate::rundown::MS_PER_DAY;
 pub enum Actor {
     /// A signed-in person. The name is kept as it was then, so renaming or
     /// removing them later does not rewrite history.
-    Person { id: Uuid, name: String },
+    Person {
+        id: Uuid,
+        name: String,
+    },
     RoomPassword,
     /// The master password.
     Admin,
@@ -120,14 +123,15 @@ impl Action {
             | EntryRenumber | EntryClone | EntryGroup | EntryUngroup | DelayApply => Area::Rundown,
             RundownCreate | RundownImport | RundownRename | RundownReplace | RundownDelete
             | RundownLoad | RundownDuplicate => Area::RundownList,
-            ProjectData | Settings | ViewSettings | CustomFields | UrlPresets | Css | PasswordSet
-            | PasswordCleared | MembersOnlyOn | MembersOnlyOff | Restore => Area::Room,
+            ProjectData | Settings | ViewSettings | CustomFields | UrlPresets | Css
+            | PasswordSet | PasswordCleared | MembersOnlyOn | MembersOnlyOff | Restore => {
+                Area::Room
+            }
             ReportArchive | ReportClear => Area::Report,
             PersonCreate | PersonRemove | InviteIssue | InviteRedeem | SignOut | MembersChange
             | OperatorAdd | OperatorRemove => Area::People,
-            PrompterPlay | PrompterPause | PrompterMove | PrompterSpeed | PrompterMode | PrompterBlackout => {
-                Area::Teleprompter
-            }
+            PrompterPlay | PrompterPause | PrompterMove | PrompterSpeed | PrompterMode
+            | PrompterBlackout => Area::Teleprompter,
         }
     }
 }
@@ -144,7 +148,10 @@ pub struct Subject {
 
 impl Subject {
     pub fn titled(title: impl Into<String>) -> Self {
-        Self { cue: String::new(), title: title.into() }
+        Self {
+            cue: String::new(),
+            title: title.into(),
+        }
     }
 }
 
@@ -171,7 +178,14 @@ pub struct Note {
 
 impl Note {
     pub fn new(action: Action) -> Self {
-        Self { action, subject: None, fields: Vec::new(), more: 0, amount: None, room: None }
+        Self {
+            action,
+            subject: None,
+            fields: Vec::new(),
+            more: 0,
+            amount: None,
+            room: None,
+        }
     }
 
     pub fn about(mut self, subject: Option<Subject>) -> Self {
@@ -236,9 +250,16 @@ pub struct Retention {
 }
 
 impl Retention {
-    pub const ROOM: Retention = Retention { max_lines: 2_000, max_age_ms: 90 * MS_PER_DAY, chunk_lines: 100 };
-    pub const REGISTRY: Retention =
-        Retention { max_lines: 2_000, max_age_ms: 365 * MS_PER_DAY, chunk_lines: 100 };
+    pub const ROOM: Retention = Retention {
+        max_lines: 2_000,
+        max_age_ms: 90 * MS_PER_DAY,
+        chunk_lines: 100,
+    };
+    pub const REGISTRY: Retention = Retention {
+        max_lines: 2_000,
+        max_age_ms: 365 * MS_PER_DAY,
+        chunk_lines: 100,
+    };
 
     fn max_chunks(&self) -> usize {
         (self.max_lines / self.chunk_lines).max(1)
@@ -350,13 +371,25 @@ impl AuditIndex {
 
         let mut chunk = match head {
             Some(chunk) if merged || chunk.lines.len() < retention.chunk_lines => chunk,
-            _ => Chunk { no: next_no, lines: Vec::new() },
+            _ => Chunk {
+                no: next_no,
+                lines: Vec::new(),
+            },
         };
         if !merged {
-            chunk.lines.push(AuditLine { at: now, actor, note, times: 1 });
+            chunk.lines.push(AuditLine {
+                at: now,
+                actor,
+                note,
+                times: 1,
+            });
         }
 
-        let meta = ChunkMeta { no: chunk.no, newest: now, len: chunk.lines.len() };
+        let meta = ChunkMeta {
+            no: chunk.no,
+            newest: now,
+            len: chunk.lines.len(),
+        };
         match self.chunks.last_mut() {
             Some(last) if last.no == chunk.no => *last = meta,
             _ => self.chunks.push(meta),
@@ -433,6 +466,8 @@ impl Page {
 
     /// Where the next page starts, when this one is full.
     pub fn next_before(&self) -> Option<i64> {
-        self.is_full().then(|| self.lines.last().map(|line| line.at)).flatten()
+        self.is_full()
+            .then(|| self.lines.last().map(|line| line.at))
+            .flatten()
     }
 }

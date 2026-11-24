@@ -16,7 +16,10 @@ use crate::runtime::Command;
 /// present, it is what let them in.
 pub fn actor(project: &Project, req: &ApiRequest, member: Option<&Member>) -> Actor {
     if let Some(member) = member {
-        return Actor::Person { id: member.person, name: member.name.clone() };
+        return Actor::Person {
+            id: member.person,
+            name: member.name.clone(),
+        };
     }
     if api::is_admin(req) {
         return Actor::Admin;
@@ -42,11 +45,17 @@ pub fn http_note(project: &Project, req: &ApiRequest) -> Option<Note> {
     let segments = route_segments(&req.path);
     match (req.method, segments.as_slice()) {
         (_, ["data", "rundowns", rest @ ..]) => rundown_note(project, req.method, rest, body),
-        (_, ["data", "project", ..]) => Some(Note::new(Action::ProjectData).with_fields(keys(body))),
+        (_, ["data", "project", ..]) => {
+            Some(Note::new(Action::ProjectData).with_fields(keys(body)))
+        }
         (_, ["data", "settings", ..]) => Some(Note::new(Action::Settings).with_fields(keys(body))),
-        (_, ["data", "view-settings"]) => Some(Note::new(Action::ViewSettings).with_fields(keys(body))),
+        (_, ["data", "view-settings"]) => {
+            Some(Note::new(Action::ViewSettings).with_fields(keys(body)))
+        }
         (_, ["data", "custom-fields", rest @ ..]) => {
-            let name = text(body, "label").or(rest.first().copied()).map(Subject::titled);
+            let name = text(body, "label")
+                .or(rest.first().copied())
+                .map(Subject::titled);
             Some(Note::new(Action::CustomFields).about(name))
         }
         (_, ["data", "url-presets", ..]) => Some(Note::new(Action::UrlPresets)),
@@ -58,7 +67,9 @@ pub fn http_note(project: &Project, req: &ApiRequest) -> Option<Note> {
             None => None,
         },
         (_, ["data", "session", "password"]) => match body.get("password") {
-            Some(Value::String(password)) if !password.is_empty() => Some(Note::new(Action::PasswordSet)),
+            Some(Value::String(password)) if !password.is_empty() => {
+                Some(Note::new(Action::PasswordSet))
+            }
             Some(Value::Null) => Some(Note::new(Action::PasswordCleared)),
             _ => None,
         },
@@ -68,9 +79,19 @@ pub fn http_note(project: &Project, req: &ApiRequest) -> Option<Note> {
     }
 }
 
-fn rundown_note(project: &Project, method: HttpMethod, rest: &[&str], body: &Value) -> Option<Note> {
+fn rundown_note(
+    project: &Project,
+    method: HttpMethod,
+    rest: &[&str],
+    body: &Value,
+) -> Option<Note> {
     use HttpMethod::*;
-    let titled = |id: &str| project.rundowns.get(id).map(|rundown| Subject::titled(rundown.title.clone()));
+    let titled = |id: &str| {
+        project
+            .rundowns
+            .get(id)
+            .map(|rundown| Subject::titled(rundown.title.clone()))
+    };
     let entry = |rundown: &str, id: &str| entry_subject(project, rundown, id);
     let entries = |rundown: &str, ids: &[String]| {
         let first = ids.first().and_then(|id| entry(rundown, id));
@@ -78,9 +99,15 @@ fn rundown_note(project: &Project, method: HttpMethod, rest: &[&str], body: &Val
     };
 
     let note = match (method, rest) {
-        (Post, []) => Note::new(Action::RundownCreate).about(text(body, "title").map(Subject::titled)),
-        (Post, ["import"]) => Note::new(Action::RundownImport).about(text(body, "title").map(Subject::titled)),
-        (Patch, [_]) => Note::new(Action::RundownRename).about(text(body, "title").map(Subject::titled)),
+        (Post, []) => {
+            Note::new(Action::RundownCreate).about(text(body, "title").map(Subject::titled))
+        }
+        (Post, ["import"]) => {
+            Note::new(Action::RundownImport).about(text(body, "title").map(Subject::titled))
+        }
+        (Patch, [_]) => {
+            Note::new(Action::RundownRename).about(text(body, "title").map(Subject::titled))
+        }
         (Put, [id]) => Note::new(Action::RundownReplace).about(titled(id)),
         (Delete, [id]) => Note::new(Action::RundownDelete).about(titled(id)),
         (Post, [id, "load"]) => Note::new(Action::RundownLoad).about(titled(id)),
@@ -88,35 +115,46 @@ fn rundown_note(project: &Project, method: HttpMethod, rest: &[&str], body: &Val
         (Post, [_, "entry"]) => Note::new(Action::EntryAdd).about(Some(subject_of(body))),
         (Put, [id, "entry"]) => {
             let subject = text(body, "id").and_then(|entry_id| entry(id, entry_id));
-            Note::new(Action::EntryEdit).about(subject).with_fields(field_names(body))
+            Note::new(Action::EntryEdit)
+                .about(subject)
+                .with_fields(field_names(body))
         }
         (Put, [id, "batch"]) => {
             let (subject, more) = entries(id, &strings(body.get("ids")));
             let data = body.get("data").unwrap_or(&Value::Null);
-            Note::new(Action::EntryEdit).about(subject).with_more(more).with_fields(field_names(data))
+            Note::new(Action::EntryEdit)
+                .about(subject)
+                .with_more(more)
+                .with_fields(field_names(data))
         }
         (Delete, [id, "entries"]) => {
             let (subject, more) = entries(id, &strings(body.get("ids")));
-            Note::new(Action::EntryDelete).about(subject).with_more(more)
+            Note::new(Action::EntryDelete)
+                .about(subject)
+                .with_more(more)
         }
         (Delete, [id, "all"]) => Note::new(Action::EntryDeleteAll).about(titled(id)),
-        (Patch, [id, "reorder"]) => {
-            Note::new(Action::EntryMove).about(text(body, "entryId").and_then(|entry_id| entry(id, entry_id)))
-        }
-        (Patch, [id, "swap"]) => {
-            Note::new(Action::EntrySwap).about(text(body, "from").and_then(|entry_id| entry(id, entry_id)))
-        }
+        (Patch, [id, "reorder"]) => Note::new(Action::EntryMove)
+            .about(text(body, "entryId").and_then(|entry_id| entry(id, entry_id))),
+        (Patch, [id, "swap"]) => Note::new(Action::EntrySwap)
+            .about(text(body, "from").and_then(|entry_id| entry(id, entry_id))),
         (Patch, [id, "renumber"]) => {
             let (subject, more) = entries(id, &strings(body.get("ids")));
-            Note::new(Action::EntryRenumber).about(subject).with_more(more)
+            Note::new(Action::EntryRenumber)
+                .about(subject)
+                .with_more(more)
         }
-        (Patch, [id, "applydelay", delay_id]) => Note::new(Action::DelayApply).about(entry(id, delay_id)),
+        (Patch, [id, "applydelay", delay_id]) => {
+            Note::new(Action::DelayApply).about(entry(id, delay_id))
+        }
         (Post, [id, "clone", entry_id]) => Note::new(Action::EntryClone).about(entry(id, entry_id)),
         (Post, [id, "group"]) => {
             let (subject, more) = entries(id, &strings(body.get("ids")));
             Note::new(Action::EntryGroup).about(subject).with_more(more)
         }
-        (Post, [id, "ungroup", group_id]) => Note::new(Action::EntryUngroup).about(entry(id, group_id)),
+        (Post, [id, "ungroup", group_id]) => {
+            Note::new(Action::EntryUngroup).about(entry(id, group_id))
+        }
         _ => return None,
     };
     Some(note)
@@ -127,7 +165,12 @@ fn rundown_note(project: &Project, method: HttpMethod, rest: &[&str], body: &Val
 /// was loaded until then, which pause, stop and add-time are about.
 ///
 /// The message overlay and the aux timers are not recorded.
-pub fn socket_note(project: &Project, tag: &str, payload: Option<&Value>, before: Option<&str>) -> Option<Note> {
+pub fn socket_note(
+    project: &Project,
+    tag: &str,
+    payload: Option<&Value>,
+    before: Option<&str>,
+) -> Option<Note> {
     if tag == "teleprompter" {
         return prompter_note(project, payload?);
     }
@@ -135,7 +178,9 @@ pub fn socket_note(project: &Project, tag: &str, payload: Option<&Value>, before
     let loaded = project.runtime.selected_id.as_deref();
     let (action, about, amount) = match command {
         Command::Start | Command::StartNext | Command::StartId(_) => (Action::Start, loaded, None),
-        Command::LoadNext | Command::LoadPrevious | Command::LoadId(_) => (Action::Load, loaded, None),
+        Command::LoadNext | Command::LoadPrevious | Command::LoadId(_) => {
+            (Action::Load, loaded, None)
+        }
         Command::Roll => (Action::Roll, loaded, None),
         Command::Pause => (Action::Pause, before, None),
         Command::Stop => (Action::Stop, before, None),
@@ -163,9 +208,11 @@ fn prompter_note(project: &Project, payload: &Value) -> Option<Note> {
             Playback::Pause => Action::PrompterPause,
         },
         Prompt::Speed { .. } | Prompt::SpeedBy { .. } => Action::PrompterSpeed,
-        Prompt::Scroll { .. } | Prompt::Next | Prompt::Previous | Prompt::Top | Prompt::Goto { .. } => {
-            Action::PrompterMove
-        }
+        Prompt::Scroll { .. }
+        | Prompt::Next
+        | Prompt::Previous
+        | Prompt::Top
+        | Prompt::Goto { .. } => Action::PrompterMove,
         Prompt::Mode { .. } => Action::PrompterMode,
         Prompt::Blackout { .. } => Action::PrompterBlackout,
     };
@@ -177,7 +224,12 @@ fn prompter_note(project: &Project, payload: &Value) -> Option<Note> {
 }
 
 fn entry_subject(project: &Project, rundown: &str, id: &str) -> Option<Subject> {
-    project.rundowns.get(rundown)?.entries.get(id).map(subject_of)
+    project
+        .rundowns
+        .get(rundown)?
+        .entries
+        .get(id)
+        .map(subject_of)
 }
 
 fn subject_of(entry: &Value) -> Subject {
@@ -197,23 +249,36 @@ fn field_names(patch: &Value) -> Vec<String> {
         .iter()
         .filter(|(key, _)| key.as_str() != "id")
         .flat_map(|(key, value)| match (key.as_str(), value.as_object()) {
-            ("custom", Some(custom)) => custom.keys().map(|name| format!("custom.{name}")).collect(),
+            ("custom", Some(custom)) => {
+                custom.keys().map(|name| format!("custom.{name}")).collect()
+            }
             _ => vec![key.clone()],
         })
         .collect()
 }
 
 fn keys(body: &Value) -> Vec<String> {
-    body.as_object().map(|object| object.keys().cloned().collect()).unwrap_or_default()
+    body.as_object()
+        .map(|object| object.keys().cloned().collect())
+        .unwrap_or_default()
 }
 
 fn text<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
-    value.get(key).and_then(Value::as_str).filter(|s| !s.is_empty())
+    value
+        .get(key)
+        .and_then(Value::as_str)
+        .filter(|s| !s.is_empty())
 }
 
 fn strings(value: Option<&Value>) -> Vec<String> {
     value
         .and_then(Value::as_array)
-        .map(|items| items.iter().filter_map(Value::as_str).map(str::to_string).collect())
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_string)
+                .collect()
+        })
         .unwrap_or_default()
 }

@@ -42,9 +42,9 @@ new_sqlite_classes = ["OntimeProject"]
 Two failed attempts are worth recording, because the ordering is not obvious:
 
 - Renaming only the class → `10061 Cannot apply --delete-class migration to class
-  'OntimeRoom' without also removing the binding that references it`
+'OntimeRoom' without also removing the binding that references it`
 - Dropping `deleted_classes` → `10064 New version of script does not export class
-  'OntimeRoom' which is depended on by existing Durable Objects`
+'OntimeRoom' which is depended on by existing Durable Objects`
 
 The binding **name** has to change too (`ONTIME_ROOM` → `ONTIME_PROJECT`), not just
 the class name. With both renamed and `deleted_classes` present, the deploy succeeds
@@ -57,7 +57,7 @@ maths, kept pure so it is testable without a Worker.
 
 **Time model.** `startedAt` / `pausedAt` are stored as **epoch milliseconds**, so
 pausing and resuming never has to reason about midnight. The client's `RuntimeStore`
-speaks *time of day* (ms since local midnight), so the conversion happens once, in
+speaks _time of day_ (ms since local midnight), so the conversion happens once, in
 `snapshot()`.
 
 **Timezone.** A Worker has no local timezone — it is always UTC. Without correction,
@@ -113,22 +113,22 @@ All against the deployed Worker unless stated.
 - REST smoke test — 40 checks passing.
 - WebSocket test — `client-init`, `ping`→`pong`, mutation broadcasts `refetch`.
 - Timer test over a real websocket — 20 checks passing, including
-  *"no ticks while stopped"*, which is what keeps the cost model valid.
+  _"no ticks while stopped"_, which is what keeps the cost model valid.
 - Endpoint sweep — all 15 paths the client fetches on load return 200.
 
 ## 4. Does the free plan actually hold? Yes, with room to spare
 
 Verified limits (Workers Free / Durable Objects Free):
 
-| Resource | Free allowance |
-|---|---|
-| Worker requests | 100,000 / day |
-| DO requests | 100,000 / day |
-| DO duration | 13,000 GB-s / day |
-| DO rows written | 100,000 / day |
-| DO rows read | 5,000,000 / day |
-| DO storage | 5 GB total, 1 GB per object |
-| Pages bandwidth | unlimited |
+| Resource        | Free allowance              |
+| --------------- | --------------------------- |
+| Worker requests | 100,000 / day               |
+| DO requests     | 100,000 / day               |
+| DO duration     | 13,000 GB-s / day           |
+| DO rows written | 100,000 / day               |
+| DO rows read    | 5,000,000 / day             |
+| DO storage      | 5 GB total, 1 GB per object |
+| Pages bandwidth | unlimited                   |
 
 The decisive billing rule: **outgoing WebSocket messages are not charged**, and
 incoming ones are discounted 20:1. Broadcasting the timer to viewers is therefore
@@ -136,12 +136,12 @@ effectively free, and viewer count is not a cost driver at all.
 
 What does cost:
 
-| Activity | DO requests | Rows written |
-|---|---|---|
-| 1 hour of playback (1 Hz alarm) | 3,600 | 3,600 |
-| One viewer loading the app (~15 REST calls) | 15 | 0 |
-| One operator edit | 1 | 1 |
-| Idle (nothing playing) | **0** | **0** |
+| Activity                                    | DO requests | Rows written |
+| ------------------------------------------- | ----------- | ------------ |
+| 1 hour of playback (1 Hz alarm)             | 3,600       | 3,600        |
+| One viewer loading the app (~15 REST calls) | 15          | 0            |
+| One operator edit                           | 1           | 1            |
+| Idle (nothing playing)                      | **0**       | **0**        |
 
 Binding constraint is rows written: 100,000 ÷ 3,600 ≈ **27 hours of playback per day**.
 For any realistic show that is unlimited. On the Worker side, 100,000 requests/day is
@@ -177,12 +177,12 @@ original's rundown-wide calculation.
 `apps/server` is 20,046 lines of TypeScript and works today with full parity. Hosting
 it free:
 
-| Option | Verdict |
-|---|---|
-| **Oracle Cloud Always Free** | 2 OCPU / 12 GB ARM VM, free with no time limit (halved from 4/24 in June 2026). Comfortably runs the Node server. **Best parity-for-free option.** |
-| **Spare machine + Cloudflare Tunnel** | Free if the hardware exists; Tunnel is free and gives TLS without port forwarding. |
-| **Render free tier** | Not viable — spins down after 15 min of inactivity, which drops WebSocket connections, and takes ~1 min to wake. Fatal for live show control. |
-| **Fly.io / Railway** | No usable free tier any more. |
+| Option                                | Verdict                                                                                                                                            |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Oracle Cloud Always Free**          | 2 OCPU / 12 GB ARM VM, free with no time limit (halved from 4/24 in June 2026). Comfortably runs the Node server. **Best parity-for-free option.** |
+| **Spare machine + Cloudflare Tunnel** | Free if the hardware exists; Tunnel is free and gives TLS without port forwarding.                                                                 |
+| **Render free tier**                  | Not viable — spins down after 15 min of inactivity, which drops WebSocket connections, and takes ~1 min to wake. Fatal for live show control.      |
+| **Fly.io / Railway**                  | No usable free tier any more.                                                                                                                      |
 
 ### Recommendation
 
@@ -190,7 +190,7 @@ it free:
   original Node server on an Oracle Always Free VM. Same 0 baht, 100% parity, and no
   ongoing cost of tracking a 20k-line upstream in a parallel Rust implementation.
 - **If you need a cloud rundown + timer for many viewers** and no hardware
-  integrations: the Workers build now does that, and does it *better* than a single
+  integrations: the Workers build now does that, and does it _better_ than a single
   VM — global edge, no server to patch, and viewers are free because outgoing
   WebSocket traffic is not billed.
 

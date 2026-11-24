@@ -31,7 +31,8 @@ pub(crate) fn handle(
         }
         (HttpMethod::Get, ["script"]) => {
             let was_built = project.prompter.built;
-            let script = room::script_for_source(project, query(&req.path, "source").as_deref(), now);
+            let script =
+                room::script_for_source(project, query(&req.path, "source").as_deref(), now);
             // the first read starts following the loaded event, which is worth keeping
             if project.prompter.built != was_built {
                 effects.push(Effect::Persist);

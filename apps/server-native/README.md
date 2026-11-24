@@ -28,10 +28,10 @@ apps/server-rs/tests/e2e/run.sh http://127.0.0.1:4001
 
 ## What lives where
 
-| | |
-|---|---|
-| `ontime-core::api` | routing, auth, the wake policy, socket commands |
-| this crate | HTTP and websockets (axum), one JSON file per room, the client list |
+|                    |                                                                     |
+| ------------------ | ------------------------------------------------------------------- |
+| `ontime-core::api` | routing, auth, the wake policy, socket commands                     |
+| this crate         | HTTP and websockets (axum), one JSON file per room, the client list |
 
 The client list is the one thing a host owns itself, because the connections are
 its own: the Worker keeps it on the socket attachment, this keeps it in a map.

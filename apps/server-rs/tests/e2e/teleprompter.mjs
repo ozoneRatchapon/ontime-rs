@@ -17,7 +17,9 @@ let failed = false;
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`,
+  );
 };
 const room = `tp-${Math.random().toString(36).slice(2, 8)}`;
 const master = process.env.ADMIN_PASSWORD
@@ -56,7 +58,12 @@ const socket = () =>
       if (packet.payload.teleprompter) seen.state = packet.payload.teleprompter;
     });
     ws.addEventListener('open', () =>
-      resolve({ ws, seen, send: (payload) => ws.send(JSON.stringify({ tag: 'teleprompter', payload })), raw: (tag, payload) => ws.send(JSON.stringify({ tag, payload })) }),
+      resolve({
+        ws,
+        seen,
+        send: (payload) => ws.send(JSON.stringify({ tag: 'teleprompter', payload })),
+        raw: (tag, payload) => ws.send(JSON.stringify({ tag, payload })),
+      }),
     );
     ws.addEventListener('error', () => reject(new Error('socket error')));
   });
@@ -65,7 +72,10 @@ const socket = () =>
 const created = await json(await call('/data/rundowns', { method: 'POST', body: { title: 'Prompt' } }));
 const rundown = created.rundowns.find((r) => r.title === 'Prompt').id;
 const add = (id, cue, note) =>
-  call(`/data/rundowns/${rundown}/entry`, { method: 'POST', body: { id, type: 'event', cue, title: `Title ${cue}`, note, duration: 600000 } });
+  call(`/data/rundowns/${rundown}/entry`, {
+    method: 'POST',
+    body: { id, type: 'event', cue, title: `Title ${cue}`, note, duration: 600000 },
+  });
 await add('ev-a', '1', 'Good evening and welcome to the show tonight');
 await add('ev-b', '2', 'Our first guest needs no introduction at all');
 await add('ev-c', '3', 'Thank you and good night');
@@ -76,8 +86,20 @@ const settings = await json(await call('/data/teleprompter/settings'));
 check('defaults', [settings.script, settings.charsPerLine, settings.heading], ['note', 32, 'title']);
 // upstream also refuses a body which is not an object; our hosts read such a
 // body as {}, an empty patch, which changes nothing
-for (const body of [{ script: 123 }, { script: 'custom-missing' }, { heading: 'banner' }, { charsPerLine: 9 }, { charsPerLine: 32.5 }, { charsPerLine: '32' }, { charsPerLine: null }]) {
-  check(`refused ${JSON.stringify(body)}`, (await call('/data/teleprompter/settings', { method: 'POST', body })).status, 422);
+for (const body of [
+  { script: 123 },
+  { script: 'custom-missing' },
+  { heading: 'banner' },
+  { charsPerLine: 9 },
+  { charsPerLine: 32.5 },
+  { charsPerLine: '32' },
+  { charsPerLine: null },
+]) {
+  check(
+    `refused ${JSON.stringify(body)}`,
+    (await call('/data/teleprompter/settings', { method: 'POST', body })).status,
+    422,
+  );
 }
 const patched = await call('/data/teleprompter/settings', { method: 'POST', body: { charsPerLine: 20 } });
 check('a partial patch', [patched.status, (await json(patched)).charsPerLine], [200, 20]);
@@ -85,8 +107,16 @@ check('nothing else changed', (await json(await call('/data/teleprompter/setting
 
 console.log('== the script ==');
 const script = await json(await call('/data/teleprompter/script'));
-check('one event per note, in order', script.events.map((e) => e.id), ['ev-a', 'ev-b', 'ev-c']);
-check('cut at 20 characters', script.events[0].lines.map((l) => l.kind), ['heading', 'text', 'text', 'text', 'blank']);
+check(
+  'one event per note, in order',
+  script.events.map((e) => e.id),
+  ['ev-a', 'ev-b', 'ev-c'],
+);
+check(
+  'cut at 20 characters',
+  script.events[0].lines.map((l) => l.kind),
+  ['heading', 'text', 'text', 'text', 'blank'],
+);
 check('the revision is a number', typeof script.revision, 'number');
 const titles = await json(await call('/data/teleprompter/script?source=title'));
 check('another source is built for the asker', [titles.revision, titles.events[0].lines[1].text], [0, 'Title 1']);
@@ -109,7 +139,10 @@ await wait(1500);
 check('no new sync while nothing happens', follower.seen.sync.at, playingSince);
 
 console.log('== an edit above the reader during playback ==');
-await call(`/data/rundowns/${rundown}/entry`, { method: 'PUT', body: { id: 'ev-a', note: 'A much longer welcome which now takes many more lines than it did before' } });
+await call(`/data/rundowns/${rundown}/entry`, {
+  method: 'PUT',
+  body: { id: 'ev-a', note: 'A much longer welcome which now takes many more lines than it did before' },
+});
 await wait(600);
 check('the script revision changed', follower.seen.sync?.revision !== script.revision, true);
 check('the reader is still in their event', follower.seen.state?.event?.id, 'ev-b');
@@ -151,7 +184,11 @@ check('refused commands change nothing', follower.seen.state, before);
 
 console.log('== the source follows its custom field ==');
 await call('/data/custom-fields', { method: 'POST', body: { label: 'Lines', type: 'text', colour: '' } });
-check('read a custom field', (await call('/data/teleprompter/settings', { method: 'POST', body: { script: 'custom-Lines' } })).status, 200);
+check(
+  'read a custom field',
+  (await call('/data/teleprompter/settings', { method: 'POST', body: { script: 'custom-Lines' } })).status,
+  200,
+);
 await call('/data/custom-fields/Lines', { method: 'PUT', body: { label: 'Speech' } });
 check('renamed with it', (await json(await call('/data/teleprompter/settings'))).script, 'custom-Speech');
 await call('/data/custom-fields/Speech', { method: 'DELETE' });

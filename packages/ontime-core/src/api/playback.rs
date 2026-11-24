@@ -151,7 +151,8 @@ pub fn on_alarm(project: &mut Project, now: i64) -> bool {
         None => false,
     };
     // an end action may load the next event
-    let followed = project.runtime.selected_id != previous_entry && prompter::follow_loaded(project, now);
+    let followed =
+        project.runtime.selected_id != previous_entry && prompter::follow_loaded(project, now);
     let settled = prompter::tick(project, now);
     timer || followed || settled
 }
@@ -161,13 +162,21 @@ pub fn on_alarm(project: &mut Project, now: i64) -> bool {
 /// host, because the copies drifting apart is how the aux timers went missing.
 pub fn runtime_payload(project: &Project, now: i64) -> Option<Value> {
     let rundown = project.current()?;
-    let mut payload = project.runtime.snapshot(rundown, now, project.timezone_offset);
+    let mut payload = project
+        .runtime
+        .snapshot(rundown, now, project.timezone_offset);
     if let Some(object) = payload.as_object_mut() {
-        if let Some(aux) = project.aux_timers.snapshot(now, &project.settings.aux_timer_names).as_object() {
+        if let Some(aux) = project
+            .aux_timers
+            .snapshot(now, &project.settings.aux_timer_names)
+            .as_object()
+        {
             object.extend(aux.clone());
         }
         object.insert("message".into(), json!(project.message));
-        object.extend(prompter::runtime_fields(project, now).map(|(key, value)| (key.to_string(), value)));
+        object.extend(
+            prompter::runtime_fields(project, now).map(|(key, value)| (key.to_string(), value)),
+        );
     }
     Some(payload)
 }

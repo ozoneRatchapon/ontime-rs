@@ -131,9 +131,15 @@ pub enum TransportCommand {
     Play,
     Pause,
     Toggle,
-    Speed { value: f64 },
-    SpeedBy { value: f64 },
-    Scroll { lines: f64 },
+    Speed {
+        value: f64,
+    },
+    SpeedBy {
+        value: f64,
+    },
+    Scroll {
+        lines: f64,
+    },
     Next,
     Previous,
     Goto {
@@ -141,8 +147,12 @@ pub enum TransportCommand {
         event_id: String,
     },
     Top,
-    Mode { mode: ModeCommand },
-    Blackout { blackout: BlackoutCommand },
+    Mode {
+        mode: ModeCommand,
+    },
+    Blackout {
+        blackout: BlackoutCommand,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -214,7 +224,10 @@ fn sign(value: f64) -> f64 {
 /// Between 1 and 100 lines per minute either way. Playback always moves, so 0
 /// is the slowest speed in the current direction.
 fn clamp_speed(speed: f64, current: f64) -> f64 {
-    let direction = [sign(speed), sign(current), 1.0].into_iter().find(|d| *d != 0.0).unwrap_or(1.0);
+    let direction = [sign(speed), sign(current), 1.0]
+        .into_iter()
+        .find(|d| *d != 0.0)
+        .unwrap_or(1.0);
     direction * speed.abs().clamp(1.0, 100.0)
 }
 
@@ -260,7 +273,10 @@ fn playback_bound(layout: &Layout, from: f64, mode: Mode, speed: f64) -> (f64, S
     };
     if speed > 0.0 {
         let next = match mode {
-            Mode::Event => layout.events.iter().find(|event| event.end_row as f64 > from + BOUNDARY_EPSILON),
+            Mode::Event => layout
+                .events
+                .iter()
+                .find(|event| event.end_row as f64 > from + BOUNDARY_EPSILON),
             Mode::Script => None,
         };
         return match next {
@@ -269,7 +285,11 @@ fn playback_bound(layout: &Layout, from: f64, mode: Mode, speed: f64) -> (f64, S
         };
     }
     let reading = match mode {
-        Mode::Event => layout.events.iter().rev().find(|event| (event.start_row as f64) < from - BOUNDARY_EPSILON),
+        Mode::Event => layout
+            .events
+            .iter()
+            .rev()
+            .find(|event| (event.start_row as f64) < from - BOUNDARY_EPSILON),
         Mode::Script => None,
     };
     match reading {
@@ -289,7 +309,12 @@ pub fn position_at(transport: &Transport, layout: &Layout, now: f64) -> Option<f
         return Some(from);
     }
     let (bound, _) = playback_bound(layout, from, transport.mode, transport.speed);
-    Some(travel(from, transport.speed, elapsed_since(transport.at, now), bound))
+    Some(travel(
+        from,
+        transport.speed,
+        elapsed_since(transport.at, now),
+        bound,
+    ))
 }
 
 /// Brings the transport up to a moment: playback which reached its end has
@@ -299,7 +324,11 @@ pub fn settle(transport: &Transport, layout: &Layout, now: f64) -> Transport {
         return transport.clone();
     }
     let Some(anchor) = &transport.anchor else {
-        return Transport { playback: Playback::Pause, at: now, ..transport.clone() };
+        return Transport {
+            playback: Playback::Pause,
+            at: now,
+            ..transport.clone()
+        };
     };
     let Some(from) = layout.row_of(anchor) else {
         return transport.clone();
@@ -347,34 +376,74 @@ pub fn apply_command(
         true => layout.anchor_at(position),
         false => current.anchor.clone(),
     };
-    let rebased = Transport { anchor, at: now, ..current.clone() };
+    let rebased = Transport {
+        anchor,
+        at: now,
+        ..current.clone()
+    };
 
     let move_to = |row: f64| {
         let last_row = layout.events.last().map_or(0, |event| event.end_row) as f64;
         let target = row.max(0.0).min(last_row);
-        Transport { anchor: layout.anchor_at(target), ended: None, ..rebased.clone() }
+        Transport {
+            anchor: layout.anchor_at(target),
+            ended: None,
+            ..rebased.clone()
+        }
     };
     let move_to_event = |event_id: Option<&str>| match event_id {
-        Some(id) => Transport { anchor: Some(start_of_event(id)), ended: None, ..rebased.clone() },
+        Some(id) => Transport {
+            anchor: Some(start_of_event(id)),
+            ended: None,
+            ..rebased.clone()
+        },
         None => rebased.clone(),
     };
     let reader = layout.event_at(position);
-    let reader_index = reader.and_then(|reader| layout.events.iter().position(|event| event.id == reader.id));
-    let event_id_at = |index: Option<usize>| index.and_then(|i| layout.events.get(i)).map(|event| event.id.as_str());
+    let reader_index =
+        reader.and_then(|reader| layout.events.iter().position(|event| event.id == reader.id));
+    let event_id_at = |index: Option<usize>| {
+        index
+            .and_then(|i| layout.events.get(i))
+            .map(|event| event.id.as_str())
+    };
 
     let next = match command {
-        TransportCommand::Play => Transport { playback: Playback::Play, ended: None, ..rebased },
-        TransportCommand::Pause => Transport { playback: Playback::Pause, ..rebased },
-        TransportCommand::Toggle => match is_playing {
-            true => Transport { playback: Playback::Pause, ..rebased },
-            false => Transport { playback: Playback::Play, ended: None, ..rebased },
+        TransportCommand::Play => Transport {
+            playback: Playback::Play,
+            ended: None,
+            ..rebased
         },
-        TransportCommand::Speed { value } => Transport { speed: clamp_speed(*value, current.speed), ..rebased },
-        TransportCommand::SpeedBy { value } => Transport { speed: step_speed(current.speed, *value), ..rebased },
+        TransportCommand::Pause => Transport {
+            playback: Playback::Pause,
+            ..rebased
+        },
+        TransportCommand::Toggle => match is_playing {
+            true => Transport {
+                playback: Playback::Pause,
+                ..rebased
+            },
+            false => Transport {
+                playback: Playback::Play,
+                ended: None,
+                ..rebased
+            },
+        },
+        TransportCommand::Speed { value } => Transport {
+            speed: clamp_speed(*value, current.speed),
+            ..rebased
+        },
+        TransportCommand::SpeedBy { value } => Transport {
+            speed: step_speed(current.speed, *value),
+            ..rebased
+        },
         TransportCommand::Scroll { lines } => move_to(position + lines),
-        TransportCommand::Next => move_to_event(event_id_at(Some(reader_index.map_or(0, |i| i + 1)))),
+        TransportCommand::Next => {
+            move_to_event(event_id_at(Some(reader_index.map_or(0, |i| i + 1))))
+        }
         TransportCommand::Previous => {
-            let is_past_start = reader.is_some_and(|reader| position >= reader.start_row as f64 + PREVIOUS_RESTART_LINES);
+            let is_past_start = reader
+                .is_some_and(|reader| position >= reader.start_row as f64 + PREVIOUS_RESTART_LINES);
             match is_past_start {
                 true => move_to_event(reader.map(|reader| reader.id.as_str())),
                 false => move_to_event(event_id_at(reader_index.and_then(|i| i.checked_sub(1)))),
@@ -395,7 +464,9 @@ pub fn apply_command(
         TransportCommand::Blackout { blackout } => Transport {
             blackout: match (blackout, current.blackout) {
                 (BlackoutCommand::On, _) | (BlackoutCommand::Toggle, Blackout::Off) => Blackout::On,
-                (BlackoutCommand::Off, _) | (BlackoutCommand::Toggle, Blackout::On) => Blackout::Off,
+                (BlackoutCommand::Off, _) | (BlackoutCommand::Toggle, Blackout::On) => {
+                    Blackout::Off
+                }
             },
             ..rebased
         },
@@ -426,7 +497,15 @@ pub fn reanchor_transport(
     if !is_playing && anchor == current.anchor {
         return current;
     }
-    settle(&Transport { anchor, at: now, ..current }, next.1, now)
+    settle(
+        &Transport {
+            anchor,
+            at: now,
+            ..current
+        },
+        next.1,
+        now,
+    )
 }
 
 /// What every screen and the host show. Time only changes it when playback
@@ -438,7 +517,11 @@ pub fn describe(transport: &Transport, layout: &Layout, now: f64) -> State {
         .as_ref()
         .and_then(|_| position_at(&current, layout, now))
         .and_then(|position| layout.event_at(position))
-        .map(|reader| ReadingEvent { id: reader.id.clone(), cue: reader.cue.clone(), title: reader.title.clone() });
+        .map(|reader| ReadingEvent {
+            id: reader.id.clone(),
+            cue: reader.cue.clone(),
+            title: reader.title.clone(),
+        });
     State {
         playback: current.playback,
         mode: current.mode,
@@ -452,17 +535,33 @@ pub fn describe(transport: &Transport, layout: &Layout, now: f64) -> State {
 /// Only the host which holds the transport resolves its anchor, so every
 /// screen counts from the same row.
 pub fn describe_sync(transport: &Transport, layout: &Layout, revision: u64) -> Sync {
-    let row = transport.anchor.as_ref().and_then(|anchor| layout.row_of(anchor)).unwrap_or(0.0);
+    let row = transport
+        .anchor
+        .as_ref()
+        .and_then(|anchor| layout.row_of(anchor))
+        .unwrap_or(0.0);
     let until = match transport.playback {
         Playback::Play => playback_bound(layout, row, transport.mode, transport.speed).0,
         Playback::Pause => row,
     };
-    Sync { revision, playback: transport.playback, speed: transport.speed, row, until, at: transport.at }
+    Sync {
+        revision,
+        playback: transport.playback,
+        speed: transport.speed,
+        row,
+        until,
+        at: transport.at,
+    }
 }
 
 pub fn sync_position_at(sync: &Sync, now: f64) -> f64 {
     match sync.playback {
-        Playback::Play => travel(sync.row, sync.speed, elapsed_since(sync.at, now), sync.until),
+        Playback::Play => travel(
+            sync.row,
+            sync.speed,
+            elapsed_since(sync.at, now),
+            sync.until,
+        ),
         Playback::Pause => sync.row,
     }
 }
@@ -487,26 +586,36 @@ pub fn parse_command(payload: &Value) -> Result<Command, CommandError> {
     };
 
     if let Some(value) = object.get("speed") {
-        return Ok(Command::Speed { value: to_number(value)? });
+        return Ok(Command::Speed {
+            value: to_number(value)?,
+        });
     }
     if let Some(value) = object.get("speedBy") {
-        return Ok(Command::SpeedBy { value: to_number(value)? });
+        return Ok(Command::SpeedBy {
+            value: to_number(value)?,
+        });
     }
     if let Some(value) = object.get("scroll") {
-        return Ok(Command::Scroll { lines: to_number(value)? });
+        return Ok(Command::Scroll {
+            lines: to_number(value)?,
+        });
     }
-    if let Some(mode) = object.get("mode").and_then(|mode| serde_json::from_value::<ModeCommand>(mode.clone()).ok()) {
+    if let Some(mode) = object
+        .get("mode")
+        .and_then(|mode| serde_json::from_value::<ModeCommand>(mode.clone()).ok())
+    {
         return Ok(Command::Mode { mode });
     }
-    if let Some(blackout) =
-        object.get("blackout").and_then(|value| serde_json::from_value::<BlackoutCommand>(value.clone()).ok())
+    if let Some(blackout) = object
+        .get("blackout")
+        .and_then(|value| serde_json::from_value::<BlackoutCommand>(value.clone()).ok())
     {
         return Ok(Command::Blackout { blackout });
     }
     match object.get("goto") {
-        Some(Value::String(target)) if target == "loaded" => {
-            Ok(Command::Goto { target: GotoTarget::Loaded(LoadedTarget::Loaded) })
-        }
+        Some(Value::String(target)) if target == "loaded" => Ok(Command::Goto {
+            target: GotoTarget::Loaded(LoadedTarget::Loaded),
+        }),
         Some(Value::Object(goto)) => parse_goto(goto).map(|target| Command::Goto { target }),
         _ => Err(CommandError::Invalid),
     }
@@ -515,15 +624,25 @@ pub fn parse_command(payload: &Value) -> Result<Command, CommandError> {
 fn parse_goto(goto: &serde_json::Map<String, Value>) -> Result<GotoTarget, CommandError> {
     match goto.get("cue") {
         Some(Value::String(cue)) => return Ok(GotoTarget::Cue { cue: cue.clone() }),
-        Some(Value::Number(cue)) => return Ok(GotoTarget::Cue { cue: cue.to_string() }),
+        Some(Value::Number(cue)) => {
+            return Ok(GotoTarget::Cue {
+                cue: cue.to_string(),
+            })
+        }
         _ => {}
     }
     if let Some(Value::String(id)) = goto.get("id") {
         return Ok(GotoTarget::Id { id: id.clone() });
     }
-    let index = goto.get("index").map(to_number).transpose()?.ok_or(CommandError::Invalid)?;
+    let index = goto
+        .get("index")
+        .map(to_number)
+        .transpose()?
+        .ok_or(CommandError::Invalid)?;
     match index.fract() == 0.0 && index > 0.0 {
-        true => Ok(GotoTarget::Index { index: index as u64 }),
+        true => Ok(GotoTarget::Index {
+            index: index as u64,
+        }),
         false => Err(CommandError::Invalid),
     }
 }
@@ -536,12 +655,16 @@ fn to_number(value: &Value) -> Result<f64, CommandError> {
         Value::String(text) if !text.trim().is_empty() => js_number(text.trim()),
         _ => None,
     };
-    number.filter(|n| n.is_finite()).ok_or(CommandError::Invalid)
+    number
+        .filter(|n| n.is_finite())
+        .ok_or(CommandError::Invalid)
 }
 
 fn js_number(text: &str) -> Option<f64> {
     let radix = |prefix: &str, radix: u32| {
-        text.strip_prefix(prefix).and_then(|digits| u64::from_str_radix(digits, radix).ok()).map(|n| n as f64)
+        text.strip_prefix(prefix)
+            .and_then(|digits| u64::from_str_radix(digits, radix).ok())
+            .map(|n| n as f64)
     };
     radix("0x", 16)
         .or_else(|| radix("0X", 16))

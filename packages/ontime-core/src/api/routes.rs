@@ -89,7 +89,9 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
     };
 
     let mut response = match segments.as_slice() {
-        ["data", "teleprompter", rest @ ..] => prompter_routes::handle(project, req, rest, &mut effects, now),
+        ["data", "teleprompter", rest @ ..] => {
+            prompter_routes::handle(project, req, rest, &mut effects, now)
+        }
         ["data", "rundowns", rest @ ..] => {
             let response = rundown_routes::handle(project, req, rest, &mut effects);
             if req.method != HttpMethod::Get && project.reconcile_runtime() {
@@ -292,7 +294,9 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
         }
     };
 
-    if let Some(previous) = script_before.filter(|_| response.status < 400 && prompter_routes::touches_script(&effects)) {
+    if let Some(previous) =
+        script_before.filter(|_| response.status < 400 && prompter_routes::touches_script(&effects))
+    {
         if prompter::after_change(project, &previous, now) {
             effects.push(Effect::Persist);
         }

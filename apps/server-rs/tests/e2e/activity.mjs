@@ -20,7 +20,9 @@ let failed = false;
 const check = (label, actual, expected) => {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failed = true;
-  console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`);
+  console.log(
+    `  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` -> got ${JSON.stringify(actual)} want ${JSON.stringify(expected)}`}`,
+  );
 };
 
 const call = (path, { token, session, method = 'GET', body } = {}) =>
@@ -43,31 +45,55 @@ const { token: master } = await json(await call('/admin/login', { method: 'POST'
 const redeem = async (code) => (await json(await call('/auth/redeem', { method: 'POST', body: { code } }))).token;
 
 // --- people and a room ----------------------------------------------------
-const owner = await json(await call('/admin/people', { token: master, method: 'POST', body: { name: `Owner ${suffix}` } }));
-const owner_session = await redeem((await json(await call(`/admin/people/${owner.id}/invite`, { token: master, method: 'POST' }))).code);
+const owner = await json(
+  await call('/admin/people', { token: master, method: 'POST', body: { name: `Owner ${suffix}` } }),
+);
+const owner_session = await redeem(
+  (await json(await call(`/admin/people/${owner.id}/invite`, { token: master, method: 'POST' }))).code,
+);
 
 await call(r('/data/project'), { token: master, method: 'POST', body: { title: 'Activity e2e' } });
 const created = await json(await call(r('/data/rundowns'), { token: master, method: 'POST', body: { title: 'Run' } }));
 const rundown = created.rundowns.find((x) => x.title === 'Run').id;
 await call(r(`/data/rundowns/${rundown}/entry`), {
-  token: master, method: 'POST', body: { id: `ev-${suffix}`, type: 'event', cue: '2.1', title: 'Keynote', duration: 600000, timeStart: 32400000 },
+  token: master,
+  method: 'POST',
+  body: { id: `ev-${suffix}`, type: 'event', cue: '2.1', title: 'Keynote', duration: 600000, timeStart: 32400000 },
 });
 await call(r(`/data/rundowns/${rundown}/load`), { token: master, method: 'POST' });
 await call(`/admin/rooms/${room}`, { token: master, method: 'PUT', body: { owners: [owner.id] } });
 
-const made = await json(await call(`/auth/rooms/${room}/operators`, { token: owner_session, method: 'POST', body: { name: `Op ${suffix}` } }));
+const made = await json(
+  await call(`/auth/rooms/${room}/operators`, { token: owner_session, method: 'POST', body: { name: `Op ${suffix}` } }),
+);
 const operator_session = await redeem(made.code);
-const set_password = await json(await call(r('/data/session/password'), { token: master, method: 'POST', body: { password: `pw-${suffix}` } }));
+const set_password = await json(
+  await call(r('/data/session/password'), { token: master, method: 'POST', body: { password: `pw-${suffix}` } }),
+);
 const room_token = set_password.token;
 
 console.log('== three ways in, one change each ==');
-check('the owner renames the project', (await call(r('/data/project'), { session: owner_session, method: 'POST', body: { title: 'Gala' } })).status, 200);
+check(
+  'the owner renames the project',
+  (await call(r('/data/project'), { session: owner_session, method: 'POST', body: { title: 'Gala' } })).status,
+  200,
+);
 const secret = `phone-081-${suffix}`;
-check('the room password edits a note', (await call(r(`/data/rundowns/${rundown}/entry`), {
-  token: room_token, method: 'PUT', body: { id: `ev-${suffix}`, note: secret },
-})).status, 200);
+check(
+  'the room password edits a note',
+  (
+    await call(r(`/data/rundowns/${rundown}/entry`), {
+      token: room_token,
+      method: 'PUT',
+      body: { id: `ev-${suffix}`, note: secret },
+    })
+  ).status,
+  200,
+);
 
-const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws?${new URLSearchParams({ room, session: operator_session })}`);
+const ws = new WebSocket(
+  `${base.replace(/^http/, 'ws')}/ws?${new URLSearchParams({ room, session: operator_session })}`,
+);
 await new Promise((resolve, reject) => {
   ws.addEventListener('open', resolve);
   ws.addEventListener('error', () => reject(new Error('socket error')));
@@ -104,9 +130,11 @@ check('the double tap merged', [page.lines[0].times, page.lines[0].amount], [2, 
 check('start names the event', page.lines[1].subject, { cue: '2.1', title: 'Keynote' });
 check('the edit names the field', page.lines[2].fields, ['note']);
 check('but never its value', JSON.stringify(page).includes(secret), false);
-check('the admin set-up is there too', page.lines.filter((l) => l.actor.kind === 'admin').map((l) => l.action), [
-  'password-set', 'rundown-load', 'entry-add', 'rundown-create', 'project-data',
-]);
+check(
+  'the admin set-up is there too',
+  page.lines.filter((l) => l.actor.kind === 'admin').map((l) => l.action),
+  ['password-set', 'rundown-load', 'entry-add', 'rundown-create', 'project-data'],
+);
 
 console.log('== paging ==');
 const first = await json(await read({ token: master }, '?limit=2'));
@@ -117,7 +145,11 @@ check('the rest follows on', rest.lines.length, page.lines.length - 2);
 check('and ends', rest.before, null);
 
 console.log('== a removed person keeps their name in old lines ==');
-check('the owner removes the operator', (await call(`/auth/rooms/${room}/operators/${made.person.id}`, { token: owner_session, method: 'DELETE' })).status, 200);
+check(
+  'the owner removes the operator',
+  (await call(`/auth/rooms/${room}/operators/${made.person.id}`, { token: owner_session, method: 'DELETE' })).status,
+  200,
+);
 const after = await json(await read({ session: owner_session }));
 check('still named', after.lines.find((l) => l.action === 'start')?.actor?.name, `Op ${suffix}`);
 
@@ -142,6 +174,10 @@ console.log('== cleanup ==');
 await call(r('/data/session/password'), { token: master, method: 'POST', body: { password: null } });
 await call(`/admin/people/${owner.id}`, { token: master, method: 'DELETE' });
 await call(`/admin/rooms/${room}`, { token: master, method: 'DELETE' });
-check('no people left behind', (await json(await call('/admin/people', { token: master }))).people.filter((p) => p.name.endsWith(suffix)).length, 0);
+check(
+  'no people left behind',
+  (await json(await call('/admin/people', { token: master }))).people.filter((p) => p.name.endsWith(suffix)).length,
+  0,
+);
 
 process.exit(failed ? 1 : 0);

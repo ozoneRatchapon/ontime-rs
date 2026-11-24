@@ -1,5 +1,7 @@
 use ontime_core::directory::{handle, Directory};
-use ontime_core::identity::{device_label, Identity, IdentityError, INVITE_TTL_MS, SESSION_TTL_MS, TOUCH_INTERVAL_MS};
+use ontime_core::identity::{
+    device_label, Identity, IdentityError, INVITE_TTL_MS, SESSION_TTL_MS, TOUCH_INTERVAL_MS,
+};
 use ontime_core::registry::{Registry, RoomRecord};
 use serde_json::{json, Value};
 use uuid::Uuid;
@@ -26,9 +28,14 @@ fn an_invite_signs_in_once() {
     let (code, expires_at) = identity.issue_invite(somsri, NOW, &mut secrets).unwrap();
     assert_eq!(expires_at, NOW + INVITE_TTL_MS);
 
-    let (token, who) = identity.redeem(&code, "iPhone Safari", NOW + 1, &mut secrets).unwrap();
+    let (token, who) = identity
+        .redeem(&code, "iPhone Safari", NOW + 1, &mut secrets)
+        .unwrap();
     assert_eq!(who.id, somsri);
-    assert_eq!(identity.authenticate(&token, NOW + 2), Some((somsri, false)));
+    assert_eq!(
+        identity.authenticate(&token, NOW + 2),
+        Some((somsri, false))
+    );
 
     let again = identity.redeem(&code, "Mac Chrome", NOW + 3, &mut secrets);
     assert_eq!(again.unwrap_err(), IdentityError::InvalidInvite);
@@ -88,11 +95,17 @@ fn sessions_slide_and_expire() {
     let (token, _) = identity.redeem(&code, "", NOW, &mut secrets).unwrap();
 
     // used within the hour: nothing to store
-    assert_eq!(identity.authenticate(&token, NOW + 1000), Some((somsri, false)));
+    assert_eq!(
+        identity.authenticate(&token, NOW + 1000),
+        Some((somsri, false))
+    );
     // used later: last_seen moves, which extends the session
     let later = NOW + SESSION_TTL_MS - 1;
     assert_eq!(identity.authenticate(&token, later), Some((somsri, true)));
-    assert_eq!(identity.authenticate(&token, later + TOUCH_INTERVAL_MS), Some((somsri, true)));
+    assert_eq!(
+        identity.authenticate(&token, later + TOUCH_INTERVAL_MS),
+        Some((somsri, true))
+    );
     // left unused for the whole lifetime: gone
     let idle = later + TOUCH_INTERVAL_MS + SESSION_TTL_MS;
     assert_eq!(identity.authenticate(&token, idle), None);
@@ -134,7 +147,10 @@ fn signing_out_ends_only_that_device() {
 #[test]
 fn a_person_needs_a_name() {
     let mut identity = Identity::default();
-    assert_eq!(identity.create_person("   ", NOW).unwrap_err(), IdentityError::InvalidName);
+    assert_eq!(
+        identity.create_person("   ", NOW).unwrap_err(),
+        IdentityError::InvalidName
+    );
 }
 
 #[test]
@@ -170,7 +186,13 @@ fn an_old_room_record_still_loads() {
 
 // --- the routes, as the registry instance sees them
 
-fn call(directory: &mut Directory, method: &str, path: &str, body: Value, secrets: &mut impl FnMut() -> String) -> (u16, Value, bool) {
+fn call(
+    directory: &mut Directory,
+    method: &str,
+    path: &str,
+    body: Value,
+    secrets: &mut impl FnMut() -> String,
+) -> (u16, Value, bool) {
     let segments: Vec<&str> = path.split('/').collect();
     let response = handle(directory, method, &segments, &body, NOW, secrets);
     (response.status, response.body, response.changed)
@@ -180,32 +202,80 @@ fn call(directory: &mut Directory, method: &str, path: &str, body: Value, secret
 fn owners_see_their_rooms() {
     let mut directory = Directory::default();
     let mut secrets = counter();
-    let (_, created, _) = call(&mut directory, "POST", "people", json!({ "name": "Somsri" }), &mut secrets);
+    let (_, created, _) = call(
+        &mut directory,
+        "POST",
+        "people",
+        json!({ "name": "Somsri" }),
+        &mut secrets,
+    );
     let id = created["id"].as_str().unwrap().to_string();
 
-    let (status, invite, _) = call(&mut directory, "POST", &format!("people/{id}/invite"), Value::Null, &mut secrets);
+    let (status, invite, _) = call(
+        &mut directory,
+        "POST",
+        &format!("people/{id}/invite"),
+        Value::Null,
+        &mut secrets,
+    );
     assert_eq!(status, 200);
     let code = invite["code"].as_str().unwrap();
 
-    let (status, signed_in, changed) = call(&mut directory, "POST", "auth/redeem", json!({ "code": code, "device": "Mac" }), &mut secrets);
+    let (status, signed_in, changed) = call(
+        &mut directory,
+        "POST",
+        "auth/redeem",
+        json!({ "code": code, "device": "Mac" }),
+        &mut secrets,
+    );
     assert_eq!((status, changed), (200, true));
     let token = signed_in["token"].as_str().unwrap().to_string();
 
-    let (_, me, _) = call(&mut directory, "POST", "auth/me", json!({ "token": token }), &mut secrets);
+    let (_, me, _) = call(
+        &mut directory,
+        "POST",
+        "auth/me",
+        json!({ "token": token }),
+        &mut secrets,
+    );
     assert_eq!(me["person"]["name"], "Somsri");
     assert_eq!(me["rooms"], json!([]));
 
-    let (status, room, _) = call(&mut directory, "PUT", "rooms/exam", json!({ "owners": [id], "note": "IS" }), &mut secrets);
+    let (status, room, _) = call(
+        &mut directory,
+        "PUT",
+        "rooms/exam",
+        json!({ "owners": [id], "note": "IS" }),
+        &mut secrets,
+    );
     assert_eq!(status, 200);
     assert_eq!(room["note"], "IS");
-    let (_, me, _) = call(&mut directory, "POST", "auth/me", json!({ "token": token }), &mut secrets);
+    let (_, me, _) = call(
+        &mut directory,
+        "POST",
+        "auth/me",
+        json!({ "token": token }),
+        &mut secrets,
+    );
     assert_eq!(me["rooms"][0]["name"], "exam");
 
     // removing the person takes them off the room and signs them out
-    let (status, _, _) = call(&mut directory, "DELETE", &format!("people/{id}"), Value::Null, &mut secrets);
+    let (status, _, _) = call(
+        &mut directory,
+        "DELETE",
+        &format!("people/{id}"),
+        Value::Null,
+        &mut secrets,
+    );
     assert_eq!(status, 200);
     assert!(directory.rooms.rooms["exam"].owners.is_empty());
-    let (status, _, _) = call(&mut directory, "POST", "auth/me", json!({ "token": token }), &mut secrets);
+    let (status, _, _) = call(
+        &mut directory,
+        "POST",
+        "auth/me",
+        json!({ "token": token }),
+        &mut secrets,
+    );
     assert_eq!(status, 401);
 }
 
@@ -214,9 +284,21 @@ fn owners_must_be_people() {
     let mut directory = Directory::default();
     let mut secrets = counter();
     let stranger = Uuid::now_v7().to_string();
-    let (status, _, _) = call(&mut directory, "PUT", "rooms/exam", json!({ "owners": [stranger] }), &mut secrets);
+    let (status, _, _) = call(
+        &mut directory,
+        "PUT",
+        "rooms/exam",
+        json!({ "owners": [stranger] }),
+        &mut secrets,
+    );
     assert_eq!(status, 400);
-    let (status, _, _) = call(&mut directory, "PUT", "rooms/exam", json!({ "owners": "nobody" }), &mut secrets);
+    let (status, _, _) = call(
+        &mut directory,
+        "PUT",
+        "rooms/exam",
+        json!({ "owners": "nobody" }),
+        &mut secrets,
+    );
     assert_eq!(status, 400);
     assert!(directory.rooms.rooms.is_empty());
 }
@@ -225,7 +307,13 @@ fn owners_must_be_people() {
 fn a_made_up_code_changes_nothing() {
     let mut directory = Directory::default();
     let mut secrets = counter();
-    let (status, body, changed) = call(&mut directory, "POST", "auth/redeem", json!({ "code": "guess" }), &mut secrets);
+    let (status, body, changed) = call(
+        &mut directory,
+        "POST",
+        "auth/redeem",
+        json!({ "code": "guess" }),
+        &mut secrets,
+    );
     assert_eq!((status, changed), (401, false));
     assert!(body["message"].as_str().unwrap().contains("not valid"));
 }
@@ -234,7 +322,13 @@ fn a_made_up_code_changes_nothing() {
 fn room_routes_still_work() {
     let mut directory = Directory::default();
     let mut secrets = counter();
-    let (status, _, changed) = call(&mut directory, "PUT", "rooms/exam", json!({ "owner": "Aj. A" }), &mut secrets);
+    let (status, _, changed) = call(
+        &mut directory,
+        "PUT",
+        "rooms/exam",
+        json!({ "owner": "Aj. A" }),
+        &mut secrets,
+    );
     assert_eq!((status, changed), (200, true));
     let (_, listed, _) = call(&mut directory, "GET", "rooms", Value::Null, &mut secrets);
     assert_eq!(listed["rooms"][0]["owner"], "Aj. A");

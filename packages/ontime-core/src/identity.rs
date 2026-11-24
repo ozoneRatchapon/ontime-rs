@@ -113,7 +113,12 @@ impl Identity {
         self.create_person_by(name, None, now)
     }
 
-    pub fn create_person_by(&mut self, name: &str, invited_by: Option<Uuid>, now: i64) -> Result<&Person, IdentityError> {
+    pub fn create_person_by(
+        &mut self,
+        name: &str,
+        invited_by: Option<Uuid>,
+        now: i64,
+    ) -> Result<&Person, IdentityError> {
         let name: String = name.trim().chars().take(MAX_NAME_CHARS).collect();
         if name.is_empty() {
             return Err(IdentityError::InvalidName);
@@ -138,7 +143,12 @@ impl Identity {
     /// Issues a new invite link code, replacing any unused one, so a person
     /// only ever has one live link. Returns the code — the only time it exists
     /// in the clear.
-    pub fn issue_invite(&mut self, person: Uuid, now: i64, secrets: &mut impl Secrets) -> Result<(String, i64), IdentityError> {
+    pub fn issue_invite(
+        &mut self,
+        person: Uuid,
+        now: i64,
+        secrets: &mut impl Secrets,
+    ) -> Result<(String, i64), IdentityError> {
         if !self.people.contains_key(&person) {
             return Err(IdentityError::UnknownPerson);
         }
@@ -154,7 +164,13 @@ impl Identity {
     }
 
     /// Spends an invite and signs a device in. Returns the session token.
-    pub fn redeem(&mut self, code: &str, device: &str, now: i64, secrets: &mut impl Secrets) -> Result<(String, &Person), IdentityError> {
+    pub fn redeem(
+        &mut self,
+        code: &str,
+        device: &str,
+        now: i64,
+        secrets: &mut impl Secrets,
+    ) -> Result<(String, &Person), IdentityError> {
         let hash = digest("invite", code);
         let index = self
             .invites
@@ -188,7 +204,8 @@ impl Identity {
     /// `last_seen` moved, i.e. whether the identity has to be stored.
     /// Whose live session a token is, without touching it.
     pub fn person_of(&self, token: &str, now: i64) -> Option<Uuid> {
-        self.session_index(token, now).map(|index| self.sessions[index].person)
+        self.session_index(token, now)
+            .map(|index| self.sessions[index].person)
     }
 
     pub fn authenticate(&mut self, token: &str, now: i64) -> Option<(Uuid, bool)> {
@@ -229,7 +246,8 @@ impl Identity {
     pub fn prune(&mut self, now: i64) -> bool {
         let before = self.sessions.len() + self.invites.len();
         self.invites.retain(|invite| invite.expires_at > now);
-        self.sessions.retain(|session| now - session.last_seen < SESSION_TTL_MS);
+        self.sessions
+            .retain(|session| now - session.last_seen < SESSION_TTL_MS);
         before != self.sessions.len() + self.invites.len()
     }
 
@@ -239,7 +257,11 @@ impl Identity {
             .people
             .values()
             .map(|person| {
-                let sessions: Vec<&Session> = self.sessions.iter().filter(|s| s.person == person.id).collect();
+                let sessions: Vec<&Session> = self
+                    .sessions
+                    .iter()
+                    .filter(|s| s.person == person.id)
+                    .collect();
                 PersonSummary {
                     person,
                     devices: sessions.iter().map(|s| s.device.as_str()).collect(),

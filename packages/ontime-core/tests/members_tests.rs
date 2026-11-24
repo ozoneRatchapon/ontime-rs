@@ -109,19 +109,40 @@ fn an_open_members_only_room_lets_anyone_watch_but_only_members_edit() {
 fn a_password_members_only_room_keeps_its_password_gate() {
     assert_eq!(
         matrix(&room(true, true)),
-        vec![(false, false), (true, true), (true, true), (true, true), (true, true), (false, false)]
+        vec![
+            (false, false),
+            (true, true),
+            (true, true),
+            (true, true),
+            (true, true),
+            (false, false)
+        ]
     );
 }
 
 #[test]
 fn a_members_only_room_refuses_edits_but_still_serves_reads() {
     let mut project = room(false, true);
-    let read = handle(&mut project, &request(Caller::Anonymous, HttpMethod::Get, "/data/rundowns", json!({})), 0);
+    let read = handle(
+        &mut project,
+        &request(
+            Caller::Anonymous,
+            HttpMethod::Get,
+            "/data/rundowns",
+            json!({}),
+        ),
+        0,
+    );
     assert_eq!(read.status, 200);
 
     let write = handle(
         &mut project,
-        &request(Caller::Anonymous, HttpMethod::Post, "/data/rundowns", json!({ "title": "x" })),
+        &request(
+            Caller::Anonymous,
+            HttpMethod::Post,
+            "/data/rundowns",
+            json!({ "title": "x" }),
+        ),
         0,
     );
     assert_eq!(write.status, 403);
@@ -130,7 +151,12 @@ fn a_members_only_room_refuses_edits_but_still_serves_reads() {
     // and claiming the room by setting a password is an edit like any other
     let claim = handle(
         &mut project,
-        &request(Caller::Anonymous, HttpMethod::Post, "/data/session/password", json!({ "password": "mine" })),
+        &request(
+            Caller::Anonymous,
+            HttpMethod::Post,
+            "/data/session/password",
+            json!({ "password": "mine" }),
+        ),
         0,
     );
     assert_eq!(claim.status, 403);
@@ -138,7 +164,12 @@ fn a_members_only_room_refuses_edits_but_still_serves_reads() {
 
     let member = handle(
         &mut project,
-        &request(Caller::Operator, HttpMethod::Post, "/data/rundowns", json!({ "title": "x" })),
+        &request(
+            Caller::Operator,
+            HttpMethod::Post,
+            "/data/rundowns",
+            json!({ "title": "x" }),
+        ),
         0,
     );
     assert_eq!(member.status, 200);
@@ -156,7 +187,12 @@ fn only_an_owner_or_the_admin_flips_members_only() {
         let mut project = room(false, false);
         let response = handle(
             &mut project,
-            &request(caller, HttpMethod::Post, "/data/members-only", json!({ "on": true })),
+            &request(
+                caller,
+                HttpMethod::Post,
+                "/data/members-only",
+                json!({ "on": true }),
+            ),
             0,
         );
         assert_eq!(project.members_only, allowed, "{caller:?}");
@@ -168,19 +204,33 @@ fn only_an_owner_or_the_admin_flips_members_only() {
 fn info_tells_the_editor_whether_it_may_edit() {
     let mut project = room(false, true);
     let info = |project: &mut Project, caller| {
-        handle(project, &request(caller, HttpMethod::Get, "/data/session/info", json!({})), 0)
-            .body
-            .unwrap()
+        handle(
+            project,
+            &request(caller, HttpMethod::Get, "/data/session/info", json!({})),
+            0,
+        )
+        .body
+        .unwrap()
     };
     let anonymous = info(&mut project, Caller::Anonymous);
-    assert_eq!((anonymous["membersOnly"].clone(), anonymous["canEdit"].clone()), (json!(true), json!(false)));
+    assert_eq!(
+        (
+            anonymous["membersOnly"].clone(),
+            anonymous["canEdit"].clone()
+        ),
+        (json!(true), json!(false))
+    );
     assert_eq!(info(&mut project, Caller::Operator)["canEdit"], json!(true));
 }
 
 #[test]
 fn an_old_project_is_not_members_only() {
     let mut stored = serde_json::to_value(Project::default()).unwrap();
-    assert!(stored.as_object_mut().unwrap().remove("membersOnly").is_some());
+    assert!(stored
+        .as_object_mut()
+        .unwrap()
+        .remove("membersOnly")
+        .is_some());
     let project: Project = serde_json::from_value(stored).unwrap();
     assert!(!project.members_only);
 }
@@ -207,7 +257,14 @@ impl World {
     fn call(&mut self, method: &str, path: &str, body: Value) -> (u16, Value) {
         let segments: Vec<&str> = path.split('/').collect();
         let mut secrets = || (self.secrets)();
-        let response = directory::handle(&mut self.directory, method, &segments, &body, NOW, &mut secrets);
+        let response = directory::handle(
+            &mut self.directory,
+            method,
+            &segments,
+            &body,
+            NOW,
+            &mut secrets,
+        );
         (response.status, response.body)
     }
 
@@ -233,22 +290,44 @@ fn an_owner_invites_an_operator_who_can_then_run_the_room() {
     let (owner, owner_token) = world.person("Owner");
     world.call("PUT", "rooms/exam", json!({ "owners": [owner] }));
 
-    let (status, made) = world.call("POST", "auth/rooms/exam/operators", json!({ "token": owner_token, "name": "Op" }));
+    let (status, made) = world.call(
+        "POST",
+        "auth/rooms/exam/operators",
+        json!({ "token": owner_token, "name": "Op" }),
+    );
     assert_eq!(status, 200);
     let operator = made["person"]["id"].as_str().unwrap().to_string();
     let operator_token = world.sign_in(&made["code"]);
 
-    let (status, checked) = world.call("POST", "auth/check", json!({ "token": operator_token, "room": "exam" }));
+    let (status, checked) = world.call(
+        "POST",
+        "auth/check",
+        json!({ "token": operator_token, "room": "exam" }),
+    );
     assert_eq!((status, checked["role"].clone()), (200, json!("operator")));
-    let (_, checked) = world.call("POST", "auth/check", json!({ "token": owner_token, "room": "exam" }));
+    let (_, checked) = world.call(
+        "POST",
+        "auth/check",
+        json!({ "token": owner_token, "room": "exam" }),
+    );
     assert_eq!(checked["role"], "owner");
 
     // the operator sees the room, with their role
     let (_, me) = world.call("POST", "auth/me", json!({ "token": operator_token }));
-    assert_eq!((me["rooms"][0]["name"].clone(), me["rooms"][0]["role"].clone()), (json!("exam"), json!("operator")));
+    assert_eq!(
+        (
+            me["rooms"][0]["name"].clone(),
+            me["rooms"][0]["role"].clone()
+        ),
+        (json!("exam"), json!("operator"))
+    );
 
     // the team, as the owner sees it
-    let (_, team) = world.call("GET", "auth/rooms/exam/team", json!({ "token": owner_token }));
+    let (_, team) = world.call(
+        "GET",
+        "auth/rooms/exam/team",
+        json!({ "token": owner_token }),
+    );
     assert_eq!(team["operators"][0]["person"]["id"], json!(operator));
     assert_eq!(team["operators"][0]["mine"], json!(true));
     assert_eq!(team["owners"][0]["mine"], json!(false));
@@ -259,9 +338,17 @@ fn membership_is_per_room() {
     let mut world = World::new();
     let (owner, owner_token) = world.person("Owner");
     world.call("PUT", "rooms/exam", json!({ "owners": [owner] }));
-    let (status, _) = world.call("POST", "auth/check", json!({ "token": owner_token, "room": "other" }));
+    let (status, _) = world.call(
+        "POST",
+        "auth/check",
+        json!({ "token": owner_token, "room": "other" }),
+    );
     assert_eq!(status, 403);
-    let (status, _) = world.call("POST", "auth/check", json!({ "token": "made-up", "room": "exam" }));
+    let (status, _) = world.call(
+        "POST",
+        "auth/check",
+        json!({ "token": "made-up", "room": "exam" }),
+    );
     assert_eq!(status, 401);
 }
 
@@ -271,11 +358,19 @@ fn only_owners_manage_a_team() {
     let (owner, owner_token) = world.person("Owner");
     let (_, stranger_token) = world.person("Stranger");
     world.call("PUT", "rooms/exam", json!({ "owners": [owner] }));
-    let (_, made) = world.call("POST", "auth/rooms/exam/operators", json!({ "token": owner_token, "name": "Op" }));
+    let (_, made) = world.call(
+        "POST",
+        "auth/rooms/exam/operators",
+        json!({ "token": owner_token, "name": "Op" }),
+    );
     let operator_token = world.sign_in(&made["code"]);
 
     for token in [&stranger_token, &operator_token] {
-        let (status, _) = world.call("POST", "auth/rooms/exam/operators", json!({ "token": token, "name": "Sneaky" }));
+        let (status, _) = world.call(
+            "POST",
+            "auth/rooms/exam/operators",
+            json!({ "token": token, "name": "Sneaky" }),
+        );
         assert_eq!(status, 403);
         let (status, _) = world.call("GET", "auth/rooms/exam/team", json!({ "token": token }));
         assert_eq!(status, 403);
@@ -290,13 +385,25 @@ fn an_owner_cannot_relink_someone_they_did_not_invite() {
     let (owner, owner_token) = world.person("Owner A");
     // the admin makes B an operator of A's room; B also owns another room
     let (b, _) = world.person("Owner B");
-    world.call("PUT", "rooms/exam", json!({ "owners": [owner], "operators": [b] }));
+    world.call(
+        "PUT",
+        "rooms/exam",
+        json!({ "owners": [owner], "operators": [b] }),
+    );
     world.call("PUT", "rooms/other", json!({ "owners": [b] }));
 
-    let (status, body) = world.call("POST", &format!("auth/rooms/exam/operators/{b}/invite"), json!({ "token": owner_token }));
+    let (status, body) = world.call(
+        "POST",
+        &format!("auth/rooms/exam/operators/{b}/invite"),
+        json!({ "token": owner_token }),
+    );
     assert_eq!(status, 403, "{body}");
     // nor can A remove B from B's own room, or from anywhere but A's room
-    let (status, _) = world.call("DELETE", &format!("auth/rooms/other/operators/{b}"), json!({ "token": owner_token }));
+    let (status, _) = world.call(
+        "DELETE",
+        &format!("auth/rooms/other/operators/{b}"),
+        json!({ "token": owner_token }),
+    );
     assert_eq!(status, 403);
 }
 
@@ -305,15 +412,26 @@ fn an_owner_relinks_and_removes_their_own_operator() {
     let mut world = World::new();
     let (owner, owner_token) = world.person("Owner");
     world.call("PUT", "rooms/exam", json!({ "owners": [owner] }));
-    let (_, made) = world.call("POST", "auth/rooms/exam/operators", json!({ "token": owner_token, "name": "Op" }));
+    let (_, made) = world.call(
+        "POST",
+        "auth/rooms/exam/operators",
+        json!({ "token": owner_token, "name": "Op" }),
+    );
     let operator = made["person"]["id"].as_str().unwrap().to_string();
 
-    let (status, relinked) =
-        world.call("POST", &format!("auth/rooms/exam/operators/{operator}/invite"), json!({ "token": owner_token }));
+    let (status, relinked) = world.call(
+        "POST",
+        &format!("auth/rooms/exam/operators/{operator}/invite"),
+        json!({ "token": owner_token }),
+    );
     assert_eq!(status, 200);
     let operator_token = world.sign_in(&relinked["code"]);
 
-    let (status, _) = world.call("DELETE", &format!("auth/rooms/exam/operators/{operator}"), json!({ "token": owner_token }));
+    let (status, _) = world.call(
+        "DELETE",
+        &format!("auth/rooms/exam/operators/{operator}"),
+        json!({ "token": owner_token }),
+    );
     assert_eq!(status, 200);
     // in no room any more and brought in by this owner: gone entirely
     let (status, _) = world.call("POST", "auth/me", json!({ "token": operator_token }));
@@ -327,14 +445,27 @@ fn removing_an_operator_who_is_elsewhere_keeps_them() {
     let (owner, owner_token) = world.person("Owner");
     world.call("PUT", "rooms/exam", json!({ "owners": [owner] }));
     world.call("PUT", "rooms/second", json!({ "owners": [owner] }));
-    let (_, made) = world.call("POST", "auth/rooms/exam/operators", json!({ "token": owner_token, "name": "Op" }));
+    let (_, made) = world.call(
+        "POST",
+        "auth/rooms/exam/operators",
+        json!({ "token": owner_token, "name": "Op" }),
+    );
     let operator = made["person"]["id"].as_str().unwrap().to_string();
     let operator_token = world.sign_in(&made["code"]);
     world.call("PUT", "rooms/second", json!({ "operators": [operator] }));
 
-    world.call("DELETE", &format!("auth/rooms/exam/operators/{operator}"), json!({ "token": owner_token }));
+    world.call(
+        "DELETE",
+        &format!("auth/rooms/exam/operators/{operator}"),
+        json!({ "token": owner_token }),
+    );
     let (_, me) = world.call("POST", "auth/me", json!({ "token": operator_token }));
-    let rooms: Vec<&str> = me["rooms"].as_array().unwrap().iter().map(|r| r["name"].as_str().unwrap()).collect();
+    let rooms: Vec<&str> = me["rooms"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| r["name"].as_str().unwrap())
+        .collect();
     assert_eq!(rooms, vec!["second"]);
 }
 

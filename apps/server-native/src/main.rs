@@ -53,13 +53,20 @@ impl Room {
             None => None,
         };
         let (outbound, _) = broadcast::channel(256);
-        Self { project, outbound, audit_head }
+        Self {
+            project,
+            outbound,
+            audit_head,
+        }
     }
 
     /// Adds a line to the log in memory. The writes go to `store::save_audit`.
     fn audit(&mut self, actor: Actor, note: Note, now: i64) -> Writes {
         let head = self.audit_head.take();
-        let writes = self.project.audit.record(head, actor, note, now, Retention::ROOM);
+        let writes = self
+            .project
+            .audit
+            .record(head, actor, note, now, Retention::ROOM);
         self.audit_head = Some(writes.put.clone());
         writes
     }
@@ -430,7 +437,11 @@ async fn activity(
         return (StatusCode::UNAUTHORIZED, "Unauthorized").into_response();
     }
     if !api::is_owner_or_admin(request) {
-        return (StatusCode::FORBIDDEN, "Only an owner of this room can read its activity").into_response();
+        return (
+            StatusCode::FORBIDDEN,
+            "Only an owner of this room can read its activity",
+        )
+            .into_response();
     }
     if room_is_new {
         return (StatusCode::NOT_FOUND, "This room does not exist").into_response();
@@ -502,7 +513,10 @@ async fn serve_socket(state: Arc<AppState>, room_name: String, socket: WebSocket
     let (mut receiver, initial, client_id) = {
         let mut rooms = state.rooms.lock().await;
         if !rooms.contains_key(&room_name) {
-            rooms.insert(room_name.clone(), Room::load(&state.data_dir, &room_name).await);
+            rooms.insert(
+                room_name.clone(),
+                Room::load(&state.data_dir, &room_name).await,
+            );
         }
         let room = rooms.get_mut(&room_name).expect("just inserted");
 
