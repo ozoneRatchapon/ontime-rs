@@ -118,11 +118,12 @@ How to use it:
   - **Never bypass it:** no `--no-verify`.
 - [x] A "Source code of this deployment" link in Settings → About, for
   AGPL-3.0. Committed, not deployed.
-- [ ] **[ต้องถาม]** The user edits `.claude/settings.local.json` to allow
+- [x] The user edited `.claude/settings.local.json` (2026-11-24) to allow
   `git push origin *` and to deny force pushes and `--no-verify`. The agent's
   permission check refuses to widen its own permissions.
-- [ ] **[ต้องถาม]** `git push origin feat/rust-cloud-backend`, which makes it
-  public. The hook checks it first.
+- [x] Pushed `feat/rust-cloud-backend` to `origin` (public), 2026-11-24, at
+  `ba61bdd6`. The hook checked 113 commits and found them clean. From now on push to both remotes,
+  and let the hook run.
 - [ ] **[ต้องถาม]** Deploy the client after that push, so the source link
   points at current source.
 - [ ] **[ต้องถาม]** Back up the real schedules to a separate private repo,
