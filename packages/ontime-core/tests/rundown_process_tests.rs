@@ -12,6 +12,8 @@ struct Case {
     name: String,
     rundown: Rundown,
     entries: Map<String, Value>,
+    #[serde(rename = "totalDuration")]
+    total_duration: i64,
 }
 
 #[derive(Deserialize)]
@@ -36,6 +38,14 @@ fn recompute_matches_upstream() {
     for case in fixture.cases {
         let mut rundown = case.rundown;
         rundown.recompute();
+        if rundown.total_duration() != case.total_duration {
+            failures.push(format!(
+                "{} / totalDuration: upstream {}, ours {}",
+                case.name,
+                case.total_duration,
+                rundown.total_duration()
+            ));
+        }
         for (id, want) in &case.entries {
             let kind = want.get("type").and_then(Value::as_str).unwrap_or_default();
             if !matches!(kind, "event" | "group") {

@@ -173,6 +173,25 @@ impl Rundown {
         }
     }
 
+    /// How long the rundown runs from its first start: every playable event's
+    /// duration with the gap before it, less any overlap (processEntry's
+    /// `totalDuration`). Reads the values [`Rundown::recompute`] stored.
+    pub fn total_duration(&self) -> i64 {
+        self.flat_order
+            .iter()
+            .filter_map(|id| self.entries.get(id))
+            .filter(|entry| entry_type(entry) == "event" && !flag(entry, "skip"))
+            .map(|entry| {
+                let (gap, duration) = (int(entry, "gap"), int(entry, "duration"));
+                match gap >= 0 {
+                    true => gap + duration,
+                    // an overlap takes back what it overlaps, never below nothing
+                    false => (duration + gap).max(0),
+                }
+            })
+            .sum()
+    }
+
     /// Groups span their playable events: the first one's start, the last one's
     /// end, and their durations with the gaps between them (processRundown).
     pub(crate) fn recompute_groups(&mut self) {

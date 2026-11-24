@@ -7,6 +7,8 @@
 //! Everything here is milliseconds. Times of day are milliseconds since local
 //! midnight; durations are plain spans.
 
+use serde::{Deserialize, Serialize};
+
 use crate::rundown::MS_PER_DAY;
 
 /// Which day a clock reading belongs to, relative to a planned time.
@@ -61,24 +63,26 @@ pub fn runtime_offset(inputs: &OffsetInputs) -> (i64, i64) {
     // running past the end adds to the debt; `current` is negative there
     let overtime = inputs.current.min(0).abs();
 
-    let absolute = event_start_offset + overtime + inputs.paused_for + inputs.added_time;
+    // an event counting to a fixed end is not "late" for having started late:
+    // only the overrun and the operator's added time count (upstream 57a4c495)
+    let absolute = match inputs.count_to_end {
+        true => overtime + inputs.added_time,
+        false => event_start_offset + overtime + inputs.paused_for + inputs.added_time,
+    };
 
     let relative = absolute + inputs.planned_start
         - inputs.actual_start
         - inputs.start_day_offset * MS_PER_DAY;
 
-    // an event counting to a fixed end is not "late" for having started late:
-    // only the overrun counts
-    if inputs.count_to_end {
-        (overtime, relative)
-    } else {
-        (absolute, relative)
-    }
+    (absolute, relative)
 }
 
-/// Which offset the operator asked to be measured against.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Which offset the operator asked to be measured against. Set from the editor
+/// (`offsetmode`), kept for the room until it is changed again.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum OffsetMode {
+    #[default]
     Absolute,
     Relative,
 }

@@ -1,0 +1,2532 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b2 by scripts/upstream-oracle/generate.sh; do not edit by hand.",
+ "cases": [
+  {
+   "name": "on time",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36600000,
+     "do": "tick"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 0,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 39600000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43200000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "started late",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36300000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 39900000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43500000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36300000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "started early",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 35700000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": -300000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 39600000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43200000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 35700000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "running over",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 38400000,
+     "do": "tick"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 600000,
+     "relative": 600000,
+     "mode": "absolute",
+     "expectedFlagStart": 40200000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43800000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "gaps absorb lateness",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 43200000,
+      "duration": 1800000,
+      "timeEnd": 45000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36600000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 600000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 39600000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 45000000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 3,
+     "plannedStart": 36000000,
+     "plannedEnd": 45000000,
+     "actualStart": 36600000,
+     "currentDay": 0
+    },
+    "eventFlag": "b",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "lateness beyond the gaps",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 43200000,
+      "duration": 1800000,
+      "timeEnd": 45000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 39000000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 3000000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 40800000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 45000000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 3,
+     "plannedStart": 36000000,
+     "plannedEnd": 45000000,
+     "actualStart": 39000000,
+     "currentDay": 0
+    },
+    "eventFlag": "b",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "a linked chain carries lateness",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 0,
+      "duration": 1800000,
+      "timeEnd": 1800000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 0,
+      "duration": 1800000,
+      "timeEnd": 1800000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true,
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 43200000,
+      "duration": 1800000,
+      "timeEnd": 45000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36600000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 600000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 40200000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 45000000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 45000000,
+     "actualStart": 36600000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "the end of the group",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ]
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 38700000,
+      "duration": 1800000,
+      "timeEnd": 40500000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36300000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": null,
+     "expectedGroupEnd": 40500000,
+     "expectedRundownEnd": 43200000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 3,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36300000,
+     "currentDay": 0
+    },
+    "eventFlag": null,
+    "groupNow": "g"
+   }
+  },
+  {
+   "name": "the last event of the group",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ]
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 38700000,
+      "duration": 1800000,
+      "timeEnd": 40500000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 39000000,
+     "do": "start",
+     "id": "b"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 300000,
+     "mode": "absolute",
+     "expectedFlagStart": null,
+     "expectedGroupEnd": 40800000,
+     "expectedRundownEnd": 43200000
+    },
+    "rundown": {
+     "selectedEventIndex": 1,
+     "numEvents": 3,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": null,
+    "groupNow": "g"
+   }
+  },
+  {
+   "name": "added time",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36060000,
+     "do": "addtime",
+     "amount": 300000
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 300000,
+     "mode": "absolute",
+     "expectedFlagStart": 39900000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43500000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "removed time",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36300000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36360000,
+     "do": "addtime",
+     "amount": -180000
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 120000,
+     "relative": -180000,
+     "mode": "absolute",
+     "expectedFlagStart": 39720000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43320000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36300000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "relative mode",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36300000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36360000,
+     "do": "mode",
+     "mode": "relative"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 0,
+     "mode": "relative",
+     "expectedFlagStart": 39900000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43500000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36300000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "relative mode on a later event",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36300000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36360000,
+     "do": "mode",
+     "mode": "relative"
+    },
+    {
+     "at": 38700000,
+     "do": "start",
+     "id": "b"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 900000,
+     "relative": 600000,
+     "mode": "relative",
+     "expectedFlagStart": 40500000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 44100000
+    },
+    "rundown": {
+     "selectedEventIndex": 1,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36300000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "back to absolute",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36300000,
+     "do": "mode",
+     "mode": "relative"
+    },
+    {
+     "at": 36300000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36360000,
+     "do": "mode",
+     "mode": "absolute"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 39900000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43500000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36300000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "loaded but not started",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36300000,
+     "do": "load",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 0,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": null,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": null
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": null,
+     "currentDay": null
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "a later event is loaded",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 37200000,
+     "do": "load",
+     "id": "b"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 0,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": null,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": null
+    },
+    "rundown": {
+     "selectedEventIndex": 1,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "the next event starts late",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 38400000,
+     "do": "start",
+     "id": "b"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 600000,
+     "relative": 600000,
+     "mode": "absolute",
+     "expectedFlagStart": 40200000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43800000
+    },
+    "rundown": {
+     "selectedEventIndex": 1,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "the flag is running",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 39720000,
+     "do": "start",
+     "id": "c"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 120000,
+     "relative": 120000,
+     "mode": "absolute",
+     "expectedFlagStart": null,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43320000
+    },
+    "rundown": {
+     "selectedEventIndex": 2,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": null,
+    "groupNow": null
+   }
+  },
+  {
+   "name": "stopped",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36600000,
+     "do": "stop"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 0,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": null,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": null
+    },
+    "rundown": {
+     "selectedEventIndex": null,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": null,
+     "currentDay": null
+    },
+    "eventFlag": null,
+    "groupNow": null
+   }
+  },
+  {
+   "name": "paused",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36600000,
+     "do": "pause"
+    },
+    {
+     "at": 36900000,
+     "do": "tick"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 300000,
+     "mode": "absolute",
+     "expectedFlagStart": 39900000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43500000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "resumed after a pause",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36600000,
+     "do": "pause"
+    },
+    {
+     "at": 36900000,
+     "do": "resume"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 300000,
+     "mode": "absolute",
+     "expectedFlagStart": 39900000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43500000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "count to end started late",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "countToEnd": true
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36600000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 0,
+     "relative": -600000,
+     "mode": "absolute",
+     "expectedFlagStart": 37800000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 39600000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 2,
+     "plannedStart": 36000000,
+     "plannedEnd": 39600000,
+     "actualStart": 36600000,
+     "currentDay": 0
+    },
+    "eventFlag": "b",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "a skipped event in between",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "s",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "s": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "s",
+      "cue": "s",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36300000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 39600000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 41400000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 3,
+     "plannedStart": 36000000,
+     "plannedEnd": 41400000,
+     "actualStart": 36300000,
+     "currentDay": 0
+    },
+    "eventFlag": "b",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "numbered past a skipped event",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "s",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "s": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "s",
+      "cue": "s",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 39900000,
+     "do": "start",
+     "id": "b"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": 300000,
+     "mode": "absolute",
+     "expectedFlagStart": 41700000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43500000
+    },
+    "rundown": {
+     "selectedEventIndex": 2,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36000000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "relative mode survives a stop",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 36000000,
+     "do": "mode",
+     "mode": "relative"
+    },
+    {
+     "at": 36000000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 36300000,
+     "do": "stop"
+    },
+    {
+     "at": 36600000,
+     "do": "start",
+     "id": "b"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": -1200000,
+     "relative": -1800000,
+     "mode": "relative",
+     "expectedFlagStart": 40200000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 43800000
+    },
+    "rundown": {
+     "selectedEventIndex": 1,
+     "numEvents": 4,
+     "plannedStart": 36000000,
+     "plannedEnd": 43200000,
+     "actualStart": 36600000,
+     "currentDay": 0
+    },
+    "eventFlag": "c",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "across midnight",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 84600000,
+      "duration": 3600000,
+      "timeEnd": 1800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 2700000,
+      "duration": 1800000,
+      "timeEnd": 4500000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 7200000,
+      "duration": 1800000,
+      "timeEnd": 9000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 85200000,
+     "do": "start",
+     "id": "a"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 600000,
+     "relative": 0,
+     "mode": "absolute",
+     "expectedFlagStart": 89100000,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 95400000
+    },
+    "rundown": {
+     "selectedEventIndex": 0,
+     "numEvents": 3,
+     "plannedStart": 84600000,
+     "plannedEnd": 95400000,
+     "actualStart": 85200000,
+     "currentDay": 0
+    },
+    "eventFlag": "b",
+    "groupNow": null
+   }
+  },
+  {
+   "name": "after midnight",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 84600000,
+      "duration": 3600000,
+      "timeEnd": 1800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 2700000,
+      "duration": 1800000,
+      "timeEnd": 4500000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 7200000,
+      "duration": 1800000,
+      "timeEnd": 9000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 85200000,
+     "do": "start",
+     "id": "a"
+    },
+    {
+     "at": 89400000,
+     "do": "start",
+     "id": "b"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": -86100000,
+     "relative": -86700000,
+     "mode": "absolute",
+     "expectedFlagStart": null,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 9000000
+    },
+    "rundown": {
+     "selectedEventIndex": 1,
+     "numEvents": 3,
+     "plannedStart": 84600000,
+     "plannedEnd": 95400000,
+     "actualStart": 85200000,
+     "currentDay": 1
+    },
+    "eventFlag": null,
+    "groupNow": null
+   }
+  },
+  {
+   "name": "started on the next day",
+   "epoch": 1699920000000,
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 84600000,
+      "duration": 3600000,
+      "timeEnd": 1800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 2700000,
+      "duration": 1800000,
+      "timeEnd": 4500000,
+      "timeStrategy": "lock-duration",
+      "flag": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 7200000,
+      "duration": 1800000,
+      "timeEnd": 9000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "at": 89400000,
+     "do": "start",
+     "id": "b"
+    }
+   ],
+   "expected": {
+    "offset": {
+     "absolute": 300000,
+     "relative": -4500000,
+     "mode": "absolute",
+     "expectedFlagStart": null,
+     "expectedGroupEnd": null,
+     "expectedRundownEnd": 9000000
+    },
+    "rundown": {
+     "selectedEventIndex": 1,
+     "numEvents": 3,
+     "plannedStart": 84600000,
+     "plannedEnd": 95400000,
+     "actualStart": 3000000,
+     "currentDay": 1
+    },
+    "eventFlag": null,
+    "groupNow": null
+   }
+  }
+ ]
+}

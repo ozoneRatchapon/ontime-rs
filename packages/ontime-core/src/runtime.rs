@@ -54,6 +54,9 @@ pub enum Command {
     /// Hand the rundown to the wall clock: play whatever is due now, and wait
     /// for whatever is next.
     Roll,
+    /// Measure the expected times against the plan, or against the plan as
+    /// shifted by when the run actually began.
+    SetOffsetMode(OffsetMode),
 }
 
 impl Command {
@@ -86,6 +89,9 @@ impl Command {
             "reload" => Some(Command::Reload),
             "addtime" => payload.and_then(Value::as_i64).map(Command::AddTime),
             "roll" => Some(Command::Roll),
+            "offsetmode" => payload
+                .and_then(|mode| OffsetMode::deserialize(mode).ok())
+                .map(Command::SetOffsetMode),
             _ => None,
         }
     }
@@ -249,6 +255,10 @@ pub struct Runtime {
     /// start. `None` once it is actually running.
     #[serde(default)]
     pub secondary_target: Option<i64>,
+    /// Which offset the expected times follow. A setting of the room rather
+    /// than of the run, so a stop keeps it.
+    #[serde(default)]
+    pub offset_mode: OffsetMode,
 }
 
 impl Runtime {
@@ -279,6 +289,11 @@ impl Runtime {
             Command::Reload => self.reload(rundown, now, tz_offset),
             Command::AddTime(amount) => self.add_time(amount),
             Command::Roll => self.roll(rundown, now, tz_offset),
+            Command::SetOffsetMode(mode) => {
+                let changed = self.offset_mode != mode;
+                self.offset_mode = mode;
+                changed
+            }
         }
     }
 
@@ -350,7 +365,10 @@ impl Runtime {
             return false;
         }
         // a full reset: the next run establishes its own day and start time
-        *self = Runtime::default();
+        *self = Runtime {
+            offset_mode: self.offset_mode,
+            ..Runtime::default()
+        };
         true
     }
 
@@ -695,6 +713,17 @@ impl Runtime {
             .selected_id
             .as_ref()
             .and_then(|id| events.iter().position(|e| e == id));
+        // the client counts "event 3 of 8" over every event, skipped ones too
+        let timed = timed(rundown);
+        let selected_timed_index = self
+            .selected_id
+            .as_ref()
+            .and_then(|id| timed.iter().position(|e| e == id));
+        // the day the run is on now: the day it began, plus each midnight since
+        let current_day = self
+            .actual_start
+            .zip(self.start_day_offset)
+            .map(|(began, day)| day + days_between(began, now, tz_offset));
 
         let event_now = self.selected_id.as_ref().and_then(|id| rundown.get(id));
         let event_next = selected_index
@@ -714,10 +743,8 @@ impl Runtime {
             .first()
             .and_then(|id| rundown.get(id))
             .and_then(|e| field(e, "timeStart"));
-        let planned_end = events
-            .last()
-            .and_then(|id| rundown.get(id))
-            .and_then(|e| field(e, "timeEnd"));
+        // not wrapped: a rundown running past midnight ends on a later day
+        let planned_end = planned_start.map(|start| start + rundown.total_duration());
 
         // How far the run is from the plan. Positive means behind.
         let (absolute, relative) = match (
@@ -763,39 +790,45 @@ impl Runtime {
         };
 
         // when the events ahead are now expected to run, given how far the run has
-        // slipped and how much idle time is left to absorb it
+        // slipped and how much idle time is left to absorb it. Only while a run is
+        // under way: armed or stopped, nothing is expected yet (upstream
+        // getExpectedTimes). Not wrapped, like plannedEnd, so a time after
+        // midnight stays after the clock it is compared with.
         let ahead = self.look_ahead(rundown);
-        let expected_at = |target: &LookAheadTarget, add_duration: bool| -> Option<i64> {
+        let active = matches!(
+            self.playback,
+            Playback::Play | Playback::Pause | Playback::Roll
+        );
+        let expected_at = |target: Option<&LookAheadTarget>, add_duration: bool| -> Option<i64> {
+            let target = target.filter(|_| active)?;
             let event = rundown.get(&target.id)?;
             let start = expected_start(&ExpectedStartInputs {
                 time_start: field(event, "timeStart")?,
                 day_offset: field(event, "dayOffset").unwrap_or(0),
                 delay: field(event, "delay").unwrap_or(0),
-                current_day: self.start_day_offset.unwrap_or(0),
+                current_day: current_day.unwrap_or(0),
                 total_gap: target.accumulated_gap,
                 is_linked_to_loaded: target.is_linked_to_loaded,
-                offset: absolute,
-                mode: OffsetMode::Absolute,
+                offset: match self.offset_mode {
+                    OffsetMode::Absolute => absolute,
+                    OffsetMode::Relative => relative,
+                },
+                mode: self.offset_mode,
                 actual_start: self.actual_start.map(|t| time_of_day(t, tz_offset)),
                 planned_start,
             });
-            let span = if add_duration {
-                field(event, "duration").unwrap_or(0)
-            } else {
-                0
+            let span = match add_duration {
+                true => field(event, "duration").unwrap_or(0),
+                false => 0,
             };
-            Some(wrap_day(start + span))
+            Some(start + span)
         };
 
         // a flag marks a point someone is waiting on, so it is the start that matters
-        let expected_flag_start = ahead.flag.as_ref().and_then(|t| expected_at(t, false));
+        let expected_flag_start = expected_at(ahead.flag.as_ref(), false);
         // for the ends, it is the last event's start plus how long it runs
-        let expected_group_end = ahead.group_end.as_ref().and_then(|t| expected_at(t, true));
-        let expected_rundown_end = ahead
-            .rundown_end
-            .as_ref()
-            .and_then(|t| expected_at(t, true))
-            .or_else(|| planned_end.map(|end| wrap_day(end + absolute)));
+        let expected_group_end = expected_at(ahead.group_end.as_ref(), true);
+        let expected_rundown_end = expected_at(ahead.rundown_end.as_ref(), true);
 
         json!({
             "clock": time_of_day(now, tz_offset),
@@ -809,18 +842,18 @@ impl Runtime {
                 "inputs": inputs,
             },
             "rundown": {
-                "selectedEventIndex": selected_index,
-                "numEvents": events.len(),
+                "selectedEventIndex": selected_timed_index,
+                "numEvents": timed.len(),
                 "plannedStart": planned_start,
                 "plannedEnd": planned_end,
                 "actualStart": self.actual_start.map(|t| time_of_day(t, tz_offset)),
                 "actualGroupStart": Value::Null,
-                "currentDay": event_now.and_then(|e| field(e, "dayOffset")),
+                "currentDay": current_day,
             },
             "offset": {
                 "absolute": absolute,
                 "relative": relative,
-                "mode": "absolute",
+                "mode": self.offset_mode,
                 "expectedFlagStart": expected_flag_start,
                 "expectedGroupEnd": expected_group_end,
                 "expectedRundownEnd": expected_rundown_end,
@@ -997,20 +1030,33 @@ pub fn load_roll(rundown: &Rundown, clock: i64) -> Option<RollTarget> {
 
 /// Ids of the events that playback can select: real events, in order, not skipped.
 pub(crate) fn playable(rundown: &Rundown) -> Vec<String> {
+    events_where(rundown, |entry| {
+        entry.get("skip").and_then(Value::as_bool) != Some(true)
+    })
+}
+
+/// Ids of every event in order, skipped ones included (upstream's
+/// `timedEventOrder`), which is what the client numbers events by.
+fn timed(rundown: &Rundown) -> Vec<String> {
+    events_where(rundown, |_| true)
+}
+
+fn events_where(rundown: &Rundown, keep: impl Fn(&Value) -> bool) -> Vec<String> {
     rundown
         .flat_order
         .iter()
         .filter(|id| {
-            rundown
-                .get(id)
-                .map(|entry| {
-                    entry.get("type").and_then(Value::as_str) == Some("event")
-                        && entry.get("skip").and_then(Value::as_bool) != Some(true)
-                })
-                .unwrap_or(false)
+            rundown.get(id).is_some_and(|entry| {
+                entry.get("type").and_then(Value::as_str) == Some("event") && keep(entry)
+            })
         })
         .cloned()
         .collect()
+}
+
+/// How many local midnights lie between two instants (upstream daysSinceStart).
+fn days_between(from: i64, to: i64, tz_offset: i64) -> i64 {
+    (to + tz_offset).div_euclid(MS_PER_DAY) - (from + tz_offset).div_euclid(MS_PER_DAY)
 }
 
 fn field(entry: &Value, key: &str) -> Option<i64> {

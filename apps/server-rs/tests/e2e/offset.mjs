@@ -161,11 +161,24 @@ const onB = await until((p) => p.eventNow?.title === 'OFF_B', 'event B to load')
 check('event B is loaded', onB.eventNow?.title, 'OFF_B');
 check('offset changed with the new event', onB.offset.absolute !== beforeLoad, true);
 
+console.log('== the editor switches the offset mode ==');
+// the Absolute / Relative toggle in the rundown header sends this
+send('offsetmode', 'relative');
+const relative = await until((p) => p.offset.mode === 'relative', 'relative mode');
+check('mode is relative', relative.offset.mode, 'relative');
+check('the expected end is still reported', typeof relative.offset.expectedRundownEnd, 'number');
+check('the day the run is on is reported', relative.rundown.currentDay, 0);
+
 console.log('== stopping clears it ==');
 send('stop', undefined);
 const cleared = await until((p) => p.timer.playback === 'stop', 'the stop to apply');
 check('absolute cleared', cleared.offset.absolute, 0);
 check('relative cleared', cleared.offset.relative, 0);
+check('nothing is expected once stopped', cleared.offset.expectedRundownEnd, null);
+// a setting of the room, not of the run, as upstream keeps it
+check('the mode survives the stop', cleared.offset.mode, 'relative');
+send('offsetmode', 'absolute');
+await until((p) => p.offset.mode === 'absolute', 'absolute mode again');
 
 ws.close();
 await api('POST', '/data/rundowns/default/load');

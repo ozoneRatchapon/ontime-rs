@@ -164,7 +164,7 @@ fn rundown_note(
 /// "start" names the event that actually started. `before` is the event that
 /// was loaded until then, which pause, stop and add-time are about.
 ///
-/// The message overlay and the aux timers are not recorded.
+/// The message overlay, the aux timers and the offset mode are not recorded.
 pub fn socket_note(
     project: &Project,
     tag: &str,
@@ -186,6 +186,8 @@ pub fn socket_note(
         Command::Stop => (Action::Stop, before, None),
         Command::Reload => (Action::Reload, before, None),
         Command::AddTime(ms) => (Action::AddTime, before, Some(ms)),
+        // a display preference of the room, like the message overlay
+        Command::SetOffsetMode(_) => return None,
     };
     let subject = about.and_then(|id| entry_subject(project, &project.loaded, id));
     let note = Note::new(action).about(subject);

@@ -251,7 +251,10 @@ fn skipped_events_are_not_selectable() {
     runtime.apply(Command::StartNext, &rundown, T0 + 60_000, 0);
 
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[2].as_str()));
-    assert_eq!(runtime.snapshot(&rundown, T0, 0)["rundown"]["numEvents"], 2);
+    // skipped, but still numbered: the client shows "3 of 3" as upstream does
+    let rundown_state = &runtime.snapshot(&rundown, T0, 0)["rundown"];
+    assert_eq!(rundown_state["numEvents"], 3);
+    assert_eq!(rundown_state["selectedEventIndex"], 2);
 }
 
 #[test]
