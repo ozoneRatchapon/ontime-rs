@@ -1,0 +1,1202 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b by scripts/teleprompter-oracle/generate.sh; do not edit by hand.",
+ "cases": [
+  {
+   "name": "plain words",
+   "text": "one two three four",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "one two",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "three",
+     "start": 8,
+     "indent": 0
+    },
+    {
+     "text": "four",
+     "start": 14,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "an accent counts once",
+   "text": "café café café",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "café café",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "café",
+     "start": 10,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a combining accent counts once",
+   "text": "café café café",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "café café",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "café",
+     "start": 12,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "an emoji counts once",
+   "text": "👋🏽👋🏽 hello there",
+   "charsPerLine": 8,
+   "lines": [
+    {
+     "text": "👋🏽👋🏽 hello",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "there",
+     "start": 15,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a line which fits stays whole",
+   "text": "Good evening",
+   "charsPerLine": 12,
+   "lines": [
+    {
+     "text": "Good evening",
+     "start": 0,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a hyphen",
+   "text": "a well-known face",
+   "charsPerLine": 10,
+   "lines": [
+    {
+     "text": "a well-",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "known face",
+     "start": 7,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "an en dash",
+   "text": "pages 10–20 here",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "pages 10–",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "20 here",
+     "start": 9,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "an em dash",
+   "text": "wait—what now",
+   "charsPerLine": 6,
+   "lines": [
+    {
+     "text": "wait—",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "what",
+     "start": 5,
+     "indent": 0
+    },
+    {
+     "text": "now",
+     "start": 10,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a slash",
+   "text": "and/or more",
+   "charsPerLine": 5,
+   "lines": [
+    {
+     "text": "and/",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "or",
+     "start": 4,
+     "indent": 0
+    },
+    {
+     "text": "more",
+     "start": 7,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "not a leading dash",
+   "text": "-minus sign",
+   "charsPerLine": 7,
+   "lines": [
+    {
+     "text": "-minus",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "sign",
+     "start": 7,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "not a trailing dash",
+   "text": "well- known",
+   "charsPerLine": 6,
+   "lines": [
+    {
+     "text": "well-",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "known",
+     "start": 6,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "not inside a run of dashes",
+   "text": "a--b c",
+   "charsPerLine": 3,
+   "lines": [
+    {
+     "text": "a--",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "b c",
+     "start": 3,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "never breaks at a no-break space",
+   "text": "see Mr. Smith",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "see",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "Mr. Smith",
+     "start": 4,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a spaced closing mark never starts a line",
+   "text": "oui bonjour !",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "oui",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "bonjour !",
+     "start": 4,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "spaced quotes stay with their words",
+   "text": "a « hello » there",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "a",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "« hello »",
+     "start": 2,
+     "indent": 0
+    },
+    {
+     "text": "there",
+     "start": 12,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a spaced opening mark never ends a line",
+   "text": "say ( this ) now",
+   "charsPerLine": 8,
+   "lines": [
+    {
+     "text": "say",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "( this )",
+     "start": 4,
+     "indent": 0
+    },
+    {
+     "text": "now",
+     "start": 13,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a dash is no break before closing punctuation",
+   "text": "go-) now",
+   "charsPerLine": 4,
+   "lines": [
+    {
+     "text": "go-)",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "now",
+     "start": 5,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a count",
+   "text": "only 10 minutes",
+   "charsPerLine": 10,
+   "lines": [
+    {
+     "text": "only",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "10 minutes",
+     "start": 5,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a decimal",
+   "text": "about 3.5 metres",
+   "charsPerLine": 10,
+   "lines": [
+    {
+     "text": "about",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "3.5 metres",
+     "start": 6,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a time",
+   "text": "at 10:30 sharp",
+   "charsPerLine": 11,
+   "lines": [
+    {
+     "text": "at",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "10:30 sharp",
+     "start": 3,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "unless they cannot share a line",
+   "text": "10 extraordinary",
+   "charsPerLine": 13,
+   "lines": [
+    {
+     "text": "10",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "extraordinary",
+     "start": 3,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a long word",
+   "text": "abcdefghijkl",
+   "charsPerLine": 5,
+   "lines": [
+    {
+     "text": "abcde",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "fghij",
+     "start": 5,
+     "indent": 0
+    },
+    {
+     "text": "kl",
+     "start": 10,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "after a short word",
+   "text": "a abcdefghijkl",
+   "charsPerLine": 5,
+   "lines": [
+    {
+     "text": "a",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "abcde",
+     "start": 2,
+     "indent": 0
+    },
+    {
+     "text": "fghij",
+     "start": 7,
+     "indent": 0
+    },
+    {
+     "text": "kl",
+     "start": 12,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "with emoji",
+   "text": "👋🏽👋🏽👋🏽👋🏽👋🏽",
+   "charsPerLine": 2,
+   "lines": [
+    {
+     "text": "👋🏽👋🏽",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "👋🏽👋🏽",
+     "start": 8,
+     "indent": 0
+    },
+    {
+     "text": "👋🏽",
+     "start": 16,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "scripts without spaces break per character",
+   "text": "日本語の文章です",
+   "charsPerLine": 3,
+   "lines": [
+    {
+     "text": "日本語",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "の文章",
+     "start": 3,
+     "indent": 0
+    },
+    {
+     "text": "です",
+     "start": 6,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "the space where a line breaks is used up",
+   "text": "one   two",
+   "charsPerLine": 4,
+   "lines": [
+    {
+     "text": "one",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "two",
+     "start": 6,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "positions after a break",
+   "text": "one two",
+   "charsPerLine": 4,
+   "lines": [
+    {
+     "text": "one",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "two",
+     "start": 4,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "typed line breaks",
+   "text": "one\ntwo",
+   "charsPerLine": 40,
+   "lines": [
+    {
+     "text": "one",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "two",
+     "start": 4,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "blank lines are kept",
+   "text": "one\n\n\ntwo",
+   "charsPerLine": 40,
+   "lines": [
+    {
+     "text": "one",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "",
+     "start": 4,
+     "indent": 0
+    },
+    {
+     "text": "",
+     "start": 5,
+     "indent": 0
+    },
+    {
+     "text": "two",
+     "start": 6,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a leading blank line",
+   "text": "\none",
+   "charsPerLine": 40,
+   "lines": [
+    {
+     "text": "",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "one",
+     "start": 1,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "an indented line",
+   "text": "  one two three",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "one two",
+     "start": 2,
+     "indent": 2
+    },
+    {
+     "text": "three",
+     "start": 10,
+     "indent": 2
+    }
+   ]
+  },
+  {
+   "name": "indentation capped at half",
+   "text": "        one two",
+   "charsPerLine": 6,
+   "lines": [
+    {
+     "text": "one",
+     "start": 8,
+     "indent": 3
+    },
+    {
+     "text": "two",
+     "start": 12,
+     "indent": 3
+    }
+   ]
+  },
+  {
+   "name": "positions after the indentation",
+   "text": "  one two",
+   "charsPerLine": 5,
+   "lines": [
+    {
+     "text": "one",
+     "start": 2,
+     "indent": 2
+    },
+    {
+     "text": "two",
+     "start": 6,
+     "indent": 2
+    }
+   ]
+  },
+  {
+   "name": "inner spaces kept",
+   "text": "one   two  three",
+   "charsPerLine": 40,
+   "lines": [
+    {
+     "text": "one   two  three",
+     "start": 0,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "tab and crlf",
+   "text": "one\ttwo\r\nthree",
+   "charsPerLine": 40,
+   "lines": [
+    {
+     "text": "one    two",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "three",
+     "start": 11,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "crlf positions",
+   "text": "a\r\nb",
+   "charsPerLine": 40,
+   "lines": [
+    {
+     "text": "a",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "b",
+     "start": 2,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "trailing spaces and lines",
+   "text": "one  \n\n  ",
+   "charsPerLine": 40,
+   "lines": [
+    {
+     "text": "one",
+     "start": 0,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "only whitespace",
+   "text": " \n\t\n ",
+   "charsPerLine": 40,
+   "lines": []
+  },
+  {
+   "name": "empty",
+   "text": "",
+   "charsPerLine": 40,
+   "lines": []
+  },
+  {
+   "name": "every position",
+   "text": "Good evening and welcome\tto the 2026 awards.\r\n\n  Our first guest is a well-known face",
+   "charsPerLine": 12,
+   "lines": [
+    {
+     "text": "Good evening",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "and welcome",
+     "start": 13,
+     "indent": 0
+    },
+    {
+     "text": "to the",
+     "start": 28,
+     "indent": 0
+    },
+    {
+     "text": "2026 awards.",
+     "start": 35,
+     "indent": 0
+    },
+    {
+     "text": "",
+     "start": 48,
+     "indent": 0
+    },
+    {
+     "text": "Our first",
+     "start": 51,
+     "indent": 2
+    },
+    {
+     "text": "guest is a",
+     "start": 61,
+     "indent": 2
+    },
+    {
+     "text": "well-known",
+     "start": 72,
+     "indent": 2
+    },
+    {
+     "text": "face",
+     "start": 83,
+     "indent": 2
+    }
+   ]
+  },
+  {
+   "name": "thai without spaces",
+   "text": "สวัสดีครับยินดีต้อนรับทุกท่านเข้าสู่งาน",
+   "charsPerLine": 8,
+   "lines": [
+    {
+     "text": "สวัสดีครับยิ",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "นดีต้อนรับทุ",
+     "start": 12,
+     "indent": 0
+    },
+    {
+     "text": "กท่านเข้าสู่",
+     "start": 24,
+     "indent": 0
+    },
+    {
+     "text": "งาน",
+     "start": 36,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "thai with spaces",
+   "text": "ขอต้อนรับ คุณสมชาย ขึ้นเวทีครับ",
+   "charsPerLine": 10,
+   "lines": [
+    {
+     "text": "ขอต้อนรับ",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "คุณสมชาย",
+     "start": 10,
+     "indent": 0
+    },
+    {
+     "text": "ขึ้นเวทีครับ",
+     "start": 19,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "thai tone marks count once",
+   "text": "น้ำ น้ำ น้ำ",
+   "charsPerLine": 7,
+   "lines": [
+    {
+     "text": "น้ำ น้ำ น้ำ",
+     "start": 0,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "joined family emoji",
+   "text": "👨‍👩‍👧‍👦 family 👨‍👩‍👧‍👦",
+   "charsPerLine": 8,
+   "lines": [
+    {
+     "text": "👨‍👩‍👧‍👦 family",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "👨‍👩‍👧‍👦",
+     "start": 19,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "flags",
+   "text": "🇹🇭🇹🇭🇹🇭",
+   "charsPerLine": 2,
+   "lines": [
+    {
+     "text": "🇹🇭🇹🇭",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "🇹🇭",
+     "start": 8,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a lone carriage return",
+   "text": "one\rtwo three",
+   "charsPerLine": 7,
+   "lines": [
+    {
+     "text": "one\rtwo",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "three",
+     "start": 8,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "a byte order mark is whitespace",
+   "text": "one﻿two three",
+   "charsPerLine": 7,
+   "lines": [
+    {
+     "text": "one﻿two",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "three",
+     "start": 8,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "figure and narrow no-break spaces hold",
+   "text": "10 000 and 5 km",
+   "charsPerLine": 8,
+   "lines": [
+    {
+     "text": "10 000",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "and 5 km",
+     "start": 7,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "opening quote never ends a line",
+   "text": "he said “ hello",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "he said",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "“ hello",
+     "start": 8,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "inverted marks",
+   "text": "dijo ¿ qué ? bien",
+   "charsPerLine": 7,
+   "lines": [
+    {
+     "text": "dijo",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "¿ qué ?",
+     "start": 5,
+     "indent": 0
+    },
+    {
+     "text": "bien",
+     "start": 13,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "percent closes",
+   "text": "up 50 %",
+   "charsPerLine": 5,
+   "lines": [
+    {
+     "text": "up",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "50 %",
+     "start": 3,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "ellipsis closes",
+   "text": "and then …",
+   "charsPerLine": 8,
+   "lines": [
+    {
+     "text": "and",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "then …",
+     "start": 4,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "dash then dash",
+   "text": "a—-b c—d",
+   "charsPerLine": 3,
+   "lines": [
+    {
+     "text": "a—-",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "b",
+     "start": 3,
+     "indent": 0
+    },
+    {
+     "text": "c—d",
+     "start": 5,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "slash at both ends",
+   "text": "/path/to/x/",
+   "charsPerLine": 4,
+   "lines": [
+    {
+     "text": "/pat",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "h/",
+     "start": 4,
+     "indent": 0
+    },
+    {
+     "text": "to/",
+     "start": 6,
+     "indent": 0
+    },
+    {
+     "text": "x/",
+     "start": 9,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "indent with nbsp",
+   "text": "  one two",
+   "charsPerLine": 6,
+   "lines": [
+    {
+     "text": "one",
+     "start": 2,
+     "indent": 2
+    },
+    {
+     "text": "two",
+     "start": 6,
+     "indent": 2
+    }
+   ]
+  },
+  {
+   "name": "indent on many lines",
+   "text": "  one two\n    three four five",
+   "charsPerLine": 7,
+   "lines": [
+    {
+     "text": "one",
+     "start": 2,
+     "indent": 2
+    },
+    {
+     "text": "two",
+     "start": 6,
+     "indent": 2
+    },
+    {
+     "text": "thre",
+     "start": 14,
+     "indent": 3
+    },
+    {
+     "text": "e",
+     "start": 18,
+     "indent": 3
+    },
+    {
+     "text": "four",
+     "start": 20,
+     "indent": 3
+    },
+    {
+     "text": "five",
+     "start": 25,
+     "indent": 3
+    }
+   ]
+  },
+  {
+   "name": "width one",
+   "text": "ab c",
+   "charsPerLine": 1,
+   "lines": [
+    {
+     "text": "a",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "b",
+     "start": 1,
+     "indent": 0
+    },
+    {
+     "text": "c",
+     "start": 3,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "chars per line not whole",
+   "text": "one two three",
+   "charsPerLine": 7.9,
+   "lines": [
+    {
+     "text": "one two",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "three",
+     "start": 8,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "number glue chain",
+   "text": "in 2026 10 20 30 people",
+   "charsPerLine": 9,
+   "lines": [
+    {
+     "text": "in",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "2026 10",
+     "start": 3,
+     "indent": 0
+    },
+    {
+     "text": "20 30",
+     "start": 11,
+     "indent": 0
+    },
+    {
+     "text": "people",
+     "start": 17,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "long glued chunk splits",
+   "text": "« ( ( ( a ) ) ) »",
+   "charsPerLine": 5,
+   "lines": [
+    {
+     "text": "« ( (",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "( a )",
+     "start": 6,
+     "indent": 0
+    },
+    {
+     "text": ") ) »",
+     "start": 12,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "astral letters",
+   "text": "𝐀𝐁𝐂𝐃 𝐄𝐅",
+   "charsPerLine": 3,
+   "lines": [
+    {
+     "text": "𝐀𝐁𝐂",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "𝐃",
+     "start": 6,
+     "indent": 0
+    },
+    {
+     "text": "𝐄𝐅",
+     "start": 9,
+     "indent": 0
+    }
+   ]
+  },
+  {
+   "name": "mixed scripts",
+   "text": "Keynote คีย์โน้ต 基調",
+   "charsPerLine": 6,
+   "lines": [
+    {
+     "text": "Keynot",
+     "start": 0,
+     "indent": 0
+    },
+    {
+     "text": "e",
+     "start": 6,
+     "indent": 0
+    },
+    {
+     "text": "คีย์โน้ต",
+     "start": 8,
+     "indent": 0
+    },
+    {
+     "text": "基調",
+     "start": 17,
+     "indent": 0
+    }
+   ]
+  }
+ ]
+}
