@@ -133,8 +133,6 @@ export const connectSocket = () => {
       return;
     }
     console.warn('WebSocket disconnected');
-    // stop advancing a timer we can no longer trust; it resumes on the next packet
-    stopTimerEngine();
     scheduleReconnect();
   };
 
@@ -290,6 +288,9 @@ export const connectSocket = () => {
 
 function scheduleReconnect() {
   stopPinging();
+  // every way of losing the socket ends here, the watchdog's included: stop
+  // advancing a timer we can no longer trust; it resumes on the next packet
+  stopTimerEngine();
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
