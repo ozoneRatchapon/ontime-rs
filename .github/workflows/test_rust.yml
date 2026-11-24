@@ -132,3 +132,39 @@ jobs:
       - name: Client unit tests for locally patched code
         working-directory: apps/client
         run: npx vitest run src/common/stores src/common/utils
+
+  # the client in a real browser against the real Rust Worker: people and
+  # invites, members-only rooms, the activity log and the shared teleprompter
+  browser:
+    # Playwright has no browsers for ubuntu-latest (26.04) yet
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the wasm timer engine
+        run: |
+          version=$(grep -A1 '^name = "wasm-bindgen"$' packages/ontime-wasm/Cargo.lock | grep '^version' | head -1 | cut -d'"' -f2)
+          cargo install -f wasm-bindgen-cli --version "$version"
+          cargo install -q worker-build@^0.1
+          packages/ontime-wasm/build.sh
+
+      - name: Install Chromium
+        run: pnpm playwright install --with-deps chromium
+
+      - name: Browser checks against the Worker
+        run: apps/server-rs/tests/browser/run.sh --start

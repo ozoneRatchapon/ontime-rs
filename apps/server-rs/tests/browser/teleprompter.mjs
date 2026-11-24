@@ -1,16 +1,12 @@
 // Browser check of plan 008: a controller and a remote screen of the same room
 // scroll together from the shared transport in the room's Durable Object.
 //
-//   (apps/server-rs)  npx wrangler dev --port 8787 --local
-//   (apps/client)     VITE_WORKER_URL=http://127.0.0.1:8787 pnpm build && npx vite preview --port 4199
-//   node apps/server-rs/tests/browser/teleprompter.mjs <dir holding playwright-core>
-//
-// wrangler dev does not watch packages/ontime-core: restart it after a core change.
-import { createRequire } from 'node:module';
-
-const { chromium } = createRequire(process.argv[2])('playwright-core');
-const app = 'http://localhost:4199';
-const api = 'http://127.0.0.1:8787';
+// Run with ./run.sh (see there); BROWSER_APP, BROWSER_API and ADMIN_PASSWORD
+// override the local defaults.
+import { chromium } from '@playwright/test';
+const app = process.env.BROWSER_APP ?? 'http://localhost:4199';
+const api = process.env.BROWSER_API ?? 'http://127.0.0.1:8788';
+const password = process.env.ADMIN_PASSWORD ?? 'admin-e2e';
 const room = `ui-tp-${Math.random().toString(36).slice(2, 8)}`;
 const errors = [];
 let failed = false;
@@ -18,10 +14,18 @@ const check = (label, ok, detail = '') => {
   if (!ok) failed = true;
   console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok ? '' : ` ${detail}`}`);
 };
+const login = await fetch(`${api}/admin/login`, {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ password }),
+});
+// a worker with a master password creates rooms only with its token; an open one needs none
+const master = login.ok ? (await login.json()).token : null;
+const auth = master ? { Authorization: `Bearer ${master}` } : {};
 const call = (path, { method = 'GET', body } = {}) =>
   fetch(`${api}/r/${room}${path}`, {
     method,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...auth },
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -106,6 +110,7 @@ await remote.screenshot({ path: '/tmp/teleprompter-remote.png' });
 await controller.mouse.move(640, 650);
 await controller.screenshot({ path: '/tmp/teleprompter-controller.png' });
 await browser.close();
+if (master) await fetch(`${api}/admin/rooms/${room}`, { method: 'DELETE', headers: auth });
 
 const real = errors.filter((e) => !e.includes('401') && !e.includes('403'));
 check(`no console errors (${real.length})`, real.length === 0);
