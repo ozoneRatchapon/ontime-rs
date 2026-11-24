@@ -164,6 +164,34 @@ How to use it:
 - [x] Real schedules backed up by the user to `ozoneRatchapon/ontime-ops`,
       2026-11-24. Checked: the repo is PRIVATE. Copy new schedule files there too.
 
+## Dependabot rescan (2026-11-25): 108 open, 63 fixed by this pass
+
+- **What happened:**
+  - The 50 alerts from 2026-11-24 were stale. The lockfile already held
+    every fix, and GitHub closed them as fixed once it rescanned.
+  - The rescan opened 108 new alerts, and 99 of them matched the lockfile.
+- **Nothing that ships is exposed.**
+  - The Worker carries no `zip`.
+  - The client bundle's runtime copies are already fixed: axios 1.21.1 and
+    form-data 4.0.6.
+- **Fixed:**
+  - Overrides in `pnpm-workspace.yaml` lift each vulnerable package to the
+    first fixed release in the same major. These are the TS server's
+    dependencies plus build and test tools.
+  - turbo 2.9.14.
+  - calamine 0.26 → 0.38, which brings `zip` 9.8.2. `parser_excel_tests.rs`
+    checks that both versions read upstream's template identically (25 events).
+- **Left on purpose:**
+  - **electron 38 (37 alerts) and electron-builder:** no desktop app is
+    shipped (owner, 2026-11-25).
+  - **xlsx 0.18.5 (4):** in upstream's TS server only. npm has no fixed
+    release, because SheetJS publishes fixes on its own CDN. Follow upstream.
+  - **The major bumps (4):** glob 11/13 → 14 (rimraf, the Sentry plugin),
+    minimatch 9/10 → 11 (electron-builder), uuid 9 → 11 (TS server),
+    esbuild 0.24 → 0.25 (a TS server dev tool). All are build or unused paths.
+- **Checked:** core tests, the JS unit tests, typecheck, lint (0 errors) and
+  the browser checks all pass.
+
 ## Dependabot (2026-11-24): 206 open alerts on the default branch `feat/rust-cloud-backend`
 
 - **Nothing that ships is exposed.** Production is the static client bundle plus

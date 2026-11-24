@@ -24,6 +24,33 @@ overrides:
   'brace-expansion@>=4.0.0 <5.0.12': ^5.0.12
   # vite 7 comes only with vitest; the client builds with its own pinned vite 5
   'vite@>=7.0.0 <7.3.7': ^7.3.7
+  # 2026-11-25: the alerts a rescan opened, each to the first fixed release in
+  # the same major. The worker and the client bundle carry none of these; they
+  # are the TS server's (upstream's, unused here), build and test tools, and
+  # electron's (no desktop app is shipped). Majors are left: glob, minimatch,
+  # uuid, esbuild 0.24, electron, xlsx (see .plans/004).
+  '@babel/core@<7.29.6': ^7.29.6
+  '@babel/plugin-transform-modules-systemjs@>=7.12.0 <7.29.4': ^7.29.4
+  '@xmldom/xmldom@<0.8.13': ^0.8.13
+  'axios@>=1.0.0 <1.20.0': ^1.20.0
+  'brace-expansion@<1.1.20': ^1.1.20
+  'brace-expansion@>=2.0.0 <2.0.3': ^2.0.3
+  'fast-uri@>=3.0.0 <3.1.8': ^3.1.8
+  'form-data@>=4.0.0 <4.0.6': ^4.0.6
+  'immutable@>=5.0.0-beta.1 <5.1.8': ^5.1.8
+  'ip-address@>=10.0.0 <10.7.1': ^10.7.1
+  'joi@>=17.0.0 <17.13.9': ^17.13.9
+  'jws@>=4.0.0 <4.0.1': ^4.0.1
+  'lodash@>=4.0.0 <4.18.1': ^4.18.1
+  'on-headers@<1.1.0': ^1.1.0
+  'path-to-regexp@>=8.0.0 <8.4.0': ^8.4.0
+  'picomatch@<2.3.2': ^2.3.2
+  'qs@>=6.0.0 <6.16.1': ^6.16.1
+  'tar@>=7.0.0 <7.5.21': ^7.5.21
+  'tinypool@>=2.0.0 <2.1.2': ^2.1.2
+  'tmp@<0.2.6': ^0.2.6
+  'undici@>=6.0.0 <6.28.1': ^6.28.1
+  'ws@>=8.0.0 <8.21.0': ^8.21.0
 
 allowBuilds:
   '@parcel/watcher': true
