@@ -48,12 +48,21 @@ await new Promise((resolve, reject) => {
 });
 const send = (tag, payload) => ws.send(JSON.stringify({ tag, payload }));
 const last = (tag) => packets.filter((p) => p.tag === tag).at(-1);
+// waits for a packet that satisfies `ready` instead of a fixed pause, so a slow
+// round trip to a deployment does not fail a check; gives up after 5 s
+const until = async (tag, ready = () => true) => {
+  for (let i = 0; i < 50; i++) {
+    const packet = last(tag);
+    if (packet && ready(packet)) return packet;
+    await wait(100);
+  }
+  return last(tag);
+};
 
 console.log('== A1: a Pong carries the room time of day ==');
 const sent = Date.now();
 send('ping', 1234.5);
-await wait(500);
-const pong = last('pong');
+const pong = await until('pong');
 check('the payload is echoed', pong?.payload, 1234.5);
 const expected = (sent + 7 * H) % (24 * H);
 check('clock is the time of day in the room timezone (±5 s)', Math.abs((pong?.clock ?? -1e9) - expected) < 5000, true);
@@ -61,25 +70,21 @@ check('clock is the time of day in the room timezone (±5 s)', Math.abs((pong?.c
 console.log('== A2: aux timers carry their names ==');
 const named = await call('POST', '/data/settings', { auxTimerNames: [' Q&A ', 'Break'] });
 check('names are cleaned on save', named.body.auxTimerNames, ['Q&A', 'Break', '']);
-await wait(500);
-check('the runtime shows the name', last('runtime-data')?.payload?.auxtimer1?.name, 'Q&A');
+check('the runtime shows the name', (await until('runtime-data', (p) => p.payload?.auxtimer1?.name === 'Q&A'))?.payload?.auxtimer1?.name, 'Q&A');
 check('names that are not a list are refused', (await call('POST', '/data/settings', { auxTimerNames: 'x' })).status, 400);
 check('a badly typed setting is refused', (await call('POST', '/data/settings', { timeFormat: 24 })).status, 400);
 check('and nothing was reset', (await call('GET', '/data/settings')).body.auxTimerNames, ['Q&A', 'Break', '']);
 
 console.log('== A3: replacing the loaded rundown keeps playback ==');
 send('start', undefined);
-await wait(800);
-check('playing', last('runtime-data')?.payload?.timer?.playback, 'play');
+check('playing', (await until('runtime-data', (p) => p.payload?.timer?.playback === 'play'))?.payload?.timer?.playback, 'play');
 await call('PUT', `/data/rundowns/${rid}`, { entries: [event('e1', '1', 'One, revised', 9 * H), event('e3', '3', 'Three', 9 * H + 10 * M)] });
-await wait(800);
-const after = last('runtime-data')?.payload;
+const after = (await until('runtime-data', (p) => p.payload?.eventNow?.title === 'One, revised'))?.payload;
 check('still playing', after?.timer?.playback, 'play');
 check('the running event shows the new title', after?.eventNow?.title, 'One, revised');
 check('next is the new entry', after?.eventNext?.id, 'e3');
 await call('PUT', `/data/rundowns/${rid}`, { entries: [event('e3', '3', 'Three', 9 * H + 10 * M)] });
-await wait(800);
-check('without the running event it stops', last('runtime-data')?.payload?.timer?.playback, 'stop');
+check('without the running event it stops', (await until('runtime-data', (p) => p.payload?.timer?.playback === 'stop'))?.payload?.timer?.playback, 'stop');
 
 console.log('== A4: custom field values follow the field ==');
 await call('POST', '/data/custom-fields', { label: 'Mic', type: 'text', colour: '' });
