@@ -178,15 +178,30 @@ How to use it:
       root `dev:prefix` script and `docs/tracking-upstream.md`.
     - Deleting them would also make upstream patches that touch them fail to
       apply.
-- [ ] **50 alerts stay open.** They are client build and test tools or the
-  repo root, none in the browser bundle:
-  - undici 7 (16), from the repo root;
-  - vite 5 and 7 (7);
-  - happy-dom (4);
-  - postcss (3), nanoid 3 through postcss (3);
-  - js-yaml, browserslist, deepmerge-ts, @vitest/mocker;
-  - sharp, from the repo root.
-  - 4 of them, nanoid (3) and react-router (1), have no installed version in
-    range. They are stale and should close on the next scan.
-  - The fix is a dependency bump in a separate pass. The next upstream pull
-    may bring most of them.
+- [x] **45 of the remaining 50 fixed** on 2026-11-24 by a dependency bump.
+  - **Direct bumps:**
+    - `deepmerge-ts` ^8 in utils (only the TS server's test mocks call it);
+    - `happy-dom` ^21 in the client (tests only).
+  - **Scoped overrides in `pnpm-workspace.yaml`:**
+    - `miniflare>undici` and `miniflare>sharp`. Even the newest miniflare pins
+      both inside the vulnerable ranges.
+    - Same-major lifts for source-map-js, js-yaml, browserslist,
+      baseline-browser-mapping, brace-expansion 5, and the vite 7 that comes
+      with vitest.
+    - Transitive postcss and nanoid went up within their ranges.
+  - **Checks:**
+    - client tests 461, utils 467, typecheck unchanged, client build OK;
+    - `wrangler dev` with e2e `activity`, `people` and `shapes` all pass;
+    - the 32 "local timer engine unavailable" test logs were there before the
+      bump too.
+- [ ] **5 alerts stay open, all tied to the client's exact `vite` 5.4.21 pin.**
+  - vite 5 itself: 2 alerts.
+  - vitest and @vitest/mocker 4.0.17: 3 alerts. vitest 4.1 needs vite 6+
+    (`vite/module-runner`) and fails to start with vite 5. Tried, then
+    reverted.
+  - All of them are dev-server or test-runner issues, and nothing of theirs
+    ships.
+  - **The fix:** move the client to vite 6 or 7, together with
+    `@vitejs/plugin-legacy`, `@vitejs/plugin-react` and `vite-plugin-svgr`.
+    That's a build-system change worth its own pass, or wait until upstream
+    does it.
