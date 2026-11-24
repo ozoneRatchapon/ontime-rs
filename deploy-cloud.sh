@@ -26,7 +26,10 @@ set -euo pipefail
 
 WORKER_URL="${VITE_WORKER_URL:-https://ontime-server-rs.example.workers.dev}"
 PAGES_PROJECT="${PAGES_PROJECT:-your-pages-project}"
-PAGES_BRANCH="${PAGES_BRANCH:-master}"
+# The Pages production branch is `main` (the root pages.dev URL). Room and
+# invite links use the `master.` alias, which only a Preview deploy on branch
+# `master` moves, so the client goes to both. Set PAGES_BRANCHES to override.
+PAGES_BRANCHES="${PAGES_BRANCHES:-master main}"
 
 root="$(cd "$(dirname "$0")" && pwd)"
 do_worker=true
@@ -79,9 +82,11 @@ if [ "$do_client" = true ]; then
   echo "  worker url ok, no localhost leak, wasm asset present"
 
   if [ "$dry_run" = false ]; then
-    step "Deploying the client to Pages"
-    (cd "$root/apps/client" && npx --yes wrangler@latest pages deploy build \
-      --project-name="$PAGES_PROJECT" --branch="$PAGES_BRANCH" --commit-dirty=true)
+    for branch in $PAGES_BRANCHES; do
+      step "Deploying the client to Pages, branch $branch"
+      (cd "$root/apps/client" && npx --yes wrangler@latest pages deploy build \
+        --project-name="$PAGES_PROJECT" --branch="$branch" --commit-dirty=true)
+    done
   fi
 fi
 

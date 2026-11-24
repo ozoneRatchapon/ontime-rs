@@ -7,9 +7,9 @@ Status: **done and deployed (2026-11-24).**
 - **Production smoke test:** `teleprompter.mjs` 35/35 and `activity.mjs`
   25/25, both with throwaway rooms that were removed afterwards.
 - **Existing rooms:** a read-only check returns 200 for all of them.
-- **Open:** `master.ontime-team.pages.dev` stays on the previous client
-  (`781e445f`), because a Production deploy doesn't move a branch alias. See
-  004.
+- **The `master.` alias** was briefly stuck on the previous client, because
+  a Production deploy doesn't move a branch alias. It is current since the
+  two-branch deploy (`81aa811c` and `89924a11`).
 Its 4 decisions use the recommended answers, so the user's standing approval
 applies.
 

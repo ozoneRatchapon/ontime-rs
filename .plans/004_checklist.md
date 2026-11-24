@@ -95,12 +95,12 @@ How to use it:
     browser check.
   - Merged and deployed on 2026-11-24: Worker `c9560deb`, Pages `1ca3aa2c`.
     The production smoke test passed 35/35.
-- [ ] **`master.ontime-team.pages.dev` is frozen at `781e445f`.**
-  - Production deploys don't move a branch alias, and old room and invite
-    links use that host.
-  - **[ต้องถาม]** either set the production branch back to `main` and deploy
-    twice (`master` as Preview for the alias, `main` as Production for the
-    root), or move links to the root URL.
+- [x] **Both client URLs current again (2026-11-24).**
+  - The user set the Pages production branch back to `main`.
+  - `deploy-cloud.sh` now deploys the client to `master` (Preview, which moves
+    the `master.` alias that links use) and to `main` (Production, the root).
+  - First run: Preview `81aa811c`, Production `89924a11`. Both URLs serve the
+    same bundle.
 
 ## Dioxus pilot
 
