@@ -21,7 +21,7 @@ Status: **done and deployed (2026-11-24).**
 - Done in commits de884be0, edc4f759, 91ecd415 and 45501194.
 - `ontime-core/src/teleprompter/` holds `wrap`, `settings`, `script`,
   `position` and `transport`.
-- **How the fixtures are made:** `scripts/teleprompter-oracle/generate.sh
+- **How the fixtures are made:** `scripts/upstream-oracle/generate.sh
 [ref]` extracts upstream with `git archive`, bundles its TypeScript with
   esbuild, and runs it over our case lists. So every expected value is
   upstream's own output, not our reading of it.

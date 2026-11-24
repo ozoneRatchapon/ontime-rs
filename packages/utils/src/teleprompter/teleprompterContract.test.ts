@@ -2,7 +2,7 @@
  * Plan 008: the teleprompter contract, from the browser's side.
  * The same fixtures are replayed by packages/ontime-core/tests/teleprompter_*_tests.rs,
  * so the Rust host and this copy cannot drift without a red test.
- * Regenerate them with scripts/teleprompter-oracle/generate.sh after an upstream pull.
+ * Regenerate them with scripts/upstream-oracle/generate.sh after an upstream pull.
  */
 import type { TeleprompterScriptEvent, TeleprompterTransport } from 'ontime-types';
 

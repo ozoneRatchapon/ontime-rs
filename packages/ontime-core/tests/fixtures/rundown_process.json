@@ -1,0 +1,1337 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b2 by scripts/upstream-oracle/generate.sh; do not edit by hand.",
+ "cases": [
+  {
+   "name": "back to back",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 34200000,
+      "duration": 1800000,
+      "timeEnd": 36000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 36000000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 3600000,
+   "totalDays": 0
+  },
+  {
+   "name": "a gap between events",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 36000000,
+     "timeEnd": 37800000,
+     "duration": 1800000,
+     "gap": 1800000,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 5400000,
+   "totalDays": 0
+  },
+  {
+   "name": "an overlap",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 3600000,
+      "timeEnd": 36000000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 34200000,
+      "duration": 3600000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 36000000,
+     "duration": 3600000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 37800000,
+     "duration": 3600000,
+     "gap": -1800000,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 5400000,
+   "totalDays": 0
+  },
+  {
+   "name": "a linked chain",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 0,
+      "duration": 1200000,
+      "timeEnd": 1200000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 0,
+      "duration": 600000,
+      "timeEnd": 600000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 35400000,
+     "duration": 1200000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0,
+     "linkStart": true
+    },
+    "c": {
+     "type": "event",
+     "timeStart": 35400000,
+     "timeEnd": 36000000,
+     "duration": 600000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0,
+     "linkStart": true
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 3600000,
+   "totalDays": 0
+  },
+  {
+   "name": "a link with nothing before it is dropped",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0,
+     "linkStart": false
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 1800000,
+   "totalDays": 0
+  },
+  {
+   "name": "a link skips a skipped event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "s",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "s": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "s",
+      "cue": "s",
+      "timeStart": 43200000,
+      "duration": 3600000,
+      "timeEnd": 46800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 0,
+      "duration": 1200000,
+      "timeEnd": 1200000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "s": {
+     "type": "event",
+     "timeStart": 43200000,
+     "timeEnd": 46800000,
+     "duration": 3600000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 35400000,
+     "duration": 1200000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0,
+     "linkStart": true
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 3000000,
+   "totalDays": 0
+  },
+  {
+   "name": "a skipped event takes no gap or day",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "s",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 79200000,
+      "duration": 3600000,
+      "timeEnd": 82800000,
+      "timeStrategy": "lock-duration"
+     },
+     "s": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "s",
+      "cue": "s",
+      "timeStart": 3600000,
+      "duration": 3600000,
+      "timeEnd": 7200000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 84600000,
+      "duration": 600000,
+      "timeEnd": 85200000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 79200000,
+     "timeEnd": 82800000,
+     "duration": 3600000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "s": {
+     "type": "event",
+     "timeStart": 3600000,
+     "timeEnd": 7200000,
+     "duration": 3600000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 84600000,
+     "timeEnd": 85200000,
+     "duration": 600000,
+     "gap": 1800000,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 6000000,
+   "totalDays": 0
+  },
+  {
+   "name": "crossing midnight",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 82800000,
+      "duration": 1800000,
+      "timeEnd": 84600000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 85500000,
+      "duration": 1800000,
+      "timeEnd": 900000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 1800000,
+      "duration": 1800000,
+      "timeEnd": 3600000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 82800000,
+     "timeEnd": 84600000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 85500000,
+     "timeEnd": 900000,
+     "duration": 1800000,
+     "gap": 900000,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "c": {
+     "type": "event",
+     "timeStart": 1800000,
+     "timeEnd": 3600000,
+     "duration": 1800000,
+     "gap": 900000,
+     "delay": 0,
+     "dayOffset": 1
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 7200000,
+   "totalDays": 1
+  },
+  {
+   "name": "an event past midnight on its own",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 84600000,
+      "duration": 3600000,
+      "timeEnd": 1800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 3600000,
+      "duration": 1800000,
+      "timeEnd": 5400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 84600000,
+     "timeEnd": 1800000,
+     "duration": 3600000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 3600000,
+     "timeEnd": 5400000,
+     "duration": 1800000,
+     "gap": 1800000,
+     "delay": 0,
+     "dayOffset": 1
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 7200000,
+   "totalDays": 1
+  },
+  {
+   "name": "a delay accumulates",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "d",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 600000
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 34200000,
+      "duration": 1800000,
+      "timeEnd": 36000000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "d": {
+     "type": "delay",
+     "duration": 600000
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 36000000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 600000,
+     "dayOffset": 0
+    },
+    "c": {
+     "type": "event",
+     "timeStart": 36000000,
+     "timeEnd": 37800000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 600000,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 600000,
+   "totalDuration": 5400000,
+   "totalDays": 0
+  },
+  {
+   "name": "a gap absorbs a delay",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "d",
+     "b",
+     "c",
+     "e"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 600000
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 34200000,
+      "duration": 1800000,
+      "timeEnd": 36000000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 36900000,
+      "duration": 1800000,
+      "timeEnd": 38700000,
+      "timeStrategy": "lock-duration"
+     },
+     "e": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "e",
+      "cue": "e",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "d": {
+     "type": "delay",
+     "duration": 600000
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 36000000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 600000,
+     "dayOffset": 0
+    },
+    "c": {
+     "type": "event",
+     "timeStart": 36900000,
+     "timeEnd": 38700000,
+     "duration": 1800000,
+     "gap": 900000,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "e": {
+     "type": "event",
+     "timeStart": 39600000,
+     "timeEnd": 41400000,
+     "duration": 1800000,
+     "gap": 900000,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 9000000,
+   "totalDays": 0
+  },
+  {
+   "name": "a negative delay",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "d",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": -300000
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "d": {
+     "type": "delay",
+     "duration": -300000
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 36000000,
+     "timeEnd": 37800000,
+     "duration": 1800000,
+     "gap": 1800000,
+     "delay": -300000,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": -300000,
+   "totalDuration": 5400000,
+   "totalDays": 0
+  },
+  {
+   "name": "a milestone takes no time",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "m",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "m": {
+      "id": "m",
+      "type": "milestone",
+      "cue": "M",
+      "title": ""
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 34200000,
+      "duration": 1800000,
+      "timeEnd": 36000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "m": {
+     "type": "milestone"
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 36000000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 3600000,
+   "totalDays": 0
+  },
+  {
+   "name": "a group spans its events",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ]
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "g": {
+     "type": "group",
+     "timeStart": 32400000,
+     "timeEnd": 37800000,
+     "duration": 5400000
+    },
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 36000000,
+     "timeEnd": 37800000,
+     "duration": 1800000,
+     "gap": 1800000,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 5400000,
+   "totalDays": 0
+  },
+  {
+   "name": "a group whose first event is linked",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "x",
+     "g"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "x": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "x",
+      "cue": "x",
+      "timeStart": 28800000,
+      "duration": 1800000,
+      "timeEnd": 30600000,
+      "timeStrategy": "lock-duration"
+     },
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ]
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 0,
+      "duration": 1800000,
+      "timeEnd": 1800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g",
+      "linkStart": true
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "x": {
+     "type": "event",
+     "timeStart": 28800000,
+     "timeEnd": 30600000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "g": {
+     "type": "group",
+     "timeStart": 30600000,
+     "timeEnd": 34200000,
+     "duration": 3600000
+    },
+    "a": {
+     "type": "event",
+     "timeStart": 30600000,
+     "timeEnd": 32400000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0,
+     "linkStart": true
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 5400000,
+   "totalDays": 0
+  },
+  {
+   "name": "an empty group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "g",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": []
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "g": {
+     "type": "group",
+     "timeStart": null,
+     "timeEnd": null,
+     "duration": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 36000000,
+     "timeEnd": 37800000,
+     "duration": 1800000,
+     "gap": 1800000,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 5400000,
+   "totalDays": 0
+  },
+  {
+   "name": "count to end",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration",
+      "countToEnd": true
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 34200000,
+      "duration": 1800000,
+      "timeEnd": 36000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 36000000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    }
+   },
+   "totalDelay": 0,
+   "totalDuration": 3600000,
+   "totalDays": 0
+  },
+  {
+   "name": "a link after a delay",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "d",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 600000
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 0,
+      "duration": 1200000,
+      "timeEnd": 1200000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "entries": {
+    "a": {
+     "type": "event",
+     "timeStart": 32400000,
+     "timeEnd": 34200000,
+     "duration": 1800000,
+     "gap": 0,
+     "delay": 0,
+     "dayOffset": 0
+    },
+    "d": {
+     "type": "delay",
+     "duration": 600000
+    },
+    "b": {
+     "type": "event",
+     "timeStart": 34200000,
+     "timeEnd": 35400000,
+     "duration": 1200000,
+     "gap": 0,
+     "delay": 600000,
+     "dayOffset": 0,
+     "linkStart": true
+    }
+   },
+   "totalDelay": 600000,
+   "totalDuration": 3000000,
+   "totalDays": 0
+  }
+ ]
+}

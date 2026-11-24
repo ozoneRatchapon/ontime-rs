@@ -1,5 +1,5 @@
 {
- "_comment": "Generated from upstream ontime 0ca4d79b by scripts/teleprompter-oracle/generate.sh; do not edit by hand.",
+ "_comment": "Generated from upstream ontime 0ca4d79b2 by scripts/upstream-oracle/generate.sh; do not edit by hand.",
  "cases": {
   "scripts": {
    "abc": [

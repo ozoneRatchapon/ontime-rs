@@ -72,9 +72,13 @@ fn the_next_flag_is_found_and_the_loaded_event_is_never_it() {
 #[test]
 fn idle_time_between_events_is_accumulated_but_the_running_one_is_not_counted() {
     let (mut rundown, ids) = show();
-    // push the third event ten minutes later, leaving a gap before it
+    // start the third event ten minutes later, still ending when the fourth
+    // starts: a gap before it and no overlap after it
     rundown
-        .edit_entry(&ids[2], &json!({ "timeStart": 11 * HOUR + 10 * MINUTE }))
+        .edit_entry(
+            &ids[2],
+            &json!({ "timeStart": 11 * HOUR + 10 * MINUTE, "duration": 20 * MINUTE }),
+        )
         .unwrap();
     rundown
         .edit_entry(&ids[3], &json!({ "flag": true }))
@@ -85,6 +89,32 @@ fn idle_time_between_events_is_accumulated_but_the_running_one_is_not_counted() 
 
     let flag = runtime.look_ahead(&rundown).flag.unwrap();
     assert_eq!(flag.accumulated_gap, 10 * MINUTE);
+}
+
+#[test]
+fn an_overlap_takes_back_idle_time_as_upstream_counts_it() {
+    let (mut rundown, ids) = show();
+    // the third event moves ten minutes later and keeps its duration, so it
+    // runs ten minutes into the fourth: +10 then -10
+    rundown
+        .edit_entry(&ids[2], &json!({ "timeStart": 11 * HOUR + 10 * MINUTE }))
+        .unwrap();
+    rundown
+        .edit_entry(&ids[3], &json!({ "flag": true }))
+        .unwrap();
+    assert_eq!(rundown.entries[&ids[3]]["gap"], json!(-10 * MINUTE));
+    assert_eq!(
+        rundown.entries[&ids[3]]["dayOffset"],
+        json!(0),
+        "an overlap is not the next day"
+    );
+
+    let mut runtime = Runtime::default();
+    runtime.apply(Command::Start, &rundown, at(10 * HOUR), 0);
+    assert_eq!(
+        runtime.look_ahead(&rundown).flag.unwrap().accumulated_gap,
+        0
+    );
 }
 
 #[test]

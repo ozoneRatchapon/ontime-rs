@@ -201,6 +201,11 @@ fn grouping_nests_entries_and_flat_order_expands_them() {
     let a = add(&mut rundown, "A", 1000);
     let b = add(&mut rundown, "B", 1000);
     let c = add(&mut rundown, "C", 1000);
+    // B follows A; two events starting at the same moment would put the second
+    // on the next day, as upstream counts days
+    rundown
+        .edit_entry(&b, &json!({ "timeStart": 1000 }))
+        .unwrap();
 
     let group = rundown.group_entries(&[a.clone(), b.clone()]).unwrap();
     let group_id = group["id"].as_str().unwrap().to_string();

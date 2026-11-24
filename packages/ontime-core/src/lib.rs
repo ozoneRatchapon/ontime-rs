@@ -16,6 +16,7 @@ pub mod registry;
 pub mod registry_audit;
 pub mod rundown;
 pub mod rundown_routes;
+mod rundown_times;
 pub mod runtime;
 pub mod socket;
 pub mod teleprompter;
