@@ -1,0 +1,3009 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b by scripts/teleprompter-oracle/generate.sh; do not edit by hand.",
+ "cases": {
+  "scripts": {
+   "abc": [
+    {
+     "id": "a",
+     "cue": "A",
+     "title": "Title a",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "a"
+      },
+      {
+       "kind": "text",
+       "text": "one two",
+       "start": 0
+      },
+      {
+       "kind": "text",
+       "text": "three four",
+       "start": 8
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    },
+    {
+     "id": "b",
+     "cue": "B",
+     "title": "Title b",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "b"
+      },
+      {
+       "kind": "text",
+       "text": "five six",
+       "start": 0
+      },
+      {
+       "kind": "text",
+       "text": "seven eight",
+       "start": 9
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    },
+    {
+     "id": "c",
+     "cue": "C",
+     "title": "Title c",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "c"
+      },
+      {
+       "kind": "text",
+       "text": "nine ten",
+       "start": 0
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    }
+   ],
+   "grown": [
+    {
+     "id": "a",
+     "cue": "A",
+     "title": "Title a",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "a"
+      },
+      {
+       "kind": "text",
+       "text": "zero one two",
+       "start": 0
+      },
+      {
+       "kind": "text",
+       "text": "three four",
+       "start": 13
+      },
+      {
+       "kind": "text",
+       "text": "five six",
+       "start": 24
+      },
+      {
+       "kind": "text",
+       "text": "seven",
+       "start": 33
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    },
+    {
+     "id": "b",
+     "cue": "B",
+     "title": "Title b",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "b"
+      },
+      {
+       "kind": "text",
+       "text": "five six",
+       "start": 0
+      },
+      {
+       "kind": "text",
+       "text": "seven eight",
+       "start": 9
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    },
+    {
+     "id": "c",
+     "cue": "C",
+     "title": "Title c",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "c"
+      },
+      {
+       "kind": "text",
+       "text": "nine ten",
+       "start": 0
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    }
+   ],
+   "withoutB": [
+    {
+     "id": "a",
+     "cue": "A",
+     "title": "Title a",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "a"
+      },
+      {
+       "kind": "text",
+       "text": "one two",
+       "start": 0
+      },
+      {
+       "kind": "text",
+       "text": "three four",
+       "start": 8
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    },
+    {
+     "id": "c",
+     "cue": "C",
+     "title": "Title c",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "c"
+      },
+      {
+       "kind": "text",
+       "text": "nine ten",
+       "start": 0
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    }
+   ],
+   "empty": [],
+   "one": [
+    {
+     "id": "a",
+     "cue": "A",
+     "title": "Title a",
+     "lines": [
+      {
+       "kind": "heading",
+       "text": "a"
+      },
+      {
+       "kind": "text",
+       "text": "one two",
+       "start": 0
+      },
+      {
+       "kind": "text",
+       "text": "three four",
+       "start": 8
+      },
+      {
+       "kind": "blank"
+      }
+     ]
+    }
+   ]
+  },
+  "scenarios": [
+   {
+    "name": "speed commands",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "speed",
+       "value": 50
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speed",
+       "value": 0
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speed",
+       "value": -10
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speed",
+       "value": 0
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speed",
+       "value": 200
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speed",
+       "value": -0.4
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speed",
+       "value": 30
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speedBy",
+       "value": 10
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speedBy",
+       "value": -60
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speedBy",
+       "value": -5
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speedBy",
+       "value": -5
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speedBy",
+       "value": 3
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "speedBy",
+       "value": 300
+      },
+      "now": 36000000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 50,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 1,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": -10,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": -1,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 100,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": -1,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 30,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 40,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 1,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": -1,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": -6,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": -3,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": -1,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "playing in event mode stops at the end of the event",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "position": 36060000
+     },
+     {
+      "describe": 36060000
+     },
+     {
+      "sync": 7
+     },
+     {
+      "syncAt": 36060000
+     },
+     {
+      "position": 36600000
+     },
+     {
+      "describe": 36600000
+     },
+     {
+      "settle": 36600000
+     },
+     {
+      "sync": 7
+     },
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36660000
+     },
+     {
+      "position": 36720000
+     },
+     {
+      "settle": 37800000
+     },
+     {
+      "describe": 37800000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 3
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": {
+        "id": "a",
+        "cue": "A",
+        "title": "Title a"
+       },
+       "ended": "event",
+       "blackout": "off"
+      }
+     },
+     {
+      "sync": {
+       "revision": 7,
+       "playback": "play",
+       "speed": 25,
+       "row": 1,
+       "until": 3,
+       "at": 36000000
+      }
+     },
+     {
+      "position": 3
+     },
+     {
+      "position": 3
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": {
+        "id": "a",
+        "cue": "A",
+        "title": "Title a"
+       },
+       "ended": "event",
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 1
+       },
+       "at": 36600000,
+       "ended": "event",
+       "blackout": "off"
+      }
+     },
+     {
+      "sync": {
+       "revision": 7,
+       "playback": "pause",
+       "speed": 25,
+       "row": 3,
+       "until": 3,
+       "at": 36600000
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 1
+       },
+       "at": 36660000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 7
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 9,
+        "lines": 1
+       },
+       "at": 37800000,
+       "ended": "event",
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": {
+        "id": "b",
+        "cue": "B",
+        "title": "Title b"
+       },
+       "ended": "event",
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "script mode reads to the end of the script",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "script",
+     "speed": 60,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "position": 36300000
+     },
+     {
+      "describe": 36300000
+     },
+     {
+      "settle": 37200000
+     },
+     {
+      "describe": 37200000
+     },
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 37260000
+     },
+     {
+      "describe": 37260000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 60,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 10
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 60,
+       "event": {
+        "id": "c",
+        "cue": "C",
+        "title": "Title c"
+       },
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 60,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 1
+       },
+       "at": 37200000,
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 60,
+       "event": {
+        "id": "c",
+        "cue": "C",
+        "title": "Title c"
+       },
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 60,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 1
+       },
+       "at": 37260000,
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 60,
+       "event": {
+        "id": "c",
+        "cue": "C",
+        "title": "Title c"
+       },
+       "ended": "script",
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "reading back",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": -20,
+     "anchor": {
+      "eventId": "b",
+      "charOffset": 9,
+      "lines": 0.5
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "position": 36006000
+     },
+     {
+      "settle": 36600000
+     },
+     {
+      "cmd": {
+       "type": "mode",
+       "mode": "script"
+      },
+      "now": 36600000
+     },
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36600000
+     },
+     {
+      "settle": 37800000
+     },
+     {
+      "describe": 37800000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": -20,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 9,
+        "lines": 0.5
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 5
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": -20,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36600000,
+       "ended": "event",
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": -20,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36600000,
+       "ended": "event",
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": -20,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36600000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": -20,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 37800000,
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": -20,
+       "event": {
+        "id": "a",
+        "cue": "A",
+        "title": "Title a"
+       },
+       "ended": "script",
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "moves keep the play state",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "next"
+      },
+      "now": 36001000
+     },
+     {
+      "describe": 36001000
+     },
+     {
+      "cmd": {
+       "type": "next"
+      },
+      "now": 36002000
+     },
+     {
+      "cmd": {
+       "type": "next"
+      },
+      "now": 36003000
+     },
+     {
+      "cmd": {
+       "type": "previous"
+      },
+      "now": 36003000
+     },
+     {
+      "cmd": {
+       "type": "previous"
+      },
+      "now": 36003000
+     },
+     {
+      "cmd": {
+       "type": "pause"
+      },
+      "now": 36004000
+     },
+     {
+      "cmd": {
+       "type": "top"
+      },
+      "now": 36005000
+     },
+     {
+      "cmd": {
+       "type": "previous"
+      },
+      "now": 36005000
+     },
+     {
+      "cmd": {
+       "type": "goto",
+       "eventId": "c"
+      },
+      "now": 36006000
+     },
+     {
+      "cmd": {
+       "type": "goto",
+       "eventId": "gone"
+      },
+      "now": 36006000
+     },
+     {
+      "describe": 36006000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36001000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "event": {
+        "id": "b",
+        "cue": "B",
+        "title": "Title b"
+       },
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36002000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 0.4166666666666661
+       },
+       "at": 36003000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36003000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36003000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0.41666666666666674
+       },
+       "at": 36004000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36005000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36005000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36006000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "error": "Event not found",
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36006000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": {
+        "id": "c",
+        "cue": "C",
+        "title": "Title c"
+       },
+       "ended": null,
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "previous restarts the event once a line into it",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "b",
+      "charOffset": 0,
+      "lines": 0.5
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "previous"
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "scroll",
+       "lines": 5.5
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "previous"
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "scroll",
+       "lines": 1
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "previous"
+      },
+      "now": 36000000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 9,
+        "lines": 0.5
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 9,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "scrolling is clamped and clears the end",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "scroll",
+       "lines": 2.5
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "scroll",
+       "lines": -100
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "scroll",
+       "lines": 1000
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000001
+     },
+     {
+      "cmd": {
+       "type": "scroll",
+       "lines": -3
+      },
+      "now": 36000002
+     },
+     {
+      "position": 36060000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 1.5
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": -1
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 1
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 1
+       },
+       "at": 36000001,
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 9,
+        "lines": 1
+       },
+       "at": 36000002,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 7
+     }
+    ]
+   },
+   {
+    "name": "an empty script cannot play",
+    "script": "empty",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": null,
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "describe": 36000000
+     },
+     {
+      "sync": 1
+     },
+     {
+      "cmd": {
+       "type": "next"
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "scroll",
+       "lines": 3
+      },
+      "now": 36000000
+     },
+     {
+      "position": 36000000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": null,
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": null,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "sync": {
+       "revision": 1,
+       "playback": "pause",
+       "speed": 25,
+       "row": 0,
+       "until": 0,
+       "at": 36000000
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": null,
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": null,
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 0
+     }
+    ]
+   },
+   {
+    "name": "mode and blackout toggles leave playback alone",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "mode",
+       "mode": "toggle"
+      },
+      "now": 36001000
+     },
+     {
+      "cmd": {
+       "type": "blackout",
+       "blackout": "toggle"
+      },
+      "now": 36002000
+     },
+     {
+      "describe": 36002000
+     },
+     {
+      "cmd": {
+       "type": "blackout",
+       "blackout": "off"
+      },
+      "now": 36003000
+     },
+     {
+      "cmd": {
+       "type": "mode",
+       "mode": "event"
+      },
+      "now": 36004000
+     },
+     {
+      "cmd": {
+       "type": "toggle"
+      },
+      "now": 36005000
+     },
+     {
+      "cmd": {
+       "type": "toggle"
+      },
+      "now": 36006000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0.41666666666666674
+       },
+       "at": 36001000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0.8333333333333335
+       },
+       "at": 36002000,
+       "ended": null,
+       "blackout": "on"
+      }
+     },
+     {
+      "state": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 25,
+       "event": {
+        "id": "a",
+        "cue": "A",
+        "title": "Title a"
+       },
+       "ended": null,
+       "blackout": "on"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 0.25
+       },
+       "at": 36003000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 0.6666666666666665
+       },
+       "at": 36004000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 1
+       },
+       "at": 36005000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 1.4166666666666665
+       },
+       "at": 36006000,
+       "ended": null,
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "playback across midnight",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "script",
+     "speed": 10,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 86370000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 86370000
+     },
+     {
+      "position": 30000
+     },
+     {
+      "syncAt": 30000
+     },
+     {
+      "describe": 30000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 10,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 86370000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 10
+     },
+     {
+      "position": 10
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 10,
+       "event": {
+        "id": "c",
+        "cue": "C",
+        "title": "Title c"
+       },
+       "ended": "script",
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "a client clock slightly behind",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "script",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "position": 35999500
+     },
+     {
+      "syncAt": 35999500
+     },
+     {
+      "position": 35941000
+     },
+     {
+      "position": 35939000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 1
+     },
+     {
+      "position": 1
+     },
+     {
+      "position": 1
+     },
+     {
+      "position": 10
+     }
+    ]
+   },
+   {
+    "name": "slightly behind just after midnight",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "script",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 1000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 1000
+     },
+     {
+      "position": 86399500
+     },
+     {
+      "syncAt": 86399500
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 1000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 1
+     },
+     {
+      "position": 1
+     }
+    ]
+   },
+   {
+    "name": "long playback at the slowest speed",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "script",
+     "speed": 1,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "position": 36180000
+     },
+     {
+      "position": 36540000
+     },
+     {
+      "settle": 36540000
+     },
+     {
+      "settle": 37200000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 1,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 4
+     },
+     {
+      "position": 10
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 1,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 1
+       },
+       "at": 36540000,
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 1,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 1
+       },
+       "at": 36540000,
+       "ended": "script",
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "a repeated command is still a change",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "pause"
+      },
+      "now": 36000000
+     },
+     {
+      "cmd": {
+       "type": "pause"
+      },
+      "now": 36000005
+     },
+     {
+      "cmd": {
+       "type": "speed",
+       "value": 25
+      },
+      "now": 36000009
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000005,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000009,
+       "ended": null,
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "an edit above during playback does not jump",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "script",
+     "speed": 25,
+     "anchor": {
+      "eventId": "b",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "position": 36030000
+     },
+     {
+      "reanchor": "grown",
+      "now": 36030000
+     },
+     {
+      "position": 36030000
+     },
+     {
+      "position": 36060000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "script",
+       "speed": 25,
+       "anchor": {
+        "eventId": "b",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 10
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "script",
+       "speed": 25,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 1
+       },
+       "at": 36030000,
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 12
+     },
+     {
+      "position": 12
+     }
+    ]
+   },
+   {
+    "name": "a paused reader keeps their exact anchor across a rewrap",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 8,
+      "lines": 0.25
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "reanchor": "abc",
+      "now": 36000000
+     },
+     {
+      "reanchor": "grown",
+      "now": 36000001
+     },
+     {
+      "position": 36000002
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 0.25
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0.25
+       },
+       "at": 36000001,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "position": 1.25
+     }
+    ]
+   },
+   {
+    "name": "the reading event is deleted",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "b",
+      "charOffset": 5,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "reanchor": "withoutB",
+      "now": 36000000
+     },
+     {
+      "describe": 36000000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "c",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": {
+        "id": "c",
+        "cue": "C",
+        "title": "Title c"
+       },
+       "ended": null,
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "the script empties",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "reanchor": "empty",
+      "now": 36001000
+     },
+     {
+      "describe": 36001000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": null,
+       "at": 36001000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": null,
+       "ended": null,
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "a single event plays to the script end",
+    "script": "one",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "a",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "settle": 36600000
+     },
+     {
+      "describe": 36600000
+     }
+    ],
+    "results": [
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "a",
+        "charOffset": 8,
+        "lines": 1
+       },
+       "at": 36600000,
+       "ended": "script",
+       "blackout": "off"
+      }
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": {
+        "id": "a",
+        "cue": "A",
+        "title": "Title a"
+       },
+       "ended": "script",
+       "blackout": "off"
+      }
+     }
+    ]
+   },
+   {
+    "name": "an anchor outside the script",
+    "script": "abc",
+    "initial": {
+     "playback": "pause",
+     "mode": "event",
+     "speed": 25,
+     "anchor": {
+      "eventId": "gone",
+      "charOffset": 0,
+      "lines": 0
+     },
+     "at": 36000000,
+     "ended": null,
+     "blackout": "off"
+    },
+    "steps": [
+     {
+      "position": 36000000
+     },
+     {
+      "describe": 36000000
+     },
+     {
+      "sync": 2
+     },
+     {
+      "cmd": {
+       "type": "play"
+      },
+      "now": 36000000
+     },
+     {
+      "settle": 36060000
+     }
+    ],
+    "results": [
+     {
+      "position": null
+     },
+     {
+      "state": {
+       "playback": "pause",
+       "mode": "event",
+       "speed": 25,
+       "event": null,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "sync": {
+       "revision": 2,
+       "playback": "pause",
+       "speed": 25,
+       "row": 0,
+       "until": 0,
+       "at": 36000000
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "gone",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     },
+     {
+      "transport": {
+       "playback": "play",
+       "mode": "event",
+       "speed": 25,
+       "anchor": {
+        "eventId": "gone",
+        "charOffset": 0,
+        "lines": 0
+       },
+       "at": 36000000,
+       "ended": null,
+       "blackout": "off"
+      }
+     }
+    ]
+   }
+  ],
+  "parses": [
+   {
+    "payload": "play",
+    "command": {
+     "type": "play"
+    }
+   },
+   {
+    "payload": "pause",
+    "command": {
+     "type": "pause"
+    }
+   },
+   {
+    "payload": "toggle",
+    "command": {
+     "type": "toggle"
+    }
+   },
+   {
+    "payload": "next",
+    "command": {
+     "type": "next"
+    }
+   },
+   {
+    "payload": "previous",
+    "command": {
+     "type": "previous"
+    }
+   },
+   {
+    "payload": "top",
+    "command": {
+     "type": "top"
+    }
+   },
+   {
+    "payload": "stop",
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": "",
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": null,
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": 5,
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": [],
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "speed": 40
+    },
+    "command": {
+     "type": "speed",
+     "value": 40
+    }
+   },
+   {
+    "payload": {
+     "speed": "-20"
+    },
+    "command": {
+     "type": "speed",
+     "value": -20
+    }
+   },
+   {
+    "payload": {
+     "speed": ""
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "speed": " "
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "speed": "fast"
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "speed": "Infinity"
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "speed": null
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "speedBy": 5
+    },
+    "command": {
+     "type": "speedBy",
+     "value": 5
+    }
+   },
+   {
+    "payload": {
+     "speedBy": "-5"
+    },
+    "command": {
+     "type": "speedBy",
+     "value": -5
+    }
+   },
+   {
+    "payload": {
+     "scroll": 2.5
+    },
+    "command": {
+     "type": "scroll",
+     "lines": 2.5
+    }
+   },
+   {
+    "payload": {
+     "scroll": "-3"
+    },
+    "command": {
+     "type": "scroll",
+     "lines": -3
+    }
+   },
+   {
+    "payload": {
+     "mode": "event"
+    },
+    "command": {
+     "type": "mode",
+     "mode": "event"
+    }
+   },
+   {
+    "payload": {
+     "mode": "script"
+    },
+    "command": {
+     "type": "mode",
+     "mode": "script"
+    }
+   },
+   {
+    "payload": {
+     "mode": "toggle"
+    },
+    "command": {
+     "type": "mode",
+     "mode": "toggle"
+    }
+   },
+   {
+    "payload": {
+     "mode": "other"
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "blackout": "on"
+    },
+    "command": {
+     "type": "blackout",
+     "blackout": "on"
+    }
+   },
+   {
+    "payload": {
+     "blackout": "off"
+    },
+    "command": {
+     "type": "blackout",
+     "blackout": "off"
+    }
+   },
+   {
+    "payload": {
+     "blackout": "toggle"
+    },
+    "command": {
+     "type": "blackout",
+     "blackout": "toggle"
+    }
+   },
+   {
+    "payload": {
+     "blackout": true
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "goto": "loaded"
+    },
+    "command": {
+     "type": "goto",
+     "target": "loaded"
+    }
+   },
+   {
+    "payload": {
+     "goto": {
+      "cue": "2.1"
+     }
+    },
+    "command": {
+     "type": "goto",
+     "target": {
+      "cue": "2.1"
+     }
+    }
+   },
+   {
+    "payload": {
+     "goto": {
+      "cue": 12
+     }
+    },
+    "command": {
+     "type": "goto",
+     "target": {
+      "cue": "12"
+     }
+    }
+   },
+   {
+    "payload": {
+     "goto": {
+      "id": "abc"
+     }
+    },
+    "command": {
+     "type": "goto",
+     "target": {
+      "id": "abc"
+     }
+    }
+   },
+   {
+    "payload": {
+     "goto": {
+      "id": 5
+     }
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "goto": {
+      "index": 3
+     }
+    },
+    "command": {
+     "type": "goto",
+     "target": {
+      "index": 3
+     }
+    }
+   },
+   {
+    "payload": {
+     "goto": {
+      "index": "2"
+     }
+    },
+    "command": {
+     "type": "goto",
+     "target": {
+      "index": 2
+     }
+    }
+   },
+   {
+    "payload": {
+     "goto": {
+      "index": 0
+     }
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "goto": {
+      "index": 1.5
+     }
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "goto": {
+      "index": "x"
+     }
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "goto": {}
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "goto": "first"
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "other": 1
+    },
+    "error": "Invalid teleprompter command"
+   },
+   {
+    "payload": {
+     "speed": 10,
+     "mode": "script"
+    },
+    "command": {
+     "type": "speed",
+     "value": 10
+    }
+   }
+  ]
+ }
+}

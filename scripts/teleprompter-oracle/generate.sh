@@ -18,7 +18,7 @@ esbuild="$(ls -d "$root"/node_modules/.pnpm/esbuild@*/node_modules/esbuild/bin/e
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/upstream" "$work/out"
-git -C "$root" archive "$ref" tsconfig.common.json packages/types packages/utils apps/server/src/services/teleprompter-service \
+git -C "$root" archive "$ref" tsconfig.common.json packages/types packages/utils apps/server/src/services/teleprompter-service apps/server/src/api-integration/integration.teleprompter.ts \
   | tar -x -C "$work/upstream"
 # only the teleprompter part of ontime-utils, so the bundle needs none of its npm dependencies
 cat > "$work/ontime-utils.ts" <<SHIM
@@ -28,7 +28,7 @@ export * from '$work/upstream/packages/utils/src/teleprompter/teleprompterTransp
 SHIM
 commit="$(git -C "$root" rev-parse --short "$ref")"
 
-for name in wrap script position; do
+for name in wrap script position transport; do
   "$esbuild" "$here/gen-$name.ts" --bundle --platform=node --format=esm --log-level=error \
     --alias:@upstream="$work/upstream" \
     --alias:ontime-types="$work/upstream/packages/types/src/index.ts" \
