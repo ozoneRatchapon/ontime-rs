@@ -1,7 +1,15 @@
 # 008 — D1: the teleprompter, in the Rust core
 
-Status: **T0–T5 done locally (2026-11-24)** on `feature/teleprompter`. Not
-merged or deployed yet.
+Status: **done and deployed (2026-11-24).**
+- Fast-forwarded into `feat/rust-cloud-backend` (70b8b383).
+- **Worker:** `c9560deb`. The rollback point is `02b203be`.
+- **Client:** Pages `1ca3aa2c`, Production at `ontime-team.pages.dev`.
+- **Production smoke test:** `teleprompter.mjs` 35/35 and `activity.mjs`
+  25/25, both with throwaway rooms that were removed afterwards.
+- **Existing rooms:** a read-only check returns 200 for all of them.
+- **Open:** `master.ontime-team.pages.dev` stays on the previous client
+  (`781e445f`), because a Production deploy doesn't move a branch alias. See
+  004.
 Its 4 decisions use the recommended answers, so the user's standing approval
 applies.
 
