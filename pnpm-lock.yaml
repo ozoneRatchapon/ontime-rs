@@ -89,8 +89,8 @@ importers:
         specifier: ^5.2.7
         version: 5.2.7
       '@mantine/hooks':
-        specifier: ^8.3.7
-        version: 8.3.7(react@19.2.7)
+        specifier: ^9.8.2
+        version: 9.8.2(react@19.2.7)
       '@sentry/react':
         specifier: ^10.59.0
         version: 10.59.0(react@19.2.7)
@@ -2025,10 +2025,10 @@ packages:
     resolution: {integrity: sha512-9QOtNffcOF/c1seMCDnjckb3R9WHcG34tky+FHpNKKCW0wc/scYLwMtO+ptyGUfMW0/b/n4qRiALlaFHc9Oj7Q==}
     engines: {node: '>= 10.0.0'}
 
-  '@mantine/hooks@8.3.7':
-    resolution: {integrity: sha512-2xnKS8C6fTzMoq1dtOJGrh2bIBuWnVrijL/DsDk60UaUgbABh8zScwU5ndX+p02ds2bebo34LovscP9fH38uPg==}
+  '@mantine/hooks@9.8.2':
+    resolution: {integrity: sha512-BZa+6fLEvAxaos2qInPZfNzq0k1WSIIkHA3CdD4quozJhmp7Kt1KE05YAkVPNrPisCx3c5YgmkRqtu9NcRegCw==}
     peerDependencies:
-      react: ^18.x || ^19.x
+      react: ^19.2.0
 
   '@marijn/find-cluster-break@1.0.2':
     resolution: {integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==}
@@ -7496,7 +7496,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mantine/hooks@8.3.7(react@19.2.7)':
+  '@mantine/hooks@9.8.2(react@19.2.7)':
     dependencies:
       react: 19.2.7
 
