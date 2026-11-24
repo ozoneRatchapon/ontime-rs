@@ -1,6 +1,44 @@
 # 005 — D2: one copy of the schedule math, in Rust
 
-Status: **step 1 done (2026-11-24); step 2 waiting for approval.**
+Status: **step 1 done; look-ahead covered by RIIR 3 (2026-11-24); step 2
+as written is not recommended (see below).**
+
+## RIIR 3 result (commit 1794b36c6)
+
+- The look-ahead step 1 left uncovered is now pinned. It is checked
+  against upstream's own `runtimeState`, not a TS copy.
+  - Generator: `scripts/upstream-oracle/gen-runtime_offset.ts`, 28 scripted cases.
+  - Fixture: `tests/fixtures/runtime_offset.json`.
+  - Runner: `tests/runtime_offset_tests.rs`.
+- It found 15 differences in six groups, all now fixed toward upstream master:
+  1. `offsetmode` was ignored, so the editor's Absolute/Relative toggle did
+     nothing. The mode now stays with the room, and a stop keeps it.
+  2. Expected flag, group and rundown times were sent while only armed or
+     stopped. Upstream sends `null`.
+  3. `rundown.currentDay` was the loaded event's `dayOffset`. It is now the
+     run's start day plus the midnights since, and `null` before the run starts.
+  4. Count-to-end used the old formula. Upstream 57a4c495 makes absolute the
+     overtime plus the added time.
+  5. `numEvents` and `selectedEventIndex` now count skipped events, as
+     upstream's `timedEventOrder` does.
+  6. Expected times and `plannedEnd` were wrapped to 24h. They are now
+     unwrapped, and `plannedEnd` is `plannedStart + totalDuration`.
+- Not covered: roll. Upstream master moved roll's event choice into a
+  service layer, so an oracle would be mostly glue code. `roll.mjs` covers roll.
+- Noticed in upstream itself: in "after midnight", an event 5 minutes late
+  reads `absolute = -86100000`. Ours does the same. This could be
+  reported upstream.
+
+## Why step 2 is no longer recommended
+
+- The TS body has to stay as the fallback, so step 2 does not reduce the
+  number of copies. It adds a wasm path on top of them.
+- Calling across the wasm boundary for every event on every render costs
+  more than the ~30 lines of arithmetic it replaces.
+- What step 2 was meant to prevent, silent drift, is already prevented by the
+  contracts. Each one fails the moment either side changes.
+- Revisit only if a larger client-side calculation, such as
+  `rundownMetadata.ts` as a whole, is worth moving.
 
 ## Step 1 result
 
