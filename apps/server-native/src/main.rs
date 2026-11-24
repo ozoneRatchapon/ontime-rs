@@ -25,6 +25,8 @@ use axum::{
     Router,
 };
 use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
+use ontime_core::audit::{Actor, Chunk, Note, Page, Retention, Writes};
+use ontime_core::audit_describe;
 use ontime_core::project::Project;
 use serde_json::{json, Value};
 use tokio::sync::{broadcast, Mutex};
@@ -37,12 +39,29 @@ struct Room {
     project: Project,
     /// Every connected client receives what is published here.
     outbound: broadcast::Sender<String>,
+    /// The newest audit chunk, loaded with the room so recording a change
+    /// needs no disk read while the room is locked.
+    audit_head: Option<Chunk>,
 }
 
 impl Room {
-    fn new(project: Project) -> Self {
+    /// Loads a room's project and the head of its audit log.
+    async fn load(data_dir: &std::path::Path, name: &str) -> Self {
+        let project = store::load(data_dir, name).await;
+        let audit_head = match project.audit.head() {
+            Some(no) => store::load_chunk(data_dir, name, no).await,
+            None => None,
+        };
         let (outbound, _) = broadcast::channel(256);
-        Self { project, outbound }
+        Self { project, outbound, audit_head }
+    }
+
+    /// Adds a line to the log in memory. The writes go to `store::save_audit`.
+    fn audit(&mut self, actor: Actor, note: Note, now: i64) -> Writes {
+        let head = self.audit_head.take();
+        let writes = self.project.audit.record(head, actor, note, now, Retention::ROOM);
+        self.audit_head = Some(writes.put.clone());
+        writes
     }
 
     fn publish(&self, packet: Value) {
@@ -92,6 +111,8 @@ struct ClientInfo {
     identify: bool,
     origin: String,
     path: String,
+    /// Who drives the room from this socket, for the audit log. Decided at connect.
+    actor: Actor,
 }
 
 struct AppState {
@@ -245,8 +266,7 @@ async fn with_room<T>(
     let mut is_new = false;
     if !rooms.contains_key(name) {
         is_new = !store::exists(&state.data_dir, name).await;
-        let project = store::load(&state.data_dir, name).await;
-        rooms.insert(name.to_string(), Room::new(project));
+        rooms.insert(name.to_string(), Room::load(&state.data_dir, name).await);
     }
     let room = rooms.get_mut(name).expect("just inserted");
     let result = action(room);
@@ -321,8 +341,16 @@ async fn rest_handler(
         member: None,
     };
 
+    if method == Method::GET && request.path.ends_with("/data/activity") {
+        return activity(&state, &room_name, &request, &query).await;
+    }
+
     let (response, _) = with_room(&state, &room_name, |room| {
-        let response = api::handle(&mut room.project, &request, now_ms());
+        // described before the change, while what it deletes still has a name
+        let note = audit_describe::http_note(&room.project, &request);
+        let actor = audit_describe::actor(&room.project, &request, None);
+        let now = now_ms();
+        let response = api::handle(&mut room.project, &request, now);
 
         let mut persist = false;
         let mut refetched = false;
@@ -341,11 +369,18 @@ async fn rest_handler(
             room.broadcast_runtime(now_ms());
         }
 
-        (response, persist, room.project.clone())
+        let writes = match note {
+            Some(note) if persist && response.status < 400 => Some(room.audit(actor, note, now)),
+            _ => None,
+        };
+        (response, persist, room.project.clone(), writes)
     })
     .await;
 
-    let (response, persist, project) = response;
+    let (response, persist, project, writes) = response;
+    if let Some(writes) = writes {
+        let _ = store::save_audit(&state.data_dir, &room_name, &writes).await;
+    }
     if persist {
         let _ = store::save(&state.data_dir, &room_name, &project).await;
     }
@@ -387,6 +422,52 @@ async fn websocket_handler_for_room(
     upgrade_socket(state, room, query, headers, upgrade).await
 }
 
+/// `GET /data/activity`: one page of the room's log, newest first. With no
+/// people on this host, only the master password may read it.
+async fn activity(
+    state: &AppState,
+    room_name: &str,
+    request: &ApiRequest,
+    query: &HashMap<String, String>,
+) -> Response {
+    let ((authorised, room_is_new, index, head), _) = with_room(state, room_name, |room| {
+        (
+            api::is_authorised(&room.project, request),
+            request.room_is_new,
+            room.project.audit.clone(),
+            room.audit_head.clone(),
+        )
+    })
+    .await;
+    if !authorised {
+        return (StatusCode::UNAUTHORIZED, "Unauthorized").into_response();
+    }
+    if !api::is_owner_or_admin(request) {
+        return (StatusCode::FORBIDDEN, "Only an owner of this room can read its activity").into_response();
+    }
+    if room_is_new {
+        return (StatusCode::NOT_FOUND, "This room does not exist").into_response();
+    }
+
+    let before = query.get("before").and_then(|v| v.parse::<i64>().ok());
+    let limit = query.get("limit").and_then(|v| v.parse::<usize>().ok());
+    let mut page = Page::new(before, limit, now_ms(), Retention::ROOM);
+    for no in index.newest_first(before) {
+        let chunk = match &head {
+            Some(head) if head.no == no => Some(head.clone()),
+            _ => store::load_chunk(&state.data_dir, room_name, no).await,
+        };
+        if chunk.is_some_and(|chunk| page.take(&chunk)) {
+            break;
+        }
+    }
+    (
+        [(axum::http::header::CACHE_CONTROL, "no-store")],
+        axum::Json(json!({ "lines": page.lines, "before": page.next_before() })),
+    )
+        .into_response()
+}
+
 async fn upgrade_socket(
     state: Arc<AppState>,
     room_name: String,
@@ -409,8 +490,11 @@ async fn upgrade_socket(
 
     // an upgrade never reaches the shared routing, so it is gated here by the
     // same rule the routing uses
-    let (authorised, _) = with_room(&state, &room_name, |room| {
-        api::is_authorised(&room.project, &request)
+    let ((authorised, actor), _) = with_room(&state, &room_name, |room| {
+        (
+            api::is_authorised(&room.project, &request),
+            audit_describe::actor(&room.project, &request, None),
+        )
     })
     .await;
     if !authorised {
@@ -420,10 +504,10 @@ async fn upgrade_socket(
         return (StatusCode::FORBIDDEN, "This room does not exist").into_response();
     }
 
-    upgrade.on_upgrade(move |socket| serve_socket(state, room_name, socket))
+    upgrade.on_upgrade(move |socket| serve_socket(state, room_name, socket, actor))
 }
 
-async fn serve_socket(state: Arc<AppState>, room_name: String, socket: WebSocket) {
+async fn serve_socket(state: Arc<AppState>, room_name: String, socket: WebSocket, actor: Actor) {
     use futures_util::{SinkExt, StreamExt};
 
     let (mut sink, mut stream) = socket.split();
@@ -431,8 +515,7 @@ async fn serve_socket(state: Arc<AppState>, room_name: String, socket: WebSocket
     let (mut receiver, initial, client_id) = {
         let mut rooms = state.rooms.lock().await;
         if !rooms.contains_key(&room_name) {
-            let project = store::load(&state.data_dir, &room_name).await;
-            rooms.insert(room_name.clone(), Room::new(project));
+            rooms.insert(room_name.clone(), Room::load(&state.data_dir, &room_name).await);
         }
         let room = rooms.get_mut(&room_name).expect("just inserted");
 
@@ -472,6 +555,7 @@ async fn serve_socket(state: Arc<AppState>, room_name: String, socket: WebSocket
                 identify: false,
                 origin: String::new(),
                 path: String::new(),
+                actor,
             },
         );
     }
@@ -602,15 +686,30 @@ async fn handle_socket_message(
     // everything else — playback, the overlay, the aux timers and the report —
     // goes through the shared path, so this host cannot implement three of them
     // and quietly lose the fourth
-    let ((changed, project), _) = with_room(state, room_name, |room| {
+    let actor = state
+        .clients
+        .lock()
+        .await
+        .get(client_id)
+        .map_or(Actor::Anyone, |client| client.actor.clone());
+    let ((changed, project, writes), _) = with_room(state, room_name, |room| {
+        let before = room.project.runtime.selected_id.clone();
         let changed = api::apply_socket_command(&mut room.project, tag, payload, now);
         if changed {
             room.broadcast_runtime(now);
         }
-        (changed, room.project.clone())
+        let note = match changed {
+            true => audit_describe::socket_note(&room.project, tag, payload, before.as_deref()),
+            false => None,
+        };
+        let writes = note.map(|note| room.audit(actor, note, now));
+        (changed, room.project.clone(), writes)
     })
     .await;
 
+    if let Some(writes) = writes {
+        let _ = store::save_audit(&state.data_dir, room_name, &writes).await;
+    }
     if changed {
         let _ = store::save(&state.data_dir, room_name, &project).await;
     }

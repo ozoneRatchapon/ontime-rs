@@ -5,6 +5,7 @@
 
 use std::path::{Path, PathBuf};
 
+use ontime_core::audit::{chunk_key, Chunk, Writes};
 use ontime_core::project::Project;
 
 fn path_for(data_dir: &Path, room: &str) -> PathBuf {
@@ -63,3 +64,41 @@ pub async fn exists(data_dir: &Path, room: &str) -> bool {
         .await
         .unwrap_or(false)
 }
+
+// #region audit log ============================================================
+
+/// A room's audit chunks live beside its project, one file per chunk.
+fn audit_dir(data_dir: &Path, room: &str) -> PathBuf {
+    data_dir.join(format!("{room}.audit"))
+}
+
+fn chunk_path(data_dir: &Path, room: &str, no: u64) -> PathBuf {
+    audit_dir(data_dir, room).join(format!("{}.json", chunk_key(no).replace(':', "_")))
+}
+
+/// One stored chunk, or `None` when it is missing or unreadable.
+pub async fn load_chunk(data_dir: &Path, room: &str, no: u64) -> Option<Chunk> {
+    let raw = tokio::fs::read_to_string(chunk_path(data_dir, room, no)).await.ok()?;
+    serde_json::from_str(&raw).ok()
+}
+
+/// Writes the chunk a change added and drops the chunks the log let go.
+///
+/// Called before the project is saved. A crash in between leaves a line for
+/// a change that was not kept, never a kept change without its line.
+pub async fn save_audit(data_dir: &Path, room: &str, writes: &Writes) -> std::io::Result<()> {
+    tokio::fs::create_dir_all(audit_dir(data_dir, room)).await?;
+    let path = chunk_path(data_dir, room, writes.put.no);
+    let temporary = path.with_extension("json.tmp");
+    let serialised =
+        serde_json::to_string(&writes.put).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    tokio::fs::write(&temporary, serialised).await?;
+    tokio::fs::rename(&temporary, &path).await?;
+    for no in &writes.delete {
+        // already gone is fine
+        let _ = tokio::fs::remove_file(chunk_path(data_dir, room, *no)).await;
+    }
+    Ok(())
+}
+
+// #endregion audit log =========================================================

@@ -58,7 +58,15 @@ names kept as they were.
 - **A restore keeps the room's own index,** and a downloaded backup leaves the
   log out.
 
-**Not done:** `server-native` (the LAN host) does not record activity yet.
+**`server-native` (the LAN host)** records the same lines (added the same day).
+- Chunks live beside the room's file, in `<room>.audit/`.
+- The chunk is written before the project. A crash in between can leave a
+  line for a change that was not kept, but never a kept change without its
+  line.
+- With no people on that host, only the master password may read
+  `GET /data/activity`.
+- Test: `apps/server-native/tests/activity.mjs`, 9/9. The log survives a
+  restart and keeps appending to the same chunk.
 
 ## Rollout
 
