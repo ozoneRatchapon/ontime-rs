@@ -2,11 +2,11 @@
 //
 // Run with ./run.sh (see there); BROWSER_APP, BROWSER_API and ADMIN_PASSWORD
 // override the local defaults.
-import { chromium } from '@playwright/test';
+import { launch } from './support.mjs';
 
 const app = process.env.BROWSER_APP ?? 'http://localhost:4199';
 const api = process.env.BROWSER_API ?? 'http://127.0.0.1:8788';
-const password = process.env.ADMIN_PASSWORD ?? password;
+const password = process.env.ADMIN_PASSWORD ?? 'admin-e2e';
 const name = `Browser ${Math.random().toString(36).slice(2, 8)}`;
 const room = `browser-${Math.random().toString(36).slice(2, 8)}`;
 const errors = [];
@@ -16,7 +16,7 @@ const check = (label, ok) => {
   console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}`);
 };
 
-const browser = await chromium.launch();
+const browser = await launch();
 const admin_page = await browser.newPage();
 admin_page.on('console', (m) => m.type() === 'error' && errors.push(`admin: ${m.text()}`));
 admin_page.on('response', (r) => r.status() === 404 && console.log(`    404 ${r.request().method()} ${r.url()}`));

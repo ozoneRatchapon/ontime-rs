@@ -3,7 +3,7 @@
 //
 // Run with ./run.sh (see there); BROWSER_APP, BROWSER_API and ADMIN_PASSWORD
 // override the local defaults.
-import { chromium } from '@playwright/test';
+import { launch } from './support.mjs';
 const app = process.env.BROWSER_APP ?? 'http://localhost:4199';
 const api = process.env.BROWSER_API ?? 'http://127.0.0.1:8788';
 const password = process.env.ADMIN_PASSWORD ?? 'admin-e2e';
@@ -55,7 +55,7 @@ const readingRow = (page) =>
     return (scroller.scrollTop + moved) / Number.parseFloat(getComputedStyle(row).height);
   });
 
-const browser = await chromium.launch();
+const browser = await launch();
 const open = async (role) => {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 720 } })).newPage();
   page.on('console', (m) => m.type() === 'error' && errors.push(`${role}: ${m.text()}`));

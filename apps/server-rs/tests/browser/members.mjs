@@ -3,10 +3,10 @@
 //
 // Run with ./run.sh (see there); BROWSER_APP, BROWSER_API and ADMIN_PASSWORD
 // override the local defaults.
-import { chromium } from '@playwright/test';
+import { launch } from './support.mjs';
 const app = process.env.BROWSER_APP ?? 'http://localhost:4199';
 const api = process.env.BROWSER_API ?? 'http://127.0.0.1:8788';
-const password = process.env.ADMIN_PASSWORD ?? password;
+const password = process.env.ADMIN_PASSWORD ?? 'admin-e2e';
 const suffix = Math.random().toString(36).slice(2, 8);
 const room = `ui-${suffix}`;
 const errors = [];
@@ -29,7 +29,7 @@ const owner = await call('/admin/people', { token: master, method: 'POST', body:
 await call(`/admin/rooms/${room}`, { token: master, method: 'PUT', body: { owners: [owner.id] } });
 const { code } = await call(`/admin/people/${owner.id}/invite`, { token: master, method: 'POST' });
 
-const browser = await chromium.launch();
+const browser = await launch();
 const watch = (page, who) => {
   page.on('console', (m) => m.type() === 'error' && errors.push(`${who}: ${m.text()}`));
   page.on('dialog', (d) => d.accept());
