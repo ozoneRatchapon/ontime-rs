@@ -5,6 +5,11 @@
 import { version } from '../../../package.json';
 
 export const githubUrl = 'https://www.github.com/cpvalente/ontime';
+/**
+ * Source of the version this deployment runs, a modified Ontime under AGPL-3.0,
+ * which asks that the people using it over a network can get the source.
+ */
+export const sourceUrl: string = import.meta.env.VITE_SOURCE_URL || 'https://github.com/ozoneRatchapon/ontime-rs';
 export const apiRepoLatest = 'https://api.github.com/repos/cpvalente/ontime/releases/latest';
 export const websiteUrl = 'https://www.getontime.no';
 export const discordUrl = 'https://discord.com/invite/eje3CSUEXm';

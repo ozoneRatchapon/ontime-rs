@@ -5,6 +5,7 @@ import {
   documentationUrl,
   githubSponsorUrl,
   githubUrl,
+  sourceUrl,
   subredditUrl,
   websiteUrl,
   youtubeUrl,
@@ -24,6 +25,11 @@ export default function AboutPanel() {
           <Panel.Divider />
           <Info>Free, open-source software for managing rundowns and event timers.</Info>
           <Panel.ListGroup>
+            <ExternalLinkRow
+              href={sourceUrl}
+              title='Source code of this deployment'
+              description='A modified Ontime with a cloud backend, under AGPL-3.0'
+            />
             <ExternalLinkRow href={websiteUrl} title='www.getontime.no' description='App site and downloads' />
             <ExternalLinkRow
               href={githubSponsorUrl}
