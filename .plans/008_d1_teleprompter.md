@@ -1,7 +1,57 @@
 # 008 — D1: the teleprompter, in the Rust core
 
-Status: **plan** (2026-11-24). Its 4 decisions use the recommended answers, so
-the user's standing approval applies.
+Status: **T0 and T1 done (2026-11-24)** on `feature/teleprompter`; T2 is next.
+Its 4 decisions use the recommended answers, so the user's standing approval
+applies.
+
+## Progress
+
+**T0 and T1, the contract and the core:**
+- Done in commits de884be0, edc4f759, 91ecd415 and 45501194.
+- `ontime-core/src/teleprompter/` holds `wrap`, `settings`, `script`,
+  `position` and `transport`.
+- **How the fixtures are made:** `scripts/teleprompter-oracle/generate.sh
+  [ref]` extracts upstream with `git archive`, bundles its TypeScript with
+  esbuild, and runs it over our case lists. So every expected value is
+  upstream's own output, not our reading of it.
+- **What they cover:**
+  - wrap: 62 cases, including Thai, emoji and no-break spaces;
+  - script and settings: 48 cases;
+  - position: 7 scripts swept at every quarter row, 12 edits, 13 reanchors;
+  - transport: 20 scenarios, 119 steps;
+  - the command parser: 44 payloads.
+- **Result:** everything matches exactly, floats included. The tests parse
+  floats with serde_json's `float_roundtrip`.
+- Re-run `generate.sh` after each upstream pull. A changed fixture shows what
+  upstream changed.
+
+**Found along the way:** upstream cuts Thai without spaces in the middle of a
+word (`ยิ|นดี`), because it breaks per grapheme. The contract copies that.
+Breaking at real Thai words would need a dictionary (ICU), so it is a later
+improvement and must be added to both sides.
+
+## T2 design notes (from building T1)
+
+- **Settings and transport:** settings go in `Project.teleprompter`, the same
+  key upstream uses, so project files stay compatible. The transport goes in
+  `Project.teleprompter_transport`. Both have serde defaults. A restore pauses
+  the transport.
+- **The previous script for reanchoring:** the host builds the script before
+  and after any change that can affect it (rundown, custom fields, settings,
+  load, restore), then calls `reanchor_transport`.
+  - This needs no stored copy of the old script.
+  - It is skipped while the transport has never been used (anchor is `None`).
+- **Script cache:** in memory, keyed by (loaded rundown id, rundown
+  revision, settings, custom fields), so `runtime-data` can carry
+  `teleprompter` and `teleprompterSync` without rewrapping.
+- **Clock:** `now` is the room's time of day,
+  `(epoch + timezone_offset) mod day`. This is the same clock that Pong
+  carries and the client's `serverClock` follows.
+- **Waking:** `transport::ms_until_settled` feeds `next_wake_in`, so the alarm
+  fires once, at the boundary.
+- **Shape:** a small core facade (`teleprompter/room.rs`) does goto target
+  resolution (cue, id, index, loaded), following the loaded event, the
+  runtime patch and the wake time. Each host only calls it.
 
 ## What upstream built
 
