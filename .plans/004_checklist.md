@@ -103,8 +103,6 @@ How to use it:
   and the room is not to be written.
 - [x] Merge `feature/upstream-4.15` into `feat/rust-cloud-backend`: fast-forward
   to `58ba3d97`, 2026-11-24. Work on `feat/rust-cloud-backend` from now on.
-- [ ] **[ต้องถาม]** Push.
-  - Use only `backup` (ontime-rs-private, PRIVATE).
+- [x] Push to `backup`: done 2026-11-24 (`f56c8fd4`). Later pushes: `git push backup <branch>` is allowed in `.claude/settings.local.json`; pushes to `origin` are denied there.
   - `origin` (ontime-rs) is **PUBLIC**. Never push to it.
-  - The push is done by the user; the agent's permission check refuses it.
 - [ ] `scripts/split-project-sharing.mjs` is not ours. Leave it alone.
