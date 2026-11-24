@@ -438,3 +438,39 @@ fn a_custom_field_is_keyed_the_way_the_client_expects() {
     assert_eq!(create(&mut project, "").status, 400);
     assert_eq!(create(&mut project, "with-hyphen").status, 400);
 }
+
+// upstream eda03b08: the loaded event is found in the playable order, so skipped
+// events before it do not shift the search
+#[test]
+fn the_next_flag_is_found_when_skipped_events_precede_the_loaded_event() {
+    let (mut rundown, ids) = show();
+    rundown
+        .edit_entry(&ids[0], &json!({ "skip": true }))
+        .unwrap();
+    rundown
+        .edit_entry(&ids[3], &json!({ "flag": true }))
+        .unwrap();
+    let mut runtime = Runtime::default();
+    runtime.apply(Command::Start, &rundown, at(10 * HOUR + 30 * MINUTE), 0);
+    assert_eq!(runtime.selected_id.as_deref(), Some(ids[1].as_str()));
+
+    let ahead = runtime.look_ahead(&rundown);
+    assert_eq!(ahead.flag.unwrap().id, ids[3]);
+    assert_eq!(ahead.rundown_end.unwrap().id, ids[3]);
+}
+
+#[test]
+fn a_loaded_event_skipped_while_loaded_has_nothing_ahead() {
+    let (mut rundown, ids) = show();
+    rundown
+        .edit_entry(&ids[2], &json!({ "flag": true }))
+        .unwrap();
+    let mut runtime = Runtime::default();
+    runtime.apply(Command::Start, &rundown, at(10 * HOUR), 0);
+    rundown
+        .edit_entry(&ids[0], &json!({ "skip": true }))
+        .unwrap();
+
+    let ahead = runtime.look_ahead(&rundown);
+    assert!(ahead.flag.is_none());
+}

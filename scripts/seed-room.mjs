@@ -9,8 +9,9 @@
 // The master token comes from --token, ONTIME_TOKEN, or the Keychain item
 // "ontime-session-password" — so normally there is nothing to type.
 //
-// --replace refuses while the room's timer is running (override with --live):
-// the new rundown is built and loaded first, and only then is the old one deleted.
+// --replace swaps the rundown's contents in place, keeping its id and each cue's
+// entry id. It refuses while the room's timer is running unless --live is given;
+// with --live the running cue keeps playing if its cue number is still there.
 
 import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
@@ -101,32 +102,41 @@ for (const { label, colour } of fields) {
   await api('POST', '/data/custom-fields', { type: 'text', label, colour: colour ?? '' });
 }
 
-const previous_ids = new Set(previous.map((rundown) => rundown.id));
-const created = await api('POST', '/data/rundowns', { title: schedule.rundown });
-const rid = created.rundowns.find((rundown) => rundown.title === schedule.rundown && !previous_ids.has(rundown.id)).id;
+const payload = (entry, id) => ({
+  ...(id ? { id } : {}),
+  type: 'event',
+  cue: entry.cue,
+  title: entry.title,
+  note: entry.note,
+  colour: entry.colour,
+  duration: entry.end - entry.start,
+  timeStrategy: 'lock-duration',
+  ...(entry.pinned ? { timeStart: entry.start } : { linkStart: true }),
+  timeWarning: entry.timeWarning,
+  timeDanger: entry.timeDanger,
+  custom: Object.fromEntries(Object.entries(entry.custom).map(([label, value]) => [field_key(label), value])),
+});
 
-for (const entry of entries) {
-  const custom = Object.fromEntries(Object.entries(entry.custom).map(([label, value]) => [field_key(label), value]));
-  await api('POST', `/data/rundowns/${rid}/entry`, {
-    type: 'event',
-    cue: entry.cue,
-    title: entry.title,
-    note: entry.note,
-    colour: entry.colour,
-    duration: entry.end - entry.start,
-    timeStrategy: 'lock-duration',
-    ...(entry.pinned ? { timeStart: entry.start } : { linkStart: true }),
-    timeWarning: entry.timeWarning,
-    timeDanger: entry.timeDanger,
-    custom,
-  });
-}
-
-await api('POST', `/data/rundowns/${rid}/load`);
-
-// only once the new one is loaded is the old one dropped
-for (const rundown of previous) {
-  await api('DELETE', `/data/rundowns/${rundown.id}`);
+let rid;
+if (previous.length > 0) {
+  // the loaded one if it is among them, so a live show is changed rather than switched
+  const target = previous.find((rundown) => rundown.id === existing.loaded) ?? previous[0];
+  rid = target.id;
+  const current = await api('GET', `/data/rundowns/${rid}`);
+  const id_of_cue = new Map(Object.values(current.entries).filter((e) => e.cue).map((e) => [e.cue, e.id]));
+  await api('PUT', `/data/rundowns/${rid}`, { entries: entries.map((entry) => payload(entry, id_of_cue.get(entry.cue))) });
+  await api('POST', `/data/rundowns/${rid}/load`);
+  // same-titled leftovers from the old create-then-delete replace
+  for (const rundown of previous.filter((rundown) => rundown.id !== rid)) {
+    await api('DELETE', `/data/rundowns/${rundown.id}`);
+  }
+} else {
+  const created = await api('POST', '/data/rundowns', { title: schedule.rundown });
+  rid = created.rundowns.find((rundown) => rundown.title === schedule.rundown).id;
+  for (const entry of entries) {
+    await api('POST', `/data/rundowns/${rid}/entry`, payload(entry));
+  }
+  await api('POST', `/data/rundowns/${rid}/load`);
 }
 
 // a fresh room starts with a demo rundown; drop it while it is still untouched

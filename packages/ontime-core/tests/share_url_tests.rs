@@ -114,8 +114,50 @@ fn companion_links_point_at_the_root() {
 }
 
 #[test]
-fn a_missing_base_url_is_none() {
-    assert!(generate_share_url(&json!({ "path": "timer" }), None).is_none());
+fn a_missing_base_url_is_refused() {
+    assert!(generate_share_url(&json!({ "path": "timer" }), None).is_err());
+}
+
+// upstream 7de31da6: a base URL must be a full URL, eg: http://192.168.10.1:4001
+#[test]
+fn a_base_url_without_a_protocol_is_refused() {
+    for base in [
+        "192.168.10.1:4001",
+        "localhost:4001",
+        "host",
+        "",
+        "http://",
+        "://host",
+        "1http://host",
+    ] {
+        assert_eq!(
+            generate_share_url(&json!({ "baseUrl": base, "path": "timer" }), None),
+            Err("baseUrl must be a full URL, eg: http://192.168.10.1:4001"),
+            "{base:?}"
+        );
+    }
+}
+
+#[test]
+fn a_missing_path_is_refused() {
+    assert!(generate_share_url(&json!({ "baseUrl": "http://host" }), None).is_err());
+    assert!(generate_share_url(&json!({ "baseUrl": "http://host", "path": " " }), None).is_err());
+}
+
+#[test]
+fn the_route_answers_422_for_invalid_input() {
+    use ontime_core::api::{handle, ApiRequest, HttpMethod};
+    let mut project = ontime_core::Project::default();
+    let req = ApiRequest {
+        method: HttpMethod::Post,
+        path: "/data/session/url".into(),
+        body: json!({ "baseUrl": "192.168.10.1:4001", "path": "timer" }),
+        token: None,
+        master_token: None,
+        room_is_new: false,
+        member: None,
+    };
+    assert_eq!(handle(&mut project, &req, 0).status, 422);
 }
 
 #[test]

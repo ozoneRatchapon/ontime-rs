@@ -192,11 +192,11 @@ fn any_running_reports_whether_a_tick_is_needed() {
 #[test]
 fn the_snapshot_matches_the_runtime_store_shape() {
     let timers = AuxTimers::default();
-    let snapshot = timers.snapshot(T0);
+    let snapshot = timers.snapshot(T0, &Default::default());
 
     for key in ["auxtimer1", "auxtimer2", "auxtimer3"] {
         let state = &snapshot[key];
-        for field in ["duration", "current", "playback", "direction"] {
+        for field in ["duration", "current", "playback", "direction", "name"] {
             assert!(state.get(field).is_some(), "{key} missing {field}");
         }
     }

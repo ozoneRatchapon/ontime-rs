@@ -75,6 +75,7 @@ suites=(
   "roll.mjs:node"     # the rundown following the wall clock
   "report-archive.mjs:node" # runs preserved permanently
   "rooms-cost.mjs:node" # what an unwatched room costs, and who may create one
+  "upstream.mjs:node" # behaviour distilled from upstream v4.15 (plan 003)
   "admin.mjs:node"    # room list, owners, live clients (needs ADMIN_PASSWORD)
   "people.mjs:node"   # people, invite links, room owners (needs ADMIN_PASSWORD)
   "members.mjs:node"  # operators, members-only rooms (needs ADMIN_PASSWORD, ~1 min)

@@ -12,6 +12,42 @@ use serde_json::{json, Value};
 /// matching the original's `auxTimerDefault`.
 pub const DEFAULT_DURATION: i64 = 5 * 60_000;
 
+/// Longest name an aux timer may carry, as upstream's `auxTimerNameMaxLength`.
+/// Counted in characters, so a Thai name gets the same room as a Latin one.
+pub const AUX_TIMER_NAME_MAX_LENGTH: usize = 30;
+
+/// One name per aux timer, in order. An empty string means unnamed, and the
+/// client shows its default label.
+pub type AuxTimerNames = [String; 3];
+
+fn sanitise_aux_timer_name(value: Option<&Value>) -> String {
+    match value.and_then(Value::as_str) {
+        Some(name) => name
+            .trim()
+            .chars()
+            .take(AUX_TIMER_NAME_MAX_LENGTH)
+            .collect(),
+        None => String::new(),
+    }
+}
+
+/// A name for each of the three timers from whatever was stored or sent, so a
+/// missing or malformed list (a room saved before names existed) never fails.
+pub fn sanitise_aux_timer_names(names: &Value) -> AuxTimerNames {
+    let list = names.as_array();
+    let at = |index: usize| sanitise_aux_timer_name(list.and_then(|list| list.get(index)));
+    [at(0), at(1), at(2)]
+}
+
+/// serde hook for `Settings::aux_timer_names`: always yields three clean names.
+pub fn deserialize_aux_timer_names<'de, D>(deserializer: D) -> Result<AuxTimerNames, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let raw = Value::deserialize(deserializer)?;
+    Ok(sanitise_aux_timer_names(&raw))
+}
+
 /// Rounds an instant to the nearest whole second.
 ///
 /// An aux timer sits next to the wall clock on screen, so its displayed second
@@ -152,12 +188,13 @@ impl AuxTimer {
     }
 
     /// `SimpleTimerState`, as the client's runtime store holds it.
-    pub fn state(&self, now: i64) -> Value {
+    pub fn state(&self, now: i64, name: &str) -> Value {
         json!({
             "duration": self.duration,
             "current": self.current(now),
             "playback": self.playback,
             "direction": self.direction,
+            "name": name,
         })
     }
 }
@@ -234,11 +271,12 @@ impl AuxTimers {
     }
 
     /// The `auxtimer1`/`auxtimer2`/`auxtimer3` slice of the runtime store.
-    pub fn snapshot(&self, now: i64) -> Value {
+    /// The names live in the settings, so the caller passes them in.
+    pub fn snapshot(&self, now: i64, names: &AuxTimerNames) -> Value {
         json!({
-            "auxtimer1": self.timers[0].state(now),
-            "auxtimer2": self.timers[1].state(now),
-            "auxtimer3": self.timers[2].state(now),
+            "auxtimer1": self.timers[0].state(now, &names[0]),
+            "auxtimer2": self.timers[1].state(now, &names[1]),
+            "auxtimer3": self.timers[2].state(now, &names[2]),
         })
     }
 }

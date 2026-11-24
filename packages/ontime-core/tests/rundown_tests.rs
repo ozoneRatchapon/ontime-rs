@@ -265,12 +265,15 @@ fn cloning_places_the_copy_after_the_original() {
 }
 
 #[test]
-fn renumber_rewrites_cues_across_the_flat_order() {
+fn renumber_rewrites_the_given_cues() {
     let mut rundown = empty();
     let a = add(&mut rundown, "A", 1000);
     let b = add(&mut rundown, "B", 1000);
+    let number = |v| ontime_core::cue::CueNumber::parse(v).unwrap();
 
-    rundown.renumber(10.0, 5.0);
+    rundown
+        .renumber(&[a.clone(), b.clone()], "", number("10"), number("5"))
+        .unwrap();
 
     assert_eq!(field(&rundown, &a, "cue"), "10");
     assert_eq!(field(&rundown, &b, "cue"), "15");

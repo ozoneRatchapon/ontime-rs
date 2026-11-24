@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
+use crate::cue::{nth_cue, separated_prefix, CueNumber};
+
 pub type Entries = Map<String, Value>;
 
 pub const MS_PER_DAY: i64 = 86_400_000;
@@ -24,6 +26,39 @@ pub struct Rundown {
     pub entries: Entries,
     pub revision: u64,
 }
+
+/// Why a new entry was refused. Checked before anything changes.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AddError {
+    /// The payload carries an id the rundown already has.
+    Exists(String),
+    /// `parent` names something that is not a group.
+    InvalidParent(String),
+    NestedGroup,
+}
+
+/// Longest rundown title, in characters.
+pub const TITLE_MAX_LENGTH: usize = 64;
+
+/// Upstream's `validateRundownTitle`: the reason a title is refused, or `None`.
+pub fn validate_title(title: &str) -> Option<&'static str> {
+    if title.trim().is_empty() {
+        return Some("Title cannot be empty");
+    }
+    if title.chars().count() > TITLE_MAX_LENGTH {
+        return Some("Title must be 64 characters or fewer");
+    }
+    // upstream tests `[\p{L}\p{N}]`; `is_alphanumeric` is that plus a few
+    // alphabetic combining marks (eg a lone Thai vowel sign), a harmless superset
+    if !title.chars().any(char::is_alphanumeric) {
+        return Some("Title must contain at least one letter or number");
+    }
+    None
+}
+
+/// A renumber was asked for an entry that is not an event.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NotAnEvent;
 
 /// Where a newly created entry should land relative to an existing one.
 #[derive(Debug, Clone, Default)]
@@ -111,8 +146,30 @@ impl Rundown {
 
     // #region mutations ==========================================
 
+    /// The checks upstream's `addEntry` makes before it adds anything.
+    pub fn check_add(&self, payload: &Value) -> Result<(), AddError> {
+        if let Some(id) = payload.get("id").and_then(Value::as_str) {
+            if self.entries.contains_key(id) {
+                return Err(AddError::Exists(id.to_string()));
+            }
+        }
+        let Some(parent) = payload.get("parent").and_then(Value::as_str) else {
+            return Ok(());
+        };
+        if self.entries.get(parent).map(entry_type) != Some("group") {
+            return Err(AddError::InvalidParent(parent.to_string()));
+        }
+        if payload.get("type").and_then(Value::as_str) == Some("group") {
+            return Err(AddError::NestedGroup);
+        }
+        Ok(())
+    }
+
     /// Creates an entry from a (partial) client payload and links it into the order.
     /// Returns the stored entry.
+    ///
+    /// Lenient by design (see `check_add` for the strict checks): a taken id is
+    /// replaced with a fresh one, and a `parent` that is not a group is ignored.
     pub fn add_entry(&mut self, payload: &Value, at: Insert) -> Value {
         let id = payload
             .get("id")
@@ -129,10 +186,60 @@ impl Rundown {
         }
         set_id(&mut entry, &id);
 
+        let is_group = entry_type(&entry) == "group";
+        // the group asked for, when the entry may go there
+        let wanted = payload
+            .get("parent")
+            .and_then(Value::as_str)
+            .filter(|parent| {
+                !is_group && self.entries.get(*parent).map(entry_type) == Some("group")
+            })
+            .map(str::to_string);
+
         self.entries.insert(id.clone(), entry);
-        self.link(&id, at);
+        if let Some(object) = self.entries.get_mut(&id).and_then(Value::as_object_mut) {
+            // where it ends up decides its parent, not what the payload said
+            object.remove("parent");
+        }
+        let anchor_in_wanted = match (&at, &wanted) {
+            (Insert::Before(Some(anchor)) | Insert::After(Some(anchor)), Some(group)) => {
+                self.parent_of(anchor).as_deref() == Some(group.as_str())
+            }
+            _ => false,
+        };
+        match wanted {
+            Some(group) if !anchor_in_wanted => {
+                self.link_into_group(&id, &group, matches!(at, Insert::Before(None)));
+            }
+            _ => self.link(&id, at),
+        }
+        if !is_group && self.parent_of(&id).is_none() {
+            if let Some(object) = self.entries.get_mut(&id).and_then(Value::as_object_mut) {
+                object.insert("parent".into(), Value::Null);
+            }
+        }
         self.recompute();
         self.entries.get(&id).cloned().unwrap_or(Value::Null)
+    }
+
+    /// Puts `id` first or last among `group`'s entries.
+    fn link_into_group(&mut self, id: &str, group: &str, first: bool) {
+        let Some(list) = self
+            .entries
+            .get_mut(group)
+            .and_then(|g| g.get_mut("entries"))
+            .and_then(Value::as_array_mut)
+        else {
+            return self.link(id, Insert::End);
+        };
+        if first {
+            list.insert(0, json!(id));
+        } else {
+            list.push(json!(id));
+        }
+        if let Some(object) = self.entries.get_mut(id).and_then(Value::as_object_mut) {
+            object.insert("parent".into(), json!(group));
+        }
     }
 
     /// Applies a partial patch to an existing entry. Returns the stored entry.
@@ -304,24 +411,33 @@ impl Rundown {
         copy
     }
 
-    /// Renumbers cues sequentially from `start_at`, stepping by `increment`.
-    pub fn renumber(&mut self, start_at: f64, increment: f64) {
-        let mut value = start_at;
-        let ids: Vec<String> = self.flat_order.clone();
-        for id in ids {
-            let Some(entry) = self.entries.get_mut(&id) else {
-                continue;
-            };
-            if !matches!(entry_type(entry), "event" | "milestone") {
-                continue;
+    /// Gives `ids`, in that order, consecutive cues from `start` by `increment`.
+    /// Every id must be an event; nothing changes otherwise.
+    pub fn renumber(
+        &mut self,
+        ids: &[String],
+        prefix: &str,
+        start: CueNumber,
+        increment: CueNumber,
+    ) -> Result<(), NotAnEvent> {
+        if !ids
+            .iter()
+            .all(|id| self.entries.get(id).map(entry_type) == Some("event"))
+        {
+            return Err(NotAnEvent);
+        }
+        let prefix = separated_prefix(prefix);
+        for (index, id) in (0_i64..).zip(ids) {
+            let cue = nth_cue(&prefix, start, increment, index);
+            if let Some(entry) = self.entries.get_mut(id) {
+                if let Some(obj) = entry.as_object_mut() {
+                    obj.insert("cue".into(), json!(cue));
+                }
+                bump(entry);
             }
-            if let Some(obj) = entry.as_object_mut() {
-                obj.insert("cue".into(), json!(format_cue(value)));
-            }
-            bump(entry);
-            value += increment;
         }
         self.recompute();
+        Ok(())
     }
 
     /// Folds the given entries into a new group, positioned where the first one was.
@@ -724,7 +840,7 @@ fn wrap_day(value: i64) -> i64 {
     value.rem_euclid(MS_PER_DAY)
 }
 
-fn entry_type(entry: &Value) -> &str {
+pub fn entry_type(entry: &Value) -> &str {
     entry.get("type").and_then(Value::as_str).unwrap_or("event")
 }
 
@@ -738,14 +854,6 @@ fn bump(entry: &mut Value) {
     if let Some(obj) = entry.as_object_mut() {
         let revision = obj.get("revision").and_then(Value::as_u64).unwrap_or(0);
         obj.insert("revision".into(), json!(revision + 1));
-    }
-}
-
-fn format_cue(value: f64) -> String {
-    if (value.fract()).abs() < f64::EPSILON {
-        format!("{}", value as i64)
-    } else {
-        format!("{value}")
     }
 }
 

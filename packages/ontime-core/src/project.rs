@@ -5,13 +5,28 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::aux_timer::AuxTimers;
+use crate::aux_timer::{AuxTimerNames, AuxTimers};
 use crate::message::{ArchivedRun, ArchivedRunEvent, MessageState, Report, ReportArchive};
 use crate::rundown::Rundown;
 use crate::runtime::Runtime;
 
 pub const ONTIME_VERSION: &str = "4.11.0";
 pub const DEFAULT_RUNDOWN_ID: &str = "default";
+
+/// What a rundown replacement changed beyond the rundown itself.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Replaced {
+    /// The title or entry count moved, which the rundown list shows.
+    pub list_changed: bool,
+    /// The loaded event did not survive, so playback was stopped.
+    pub stopped: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ReplaceError {
+    NotFound,
+    NotAnEntry,
+}
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -32,6 +47,11 @@ pub struct Settings {
     pub operator_key: Option<String>,
     pub time_format: String,
     pub language: String,
+    #[serde(
+        default,
+        deserialize_with = "crate::aux_timer::deserialize_aux_timer_names"
+    )]
+    pub aux_timer_names: AuxTimerNames,
 }
 
 impl Default for Settings {
@@ -42,6 +62,7 @@ impl Default for Settings {
             operator_key: None,
             time_format: "24".to_string(),
             language: "en".to_string(),
+            aux_timer_names: AuxTimerNames::default(),
         }
     }
 }
@@ -275,6 +296,61 @@ impl Project {
         for id in ran_ids {
             self.report.clear_one(&id);
         }
+        true
+    }
+
+    /// Swaps the contents of an existing rundown for `entries` (entry payloads in
+    /// order, as `POST …/entry` takes them), keeping its id, and its title unless
+    /// one is given.
+    ///
+    /// Replacing the loaded rundown is a change, not a switch: playback carries on
+    /// while the loaded event is still there and playable, and stops otherwise.
+    pub fn replace_rundown(
+        &mut self,
+        id: &str,
+        title: Option<&str>,
+        entries: &[Value],
+    ) -> Result<Replaced, ReplaceError> {
+        let existing = self.rundowns.get(id).ok_or(ReplaceError::NotFound)?;
+        if entries.iter().any(|entry| !entry.is_object()) {
+            return Err(ReplaceError::NotAnEntry);
+        }
+
+        let mut rundown = Rundown::new(id, title.unwrap_or(&existing.title));
+        for entry in entries {
+            // an id already taken by an earlier entry gets a fresh one
+            rundown.add_entry(entry, crate::rundown::Insert::End);
+        }
+        let ids: Vec<String> = rundown.entries.keys().cloned().collect();
+        crate::custom_fields::drop_unknown_values(&self.custom_fields, &mut rundown, &ids);
+        rundown.revision = existing.revision + 1;
+        let list_changed =
+            rundown.title != existing.title || rundown.entries.len() != existing.entries.len();
+        let was: Vec<String> = existing.entries.keys().cloned().collect();
+        self.rundowns.insert(id.to_string(), rundown);
+        self.prune_report(&was, id);
+
+        let stopped = self.reconcile_runtime();
+        Ok(Replaced {
+            list_changed,
+            stopped,
+        })
+    }
+
+    /// After a change to the loaded rundown: if the loaded event is gone or can
+    /// no longer play (skipped), playback stops, as upstream's runtime does.
+    /// Returns true when it stopped.
+    pub fn reconcile_runtime(&mut self) -> bool {
+        let Some(selected) = self.runtime.selected_id.as_ref() else {
+            return false;
+        };
+        let still_playable = self
+            .current()
+            .is_some_and(|rundown| crate::runtime::playable(rundown).contains(selected));
+        if still_playable {
+            return false;
+        }
+        self.runtime = Runtime::default();
         true
     }
 

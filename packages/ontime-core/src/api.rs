@@ -7,10 +7,10 @@
 
 use serde_json::{json, Value};
 
+use crate::custom_fields;
+use crate::rundown_routes;
 use crate::project::{hash_password, token_matches, Project};
 use crate::registry::Role;
-use crate::rundown::Insert;
-use crate::Rundown;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HttpMethod {
@@ -75,7 +75,7 @@ pub enum Effect {
 }
 
 impl Effect {
-    fn refetch(target: &str, rundown_id: Option<String>) -> Self {
+    pub(crate) fn refetch(target: &str, rundown_id: Option<String>) -> Self {
         Effect::Refetch {
             target: target.to_string(),
             rundown_id,
@@ -173,8 +173,14 @@ pub fn is_privileged(project: &Project, req: &ApiRequest) -> bool {
     let Some(presented) = req.token.as_deref() else {
         return false;
     };
-    let room = project.password_hash.as_deref().is_some_and(|hash| token_matches(hash, presented));
-    let master = req.master_token.as_deref().is_some_and(|master| token_matches(master, presented));
+    let room = project
+        .password_hash
+        .as_deref()
+        .is_some_and(|hash| token_matches(hash, presented));
+    let master = req
+        .master_token
+        .as_deref()
+        .is_some_and(|master| token_matches(master, presented));
     room || master
 }
 
@@ -194,7 +200,8 @@ fn may_switch_members_only(req: &ApiRequest) -> bool {
     master || req.member == Some(Role::Owner)
 }
 
-pub const NEEDS_SIGN_IN: &str = "This room needs sign-in to edit. Ask its owner for an invite link.";
+pub const NEEDS_SIGN_IN: &str =
+    "This room needs sign-in to edit. Ask its owner for an invite link.";
 
 /// Whether a request is allowed to bring a new room into existence.
 ///
@@ -234,10 +241,21 @@ fn origin_of(base_url: &str) -> &str {
 /// target view as `path`; a locked preset masks the path, `lockNav` adds `n=1`,
 /// and `authenticate` injects the room token (which is the password hash).
 ///
-/// Returns `None` when `baseUrl` is missing.
-pub fn generate_share_url(body: &Value, room_hash: Option<&str>) -> Option<String> {
-    let base_url = body.get("baseUrl").and_then(Value::as_str)?;
-    let canonical_path = body.get("path").and_then(Value::as_str).unwrap_or("");
+/// Refuses, as upstream's validator does, a `baseUrl` that is not a full URL
+/// and a missing `path`.
+pub fn generate_share_url(body: &Value, room_hash: Option<&str>) -> Result<String, &'static str> {
+    let base_url = body
+        .get("baseUrl")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|base| is_full_url(base))
+        .ok_or("baseUrl must be a full URL, eg: http://192.168.10.1:4001")?;
+    let canonical_path = body
+        .get("path")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .ok_or("path must be given")?;
     let flag = |key: &str| body.get(key).and_then(Value::as_bool).unwrap_or(false);
     let str_opt = |key: &str| {
         body.get(key)
@@ -281,25 +299,23 @@ pub fn generate_share_url(body: &Value, room_hash: Option<&str>) -> Option<Strin
     } else {
         format!("?{}", query.join("&"))
     };
-    Some(format!("{}/{}{}", origin_of(base_url), path, suffix))
+    Ok(format!("{}/{}{}", origin_of(base_url), path, suffix))
 }
 
-/// The key a custom field is stored under, matching the original's
-/// `customFieldLabelToKey`.
-fn custom_field_key(label: &str) -> String {
-    label.trim().replace(' ', "_")
+/// `scheme://host…`, the scheme starting with a letter — what a browser's
+/// `location.origin` always is.
+fn is_full_url(value: &str) -> bool {
+    let Some((scheme, rest)) = value.split_once("://") else {
+        return false;
+    };
+    let mut chars = scheme.chars();
+    let scheme_ok = chars.next().is_some_and(|c| c.is_ascii_alphabetic())
+        && chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '-' | '.'));
+    let host = rest.split(['/', '?', '#']).next().unwrap_or_default();
+    scheme_ok && !host.is_empty()
 }
 
-/// The original accepts only letters, numbers and spaces in a label.
-fn is_valid_custom_field_label(label: &str) -> bool {
-    let trimmed = label.trim();
-    !trimmed.is_empty()
-        && trimmed
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == ' ')
-}
-
-fn string_list(value: Option<&Value>) -> Vec<String> {
+pub(crate) fn string_list(value: Option<&Value>) -> Vec<String> {
     value
         .and_then(Value::as_array)
         .map(|list| {
@@ -318,6 +334,20 @@ fn shallow_merge(target: &mut Value, patch: &Value) {
     for (key, value) in patch {
         target.insert(key.clone(), value.clone());
     }
+}
+
+/// `current` with `patch`'s top-level keys laid over it. A patch whose values do
+/// not fit is refused with a 400 rather than resetting the whole document to
+/// its defaults, which is what reading it back leniently used to do.
+fn merged<T>(current: &T, patch: &Value) -> Result<T, ApiResponse>
+where
+    T: serde::Serialize + serde::de::DeserializeOwned,
+{
+    let mut value = serde_json::to_value(current)
+        .map_err(|e| ApiResponse::error(format!("Unreadable stored data: {e}"), 500))?;
+    shallow_merge(&mut value, patch);
+    serde_json::from_value(value)
+        .map_err(|e| ApiResponse::error(format!("Invalid input: {e}"), 400))
 }
 
 pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse {
@@ -360,11 +390,19 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
     }
 
     let mut response = match segments.as_slice() {
-        ["data", "rundowns", rest @ ..] => rundowns(project, req, rest, &mut effects),
+        ["data", "rundowns", rest @ ..] => {
+            let response = rundown_routes::handle(project, req, rest, &mut effects);
+            if req.method != HttpMethod::Get && project.reconcile_runtime() {
+                effects.push(Effect::Reschedule);
+            }
+            response
+        }
         ["data", "project", rest @ ..] => project_data(project, req, rest, &mut effects),
         ["data", "settings", rest @ ..] => settings(project, req, rest, &mut effects),
         ["data", "view-settings"] => view_settings(project, req, &mut effects),
-        ["data", "custom-fields", rest @ ..] => custom_fields(project, req, rest, &mut effects),
+        ["data", "custom-fields", rest @ ..] => {
+            custom_fields::handle(project, req, rest, &mut effects)
+        }
         ["data", "url-presets", rest @ ..] => url_presets(project, req, rest, &mut effects),
         // automations drive OSC/HTTP integrations, which a Worker cannot host;
         // the settings are stored and served, but never acted on
@@ -409,7 +447,10 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
         }
         ["data", "members-only"] => {
             if !may_switch_members_only(req) {
-                return ApiResponse::error("Only an owner of this room can change who may edit it", 403);
+                return ApiResponse::error(
+                    "Only an owner of this room can change who may edit it",
+                    403,
+                );
             }
             match req.body.get("on").and_then(Value::as_bool) {
                 Some(on) => {
@@ -457,8 +498,8 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
         // here without the Worker ever needing to serve HTML
         ["data", "session", "url"] => {
             match generate_share_url(&req.body, project.password_hash.as_deref()) {
-                Some(url) => ApiResponse::json(&json!({ "url": url })),
-                None => ApiResponse::error("Missing baseUrl", 400),
+                Ok(url) => ApiResponse::json(&json!({ "url": url })),
+                Err(message) => ApiResponse::error(message, 422),
             }
         }
         ["data", "session", ..] => ApiResponse::json(&json!({ "clients": {} })),
@@ -545,294 +586,6 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
     response
 }
 
-// #region /data/rundowns =====================================
-
-fn rundowns(
-    project: &mut Project,
-    req: &ApiRequest,
-    rest: &[&str],
-    effects: &mut Vec<Effect>,
-) -> ApiResponse {
-    match (&req.method, rest) {
-        // --- project rundowns ---
-        (HttpMethod::Get, []) => ApiResponse::json(&project.rundown_list()),
-
-        (HttpMethod::Post, []) => {
-            let body = req.body.clone();
-            let title = body
-                .get("title")
-                .and_then(Value::as_str)
-                .unwrap_or("Untitled")
-                .to_string();
-            let id = uuid::Uuid::now_v7().to_string();
-            project.rundowns.insert(id.clone(), Rundown::new(id, title));
-            effects.push(Effect::refetch("project-rundowns", None));
-            ApiResponse::json(&project.rundown_list())
-        }
-
-        (HttpMethod::Get, ["current"]) => match project.current() {
-            Some(rundown) => ApiResponse::json(rundown),
-            None => ApiResponse::error("No rundown loaded", 404),
-        },
-
-        (HttpMethod::Post, ["import"]) => {
-            ApiResponse::error("Import is not supported on the cloud backend", 501)
-        }
-
-        // --- a single rundown ---
-        (HttpMethod::Get, [id]) => match project.rundowns.get(*id) {
-            Some(rundown) => ApiResponse::json(rundown),
-            None => ApiResponse::error("Rundown not found", 404),
-        },
-
-        (HttpMethod::Patch, [id]) => {
-            let body = req.body.clone();
-            let Some(title) = body.get("title").and_then(Value::as_str) else {
-                return ApiResponse::error("Missing title", 400);
-            };
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            rundown.title = title.to_string();
-            effects.push(Effect::refetch("project-rundowns", None));
-            ApiResponse::json(&project.rundown_list())
-        }
-
-        (HttpMethod::Delete, [id]) => {
-            if project.rundowns.len() <= 1 {
-                return ApiResponse::error("Cannot delete the only rundown", 400);
-            }
-            if let Some(removed) = project.rundowns.remove(*id) {
-                // the report is room-wide; drop the gone rundown's records with it
-                for entry_id in removed.entries.keys() {
-                    project.report.clear_one(entry_id);
-                }
-            }
-            project.ensure_consistent();
-            effects.push(Effect::refetch("project-rundowns", None));
-            ApiResponse::json(&project.rundown_list())
-        }
-
-        (HttpMethod::Post, [id, "load"]) => {
-            if !project.rundowns.contains_key(*id) {
-                return ApiResponse::error("Rundown not found", 404);
-            }
-            if project.loaded != *id {
-                project.loaded = id.to_string();
-                // Switching stops playback — the loaded event does not exist in
-                // the new rundown, and you cannot run two at once (upstream does
-                // the same). But it deliberately does NOT touch the report:
-                // switching can be an accidental tap or just a peek at another
-                // day while a show is still running, and clearing the report
-                // there would split the run in two and lose the operator's place.
-                // Preserving a finished run to the permanent archive is an
-                // explicit action — POST /data/report/archive — not a side
-                // effect of switching. Coming back and pressing play continues
-                // the same live report, uninterrupted.
-                project.runtime = Default::default();
-                effects.push(Effect::Reschedule);
-            }
-            effects.push(Effect::refetch("all", Some(id.to_string())));
-            ApiResponse::json(&project.rundown_list())
-        }
-
-        (HttpMethod::Post, [id, "duplicate"]) => {
-            let Some(source) = project.rundowns.get(*id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            let copy = source.duplicate(format!("{} (copy)", source.title));
-            project.rundowns.insert(copy.id.clone(), copy);
-            effects.push(Effect::refetch("project-rundowns", None));
-            ApiResponse::json(&project.rundown_list())
-        }
-
-        // --- entries ---
-        (HttpMethod::Post, [id, "entry"]) => {
-            let payload = req.body.clone();
-            let at = Insert::from_payload(&payload);
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            let entry = rundown.add_entry(&payload, at);
-            effects.push(Effect::refetch("rundown", Some(id.to_string())));
-            ApiResponse::status(201, &entry)
-        }
-
-        (HttpMethod::Put, [id, "entry"]) => {
-            let payload = req.body.clone();
-            let Some(entry_id) = payload
-                .get("id")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-            else {
-                return ApiResponse::error("Missing entry id", 400);
-            };
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            let Some(entry) = rundown.edit_entry(&entry_id, &payload) else {
-                return ApiResponse::error("Entry not found", 404);
-            };
-            effects.push(Effect::refetch("rundown", Some(id.to_string())));
-            ApiResponse::json(&entry)
-        }
-
-        (HttpMethod::Put, [id, "batch"]) => {
-            let payload = req.body.clone();
-            let ids = string_list(payload.get("ids"));
-            let data = payload.get("data").cloned().unwrap_or(json!({}));
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            rundown.batch_edit(&ids, &data);
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Delete, [id, "entries"]) => {
-            let payload = req.body.clone();
-            let ids = string_list(payload.get("ids"));
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            let was: Vec<String> = rundown.entries.keys().cloned().collect();
-            rundown.delete_entries(&ids);
-            project.prune_report(&was, id);
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Delete, [id, "all"]) => {
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            let was: Vec<String> = rundown.entries.keys().cloned().collect();
-            rundown.delete_all();
-            project.prune_report(&was, id);
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Patch, [id, "reorder"]) => {
-            let payload = req.body.clone();
-            let entry_id = payload
-                .get("entryId")
-                .and_then(Value::as_str)
-                .unwrap_or("")
-                .to_string();
-            let destination = payload
-                .get("destinationId")
-                .and_then(Value::as_str)
-                .unwrap_or("")
-                .to_string();
-            let order = payload
-                .get("order")
-                .and_then(Value::as_str)
-                .unwrap_or("after")
-                .to_string();
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            if !rundown.reorder(&entry_id, &destination, &order) {
-                return ApiResponse::error("Could not reorder entry", 400);
-            }
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Patch, [id, "swap"]) => {
-            let payload = req.body.clone();
-            let from = payload
-                .get("from")
-                .and_then(Value::as_str)
-                .unwrap_or("")
-                .to_string();
-            let to = payload
-                .get("to")
-                .and_then(Value::as_str)
-                .unwrap_or("")
-                .to_string();
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            if !rundown.swap(&from, &to) {
-                return ApiResponse::error("Could not swap entries", 400);
-            }
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Patch, [id, "renumber"]) => {
-            let payload = req.body.clone();
-            let start_at = payload
-                .get("startAt")
-                .and_then(Value::as_f64)
-                .unwrap_or(1.0);
-            let increment = payload
-                .get("increment")
-                .and_then(Value::as_f64)
-                .unwrap_or(1.0);
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            rundown.renumber(start_at, increment);
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Patch, [id, "applydelay", delay_id]) => {
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            if !rundown.apply_delay(delay_id) {
-                return ApiResponse::error("Delay not found", 404);
-            }
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Post, [id, "clone", entry_id]) => {
-            let payload = req.body.clone();
-            let at = Insert::from_payload(&payload);
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            if rundown.clone_entry(entry_id, at).is_none() {
-                return ApiResponse::error("Entry not found", 404);
-            }
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Post, [id, "group"]) => {
-            let payload = req.body.clone();
-            let ids = string_list(payload.get("ids"));
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            if rundown.group_entries(&ids).is_none() {
-                return ApiResponse::error("Could not group entries", 400);
-            }
-            respond_with_rundown(project, id, effects)
-        }
-
-        (HttpMethod::Post, [id, "ungroup", group_id]) => {
-            let Some(rundown) = project.get_mut(id) else {
-                return ApiResponse::error("Rundown not found", 404);
-            };
-            if !rundown.ungroup(group_id) {
-                return ApiResponse::error("Group not found", 404);
-            }
-            respond_with_rundown(project, id, effects)
-        }
-
-        _ => ApiResponse::error("Not implemented", 404),
-    }
-}
-
-/// Persists, notifies and returns the whole rundown — the shape most
-/// entry-mutating endpoints reply with.
-fn respond_with_rundown(project: &mut Project, id: &str, effects: &mut Vec<Effect>) -> ApiResponse {
-    effects.push(Effect::refetch("rundown", Some(id.to_string())));
-    match project.rundowns.get(id) {
-        Some(rundown) => ApiResponse::json(rundown),
-        None => ApiResponse::error("Rundown not found", 404),
-    }
-}
-
-// #endregion /data/rundowns ==================================
 // #region project settings ===================================
 
 fn project_data(
@@ -848,9 +601,10 @@ fn project_data(
         HttpMethod::Get => ApiResponse::json(&project.project),
         HttpMethod::Post => {
             let patch = req.body.clone();
-            let mut merged = serde_json::to_value(&project.project).unwrap_or_default();
-            shallow_merge(&mut merged, &patch);
-            project.project = serde_json::from_value(merged).unwrap_or_default();
+            project.project = match merged(&project.project, &patch) {
+                Ok(data) => data,
+                Err(refusal) => return refusal,
+            };
             effects.push(Effect::refetch("project-data", None));
             ApiResponse::json(&project.project)
         }
@@ -877,6 +631,20 @@ fn settings(
         }
         (HttpMethod::Post, []) => {
             let patch = req.body.clone();
+            if patch
+                .get("auxTimerNames")
+                .is_some_and(|names| !names.is_array())
+            {
+                return ApiResponse::error("auxTimerNames must be an array", 400);
+            }
+            // checked before anything is applied: a bad patch must not reset
+            // the settings it does not mention, nor half-apply the room fields
+            let mut settings: crate::project::Settings = match merged(&project.settings, &patch) {
+                Ok(settings) => settings,
+                Err(refusal) => return refusal,
+            };
+            // the app version is the server's to say, not the client's
+            settings.version.clone_from(&project.settings.version);
             if let Some(offset) = patch.get("timezoneOffset").and_then(Value::as_i64) {
                 project.timezone_offset = offset;
             }
@@ -890,9 +658,7 @@ fn settings(
                 };
                 effects.push(Effect::Reschedule);
             }
-            let mut merged = serde_json::to_value(&project.settings).unwrap_or_default();
-            shallow_merge(&mut merged, &patch);
-            project.settings = serde_json::from_value(merged).unwrap_or_default();
+            project.settings = settings;
             effects.push(Effect::refetch("settings", None));
             ApiResponse::json(&project.settings)
         }
@@ -914,58 +680,12 @@ fn view_settings(
         HttpMethod::Get => ApiResponse::json(&project.view_settings),
         HttpMethod::Post => {
             let patch = req.body.clone();
-            let mut merged = serde_json::to_value(&project.view_settings).unwrap_or_default();
-            shallow_merge(&mut merged, &patch);
-            project.view_settings = serde_json::from_value(merged).unwrap_or_default();
+            project.view_settings = match merged(&project.view_settings, &patch) {
+                Ok(settings) => settings,
+                Err(refusal) => return refusal,
+            };
             effects.push(Effect::refetch("view-settings", None));
             ApiResponse::json(&project.view_settings)
-        }
-        _ => ApiResponse::error("Not implemented", 404),
-    }
-}
-
-fn custom_fields(
-    project: &mut Project,
-    req: &ApiRequest,
-    rest: &[&str],
-    effects: &mut Vec<Effect>,
-) -> ApiResponse {
-    match (&req.method, rest) {
-        (HttpMethod::Get, []) => ApiResponse::json(&project.custom_fields),
-        (HttpMethod::Post, []) => {
-            let field = req.body.clone();
-            let Some(label) = field.get("label").and_then(Value::as_str) else {
-                return ApiResponse::error("Missing label", 400);
-            };
-            if !is_valid_custom_field_label(label) {
-                // the original validates this, so accepting more here would let
-                // us create fields the real client cannot handle
-                return ApiResponse::error(
-                    "A custom field label may only contain letters, numbers and spaces",
-                    400,
-                );
-            }
-            let key = custom_field_key(label);
-            if let Some(fields) = project.custom_fields.as_object_mut() {
-                fields.insert(key, field);
-            }
-            effects.push(Effect::refetch("custom-fields", None));
-            ApiResponse::json(&project.custom_fields)
-        }
-        (HttpMethod::Put, [key]) => {
-            let field = req.body.clone();
-            if let Some(fields) = project.custom_fields.as_object_mut() {
-                fields.insert((*key).to_string(), field);
-            }
-            effects.push(Effect::refetch("custom-fields", None));
-            ApiResponse::json(&project.custom_fields)
-        }
-        (HttpMethod::Delete, [key]) => {
-            if let Some(fields) = project.custom_fields.as_object_mut() {
-                fields.remove(*key);
-            }
-            effects.push(Effect::refetch("custom-fields", None));
-            ApiResponse::json(&project.custom_fields)
         }
         _ => ApiResponse::error("Not implemented", 404),
     }

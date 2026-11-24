@@ -996,7 +996,7 @@ pub fn load_roll(rundown: &Rundown, clock: i64) -> Option<RollTarget> {
 }
 
 /// Ids of the events that playback can select: real events, in order, not skipped.
-fn playable(rundown: &Rundown) -> Vec<String> {
+pub(crate) fn playable(rundown: &Rundown) -> Vec<String> {
     rundown
         .flat_order
         .iter()
@@ -1022,7 +1022,7 @@ fn wrap_day(value: i64) -> i64 {
 }
 
 /// Milliseconds since local midnight for an epoch timestamp.
-fn time_of_day(epoch_ms: i64, tz_offset: i64) -> i64 {
+pub(crate) fn time_of_day(epoch_ms: i64, tz_offset: i64) -> i64 {
     wrap_day(epoch_ms + tz_offset)
 }
 

@@ -7,6 +7,7 @@ use std::time::Duration;
 use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
 use ontime_core::project::{hash_password, Project};
 use ontime_core::registry::{should_report, Role, RoomReport};
+use ontime_core::socket;
 
 use serde::{Deserialize, Serialize};
 
@@ -136,7 +137,8 @@ impl DurableObject for OntimeProject {
 
         if tag == "ping" {
             let echo = payload.cloned().unwrap_or(Value::Null);
-            let _ = ws.send_with_str(json!({ "tag": "pong", "payload": echo }).to_string());
+            let reply = socket::pong(echo, now_ms(), self.project.timezone_offset);
+            let _ = ws.send_with_str(reply.to_string());
             return Ok(());
         }
 
@@ -387,7 +389,7 @@ impl OntimeProject {
             .snapshot(rundown, now, self.project.timezone_offset);
 
         if let Some(obj) = payload.as_object_mut() {
-            if let Some(aux) = self.project.aux_timers.snapshot(now).as_object() {
+            if let Some(aux) = self.project.aux_timers.snapshot(now, &self.project.settings.aux_timer_names).as_object() {
                 obj.extend(aux.clone());
             }
             obj.insert("message".into(), json!(self.project.message));

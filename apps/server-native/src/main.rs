@@ -60,7 +60,7 @@ impl Room {
             .snapshot(rundown, now, self.project.timezone_offset);
 
         if let Some(object) = payload.as_object_mut() {
-            if let Some(aux) = self.project.aux_timers.snapshot(now).as_object() {
+            if let Some(aux) = self.project.aux_timers.snapshot(now, &self.project.settings.aux_timer_names).as_object() {
                 object.extend(aux.clone());
             }
             object.insert("message".into(), json!(self.project.message));
@@ -450,7 +450,7 @@ async fn serve_socket(state: Arc<AppState>, room_name: String, socket: WebSocket
                     .runtime
                     .snapshot(rundown, now, room.project.timezone_offset);
             if let Some(object) = payload.as_object_mut() {
-                if let Some(aux) = room.project.aux_timers.snapshot(now).as_object() {
+                if let Some(aux) = room.project.aux_timers.snapshot(now, &room.project.settings.aux_timer_names).as_object() {
                     object.extend(aux.clone());
                 }
                 object.insert("message".into(), json!(room.project.message));
