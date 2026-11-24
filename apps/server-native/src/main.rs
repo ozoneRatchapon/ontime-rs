@@ -28,6 +28,7 @@ use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
 use ontime_core::audit::{Actor, Chunk, Note, Page, Retention, Writes};
 use ontime_core::audit_describe;
 use ontime_core::project::Project;
+use ontime_core::socket;
 use serde_json::{json, Value};
 use tokio::sync::{broadcast, Mutex};
 use tower_http::cors::{Any, CorsLayer};
@@ -634,8 +635,11 @@ async fn handle_socket_message(
     let payload = packet.get("payload");
 
     if tag == "ping" {
+        // the same pong as the Worker's, carrying the room's clock so screens
+        // can keep theirs in step
         let echo = payload.cloned().unwrap_or(Value::Null);
-        return Some(json!({ "tag": "pong", "payload": echo }).to_string());
+        let (tz, _) = with_room(state, room_name, |room| room.project.timezone_offset).await;
+        return Some(socket::pong(echo, now_ms(), tz).to_string());
     }
 
     let now = now_ms();

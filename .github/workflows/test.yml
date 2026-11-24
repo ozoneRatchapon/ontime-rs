@@ -84,6 +84,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # the client build includes the Rust timer engine, so it needs the wasm built first
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Build the wasm timer engine
+        run: |
+          version=$(grep -A1 '^name = "wasm-bindgen"$' packages/ontime-wasm/Cargo.lock | grep '^version' | head -1 | cut -d'"' -f2)
+          cargo install -f wasm-bindgen-cli --version "$version"
+          packages/ontime-wasm/build.sh
+
       - name: Get installed Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(pnpm ls @playwright/test --parseable | cut -s -d '@' -f3 | cut -d '/' -f1)" >> $GITHUB_ENV
       - name: Cache playwright binaries
