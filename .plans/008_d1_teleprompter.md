@@ -1,6 +1,6 @@
 # 008 — D1: the teleprompter, in the Rust core
 
-Status: **T0 and T1 done (2026-11-24)** on `feature/teleprompter`; T2 is next.
+Status: **T0, T1 and T2 done (2026-11-24)** on `feature/teleprompter`; T4 is next.
 Its 4 decisions use the recommended answers, so the user's standing approval
 applies.
 
@@ -30,7 +30,50 @@ word (`ยิ|นดี`), because it breaks per grapheme. The contract copies t
 Breaking at real Thai words would need a dictionary (ICU), so it is a later
 improvement and must be added to both sides.
 
-## T2 design notes (from building T1)
+**T2, the hosts:**
+- **The core facade, `teleprompter/room.rs`:** builds the script, the first
+  read follows the loaded event, resolves goto targets (cue, id, index,
+  loaded), keeps the reader in place after a change, settles on the alarm,
+  gives the wake time, pauses on restore, and produces the runtime fields.
+- **Routes, `teleprompter/routes.rs`:** `GET` and `POST
+  /data/teleprompter/settings` (422 on invalid input), and
+  `GET /data/teleprompter/script?source=`.
+- **Hooks in `api`:**
+  - the script from before a change, then `after_change`;
+  - the `teleprompter` socket tag;
+  - following the loaded event after any playback command;
+  - `on_alarm`, which is the timer tick plus the prompter settling;
+  - `next_wake_in`, now the earlier of the two;
+  - `runtime_payload`, shared by both hosts, which removed their duplicated
+    payload code.
+- **Custom fields:** renaming one moves the script source with it, and
+  deleting one falls back to `note`.
+- **Host fix:** both hosts now pass the query string to the core. The Worker
+  passed only `req.path()`, and native has `RawQuery`.
+- **Tests:**
+  - core `teleprompter_room_tests` (9);
+  - e2e `teleprompter.mjs` (35);
+  - every other e2e suite is still green on both Workers;
+  - native activity 9/9, and native serves `?source=`.
+
+**Differences from upstream, all deliberate:**
+- **No 304 or ETag on the script:** the script carries its revision, which is
+  what screens compare.
+- **A body that isn't an object (`[]`)** reads as an empty patch (200, no
+  change), not 422. Every route's hosts treat such bodies as `{}`.
+- **Socket commands get no `{tag:'teleprompter'}` reply.** Screens read
+  `runtime-data`, and the reply matters only to OSC, which the Worker doesn't
+  have.
+- **Teleprompter commands are not written to the audit log yet.**
+
+**For later:**
+- **Script cache.** The script is built whenever the prompter is in use: a
+  command, the runtime payload, or a wake check. That is fine for normal
+  rundowns. The native host asks for its wake time every 50 ms, so it would
+  benefit first.
+- **`api.rs` is at 966 lines.** Split it before it grows further.
+
+## T2 design notes (written before building it)
 
 - **Settings and transport:** settings go in `Project.teleprompter`, the same
   key upstream uses, so project files stay compatible. The transport goes in

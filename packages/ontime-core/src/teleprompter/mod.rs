@@ -3,6 +3,8 @@
 //! `tests/fixtures/teleprompter_*.json`, generated from upstream's own code.
 
 pub mod position;
+pub mod room;
+pub(crate) mod routes;
 pub mod script;
 pub mod settings;
 pub mod transport;

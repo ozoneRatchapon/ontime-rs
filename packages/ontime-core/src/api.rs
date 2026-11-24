@@ -9,6 +9,7 @@ use serde_json::{json, Value};
 
 use crate::custom_fields;
 use crate::rundown_routes;
+use crate::teleprompter::{room as prompter, routes as prompter_routes};
 use crate::project::{hash_password, token_matches, Project};
 use crate::registry::Role;
 
@@ -398,7 +399,15 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
         return ApiResponse::error(NEEDS_SIGN_IN, 403);
     }
 
+    // the teleprompter keeps its reader in place through edits, which needs the
+    // script from before the change; only built once anything prompts
+    let script_before = match req.method {
+        HttpMethod::Get => None,
+        _ => prompter::before_change(project),
+    };
+
     let mut response = match segments.as_slice() {
+        ["data", "teleprompter", rest @ ..] => prompter_routes::handle(project, req, rest, &mut effects, now),
         ["data", "rundowns", rest @ ..] => {
             let response = rundown_routes::handle(project, req, rest, &mut effects);
             if req.method != HttpMethod::Get && project.reconcile_runtime() {
@@ -562,9 +571,12 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
                     restored.password_hash = project.password_hash.clone();
                     // the log belongs to this room, not to whatever the backup came from
                     restored.audit = project.audit.clone();
+                    // shared playback never carries into another project
+                    restored.prompter = project.prompter.clone();
                     restored.runtime = Default::default();
                     *project = restored;
                     project.ensure_consistent();
+                    prompter::pause_for_new_project(project, now);
                     effects.push(Effect::Persist);
                     effects.push(Effect::refetch("all", None));
                     effects.push(Effect::Reschedule);
@@ -597,6 +609,12 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
             ApiResponse::error(format!("Not implemented: {method:?} /{path}"), 404)
         }
     };
+
+    if let Some(previous) = script_before.filter(|_| response.status < 400 && prompter_routes::touches_script(&effects)) {
+        if prompter::after_change(project, &previous, now) {
+            effects.push(Effect::Persist);
+        }
+    }
 
     response.effects.append(&mut effects);
     response
@@ -763,6 +781,15 @@ fn url_presets(
 /// This lives here rather than in either host because it is policy, not
 /// transport: the two answering it differently is exactly how they would drift.
 pub fn next_wake_in(project: &Project, now: i64, has_clients: bool) -> Option<i64> {
+    // the teleprompter wakes once, when playback reaches its end, never per tick
+    let prompter = prompter::wake_in(project, now).map(|ms| ms.max(50));
+    match (timer_wake_in(project, now, has_clients), prompter) {
+        (Some(timer), Some(prompter)) => Some(timer.min(prompter)),
+        (timer, prompter) => timer.or(prompter),
+    }
+}
+
+fn timer_wake_in(project: &Project, now: i64, has_clients: bool) -> Option<i64> {
     let runtime = &project.runtime;
     let heartbeat = if has_clients {
         project.heartbeat_ms.max(0)
@@ -838,6 +865,10 @@ pub fn apply_socket_command(
     now: i64,
 ) -> bool {
     match tag {
+        "teleprompter" => {
+            // a refused command changes nothing; the screen keeps what it shows
+            return payload.is_some_and(|payload| prompter::command(project, payload, now).is_ok());
+        }
         "message" => return payload.map(|p| project.message.apply(p)).unwrap_or(false),
         "auxtimer" => {
             return payload
@@ -862,8 +893,43 @@ pub fn apply_socket_command(
         return false;
     }
 
+    // event by event, the teleprompter follows the event Ontime loads
+    if project.runtime.selected_id != previous_entry {
+        prompter::follow_loaded(project, now);
+    }
     record_report(project, was_playing, previous_entry, now);
     true
+}
+
+/// The alarm: the timer's end action and the teleprompter reaching its end.
+/// `true` when anything changed that has to be stored.
+pub fn on_alarm(project: &mut Project, now: i64) -> bool {
+    let previous_entry = project.runtime.selected_id.clone();
+    let tz = project.timezone_offset;
+    let timer = match project.current().cloned() {
+        Some(rundown) => project.runtime.on_tick(&rundown, now, tz),
+        None => false,
+    };
+    // an end action may load the next event
+    let followed = project.runtime.selected_id != previous_entry && prompter::follow_loaded(project, now);
+    let settled = prompter::tick(project, now);
+    timer || followed || settled
+}
+
+/// The whole `runtime-data` payload: playback, the aux timers, the overlay and
+/// the teleprompter all live in the same client store. One place, for every
+/// host, because the copies drifting apart is how the aux timers went missing.
+pub fn runtime_payload(project: &Project, now: i64) -> Option<Value> {
+    let rundown = project.current()?;
+    let mut payload = project.runtime.snapshot(rundown, now, project.timezone_offset);
+    if let Some(object) = payload.as_object_mut() {
+        if let Some(aux) = project.aux_timers.snapshot(now, &project.settings.aux_timer_names).as_object() {
+            object.extend(aux.clone());
+        }
+        object.insert("message".into(), json!(project.message));
+        object.extend(prompter::runtime_fields(project, now).map(|(key, value)| (key.to_string(), value)));
+    }
+    Some(payload)
 }
 
 /// Notes when an event actually started or stopped.

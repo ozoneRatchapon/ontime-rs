@@ -233,16 +233,9 @@ impl DurableObject for OntimeProject {
         self.hydrate().await?;
 
         let now = now_ms();
-        let Some(rundown) = self.project.current().cloned() else {
-            return Response::ok("");
-        };
-
-        // an end action may advance the rundown; that change has to be durable
-        if self
-            .project
-            .runtime
-            .on_tick(&rundown, now, self.project.timezone_offset)
-        {
+        // an end action may advance the rundown, and the teleprompter may reach
+        // its end; either change has to be durable
+        if api::on_alarm(&mut self.project, now) {
             self.persist(None).await?;
         }
 
@@ -420,20 +413,7 @@ impl OntimeProject {
     /// Built in one place because it is sent from two — on connect and on change —
     /// and the two drifting apart is how the aux timers first went missing.
     fn runtime_payload(&self, now: i64) -> Option<Value> {
-        let rundown = self.project.current()?;
-        let mut payload = self
-            .project
-            .runtime
-            .snapshot(rundown, now, self.project.timezone_offset);
-
-        if let Some(obj) = payload.as_object_mut() {
-            if let Some(aux) = self.project.aux_timers.snapshot(now, &self.project.settings.aux_timer_names).as_object() {
-                obj.extend(aux.clone());
-            }
-            obj.insert("message".into(), json!(self.project.message));
-        }
-
-        Some(payload)
+        api::runtime_payload(&self.project, now)
     }
 
     /// Sends the current playback state to every connected client.
@@ -556,13 +536,18 @@ impl OntimeProject {
     /// being a second implementation.
     async fn handle(&mut self, req: &mut Request) -> Result<Response> {
         let path = req.path();
+        // the core reads query parameters off the path, as `?source=` for a script
+        let path_and_query = match req.url().ok().and_then(|url| url.query().map(str::to_string)) {
+            Some(query) => format!("{path}?{query}"),
+            None => path.clone(),
+        };
         let is_upgrade = path.contains("/ws") && !path.contains("/data/");
         let room_name = presence::room_name(req);
         let member = self.member(Self::presented_session(req), &room_name).await;
 
         let api_request = ApiRequest {
             method: HttpMethod::parse(req.method().as_ref()),
-            path,
+            path: path_and_query,
             body: body(req).await,
             token: Self::presented_token(req),
             master_token: self
@@ -596,7 +581,7 @@ impl OntimeProject {
 
         // who is looking at this room right now, for the admin page. Host-side
         // because the sockets belong to the host, not to the shared routing.
-        if req.method() == Method::Get && api_request.path.ends_with("/data/clients") {
+        if req.method() == Method::Get && path.ends_with("/data/clients") {
             if !api::is_authorised(&self.project, &api_request) {
                 return Response::error("Unauthorized", 401);
             }
@@ -608,7 +593,7 @@ impl OntimeProject {
 
         // who changed what, for an owner or the admin. Host-side because the
         // lines are stored apart from the project.
-        if req.method() == Method::Get && api_request.path.ends_with("/data/activity") {
+        if req.method() == Method::Get && path.ends_with("/data/activity") {
             if !api::is_authorised(&self.project, &api_request) {
                 return Response::error("Unauthorized", 401);
             }

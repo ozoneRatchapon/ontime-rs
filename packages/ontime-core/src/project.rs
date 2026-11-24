@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use crate::audit::AuditIndex;
+use crate::teleprompter::room::Prompter;
+use crate::teleprompter::settings::TeleprompterSettings;
 use crate::aux_timer::{AuxTimerNames, AuxTimers};
 use crate::message::{ArchivedRun, ArchivedRunEvent, MessageState, Report, ReportArchive};
 use crate::rundown::Rundown;
@@ -145,6 +147,14 @@ pub struct Project {
     /// every change, so a change and its log line are written together.
     #[serde(default)]
     pub audit: AuditIndex,
+    /// What the teleprompter reads and how it lays it out. Same key as
+    /// upstream's project file, so project files stay compatible.
+    #[serde(default)]
+    pub teleprompter: TeleprompterSettings,
+    /// The shared teleprompter transport, kept here because a Durable Object
+    /// forgets anything held only in memory.
+    #[serde(default)]
+    pub prompter: Prompter,
 }
 
 /// Hashes a room password. The resulting digest doubles as the bearer token, the
@@ -207,6 +217,8 @@ impl Default for Project {
             password_hash: None,
             members_only: false,
             audit: AuditIndex::default(),
+            teleprompter: TeleprompterSettings::default(),
+            prompter: Prompter::default(),
         }
     }
 }

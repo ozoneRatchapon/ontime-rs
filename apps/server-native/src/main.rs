@@ -17,7 +17,7 @@ use axum::{
     body::Bytes,
     extract::{
         ws::{Message, WebSocket, WebSocketUpgrade},
-        Path, Query, State,
+        Path, Query, RawQuery, State,
     },
     http::{HeaderMap, Method, StatusCode},
     response::{IntoResponse, Response},
@@ -70,22 +70,9 @@ impl Room {
     }
 
     fn broadcast_runtime(&self, now: i64) {
-        let Some(rundown) = self.project.current() else {
-            return;
-        };
-        let mut payload = self
-            .project
-            .runtime
-            .snapshot(rundown, now, self.project.timezone_offset);
-
-        if let Some(object) = payload.as_object_mut() {
-            if let Some(aux) = self.project.aux_timers.snapshot(now, &self.project.settings.aux_timer_names).as_object() {
-                object.extend(aux.clone());
-            }
-            object.insert("message".into(), json!(self.project.message));
+        if let Some(payload) = api::runtime_payload(&self.project, now) {
+            self.publish(json!({ "tag": "runtime-data", "payload": payload }));
         }
-
-        self.publish(json!({ "tag": "runtime-data", "payload": payload }));
     }
 
     fn broadcast_refetch(&self, target: &str, rundown_id: Option<&str>) {
@@ -226,13 +213,8 @@ async fn tick_rooms(state: Arc<AppState>) {
             }
             *due = now + delay;
 
-            let mut changed = false;
-            if let Some(rundown) = room.project.current().cloned() {
-                changed = room
-                    .project
-                    .runtime
-                    .on_tick(&rundown, now, room.project.timezone_offset);
-            }
+            // the timer's end action and the teleprompter reaching its end
+            let changed = api::on_alarm(&mut room.project, now);
 
             room.broadcast_runtime(now);
 
@@ -319,6 +301,7 @@ async fn rest_handler(
     method: Method,
     Path(path): Path<String>,
     Query(query): Query<HashMap<String, String>>,
+    RawQuery(raw_query): RawQuery,
     headers: HeaderMap,
     body: Bytes,
 ) -> Response {
@@ -330,7 +313,11 @@ async fn rest_handler(
 
     let request = ApiRequest {
         method: HttpMethod::parse(method.as_str()),
-        path: api_path,
+        // the core reads query parameters off the path, as `?source=` for a script
+        path: match raw_query.as_deref() {
+            Some(raw) if !raw.is_empty() => format!("{api_path}?{raw}"),
+            _ => api_path.clone(),
+        },
         body: serde_json::from_slice::<Value>(&body)
             .ok()
             .filter(Value::is_object)
@@ -341,7 +328,7 @@ async fn rest_handler(
         member: None,
     };
 
-    if method == Method::GET && request.path.ends_with("/data/activity") {
+    if method == Method::GET && api_path.ends_with("/data/activity") {
         return activity(&state, &room_name, &request, &query).await;
     }
 
@@ -526,18 +513,7 @@ async fn serve_socket(state: Arc<AppState>, room_name: String, socket: WebSocket
         });
 
         let mut packets = vec![init];
-        if let Some(rundown) = room.project.current() {
-            let now = now_ms();
-            let mut payload =
-                room.project
-                    .runtime
-                    .snapshot(rundown, now, room.project.timezone_offset);
-            if let Some(object) = payload.as_object_mut() {
-                if let Some(aux) = room.project.aux_timers.snapshot(now, &room.project.settings.aux_timer_names).as_object() {
-                    object.extend(aux.clone());
-                }
-                object.insert("message".into(), json!(room.project.message));
-            }
+        if let Some(payload) = api::runtime_payload(&room.project, now_ms()) {
             packets.push(json!({ "tag": "runtime-data", "payload": payload }));
         }
 

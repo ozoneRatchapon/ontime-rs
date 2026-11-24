@@ -6,6 +6,7 @@
 
 use serde_json::Value;
 
+use crate::teleprompter::settings::rename_script_source;
 use crate::api::{ApiRequest, ApiResponse, Effect, HttpMethod};
 use crate::project::Project;
 use crate::rundown::Rundown;
@@ -62,6 +63,8 @@ fn for_each_value_map(
 }
 
 fn rename_values(project: &mut Project, old: &str, new: &str) -> Vec<String> {
+    // a teleprompter reading this field follows it to its new key
+    project.teleprompter.script = rename_script_source(&project.teleprompter.script, old, Some(new));
     for_each_value_map(project, |values| match values.remove(old) {
         Some(value) => {
             values.insert(new.to_string(), value);
@@ -72,6 +75,8 @@ fn rename_values(project: &mut Project, old: &str, new: &str) -> Vec<String> {
 }
 
 fn remove_values(project: &mut Project, key: &str) -> Vec<String> {
+    // and falls back to the note when it is deleted
+    project.teleprompter.script = rename_script_source(&project.teleprompter.script, key, None);
     for_each_value_map(project, |values| values.remove(key).is_some())
 }
 
@@ -81,6 +86,7 @@ fn fields_response(
     effects: &mut Vec<Effect>,
 ) -> ApiResponse {
     effects.push(Effect::refetch("custom-fields", None));
+    effects.push(Effect::refetch("teleprompter", None));
     for rundown_id in changed {
         effects.push(Effect::refetch("rundown", Some(rundown_id)));
     }
