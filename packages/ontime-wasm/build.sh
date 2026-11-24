@@ -11,7 +11,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-TARGET_DIR="${CARGO_TARGET_DIR:-$HOME/.cargo/target}"
+# wherever cargo puts it: a shared CARGO_TARGET_DIR here, the crate's own target/ on CI
+TARGET_DIR="$(cargo metadata --format-version 1 --no-deps | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(JSON.parse(s).target_directory))')"
 WASM="$TARGET_DIR/wasm32-unknown-unknown/release/ontime_wasm.wasm"
 
 echo "==> cargo build"

@@ -78,6 +78,12 @@ export default defineConfig({
   test: {
     globals: true,
     dom: true,
+    alias: {
+      // unit tests never load the compiled engine, so they need no wasm build;
+      // the client falls back to server updates, as it does when the engine
+      // cannot load. The real engine is tested end to end by engine.mjs.
+      'ontime-timer-engine': path.resolve(import.meta.dirname, './src/common/utils/__mocks__/ontimeTimerEngine.ts'),
+    },
   },
   build: {
     outDir: './build',
