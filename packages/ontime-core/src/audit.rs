@@ -89,6 +89,14 @@ pub enum Action {
     /// An owner added or removed an operator of their room.
     OperatorAdd,
     OperatorRemove,
+    // the shared teleprompter
+    PrompterPlay,
+    PrompterPause,
+    /// next, previous, top, goto or a scroll
+    PrompterMove,
+    PrompterSpeed,
+    PrompterMode,
+    PrompterBlackout,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -100,6 +108,7 @@ pub enum Area {
     Room,
     Report,
     People,
+    Teleprompter,
 }
 
 impl Action {
@@ -116,6 +125,9 @@ impl Action {
             ReportArchive | ReportClear => Area::Report,
             PersonCreate | PersonRemove | InviteIssue | InviteRedeem | SignOut | MembersChange
             | OperatorAdd | OperatorRemove => Area::People,
+            PrompterPlay | PrompterPause | PrompterMove | PrompterSpeed | PrompterMode | PrompterBlackout => {
+                Area::Teleprompter
+            }
         }
     }
 }
@@ -375,7 +387,7 @@ impl AuditIndex {
 }
 
 fn is_repeat(last: &AuditLine, actor: &Actor, note: &Note, now: i64) -> bool {
-    note.action.area() == Area::Playback
+    matches!(note.action.area(), Area::Playback | Area::Teleprompter)
         && last.note == *note
         && last.actor == *actor
         && now - last.at <= MERGE_WINDOW_MS

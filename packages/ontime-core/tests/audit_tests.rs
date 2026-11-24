@@ -188,6 +188,37 @@ fn playback_names_the_event_it_affected() {
 }
 
 #[test]
+fn teleprompter_commands_are_recorded_with_the_event_read() {
+    let mut project = room();
+    // the test events have titles but no notes
+    project.teleprompter.script = "title".into();
+    for (payload, action) in [
+        (json!({ "goto": { "cue": "2.1" } }), Action::PrompterMove),
+        (json!("toggle"), Action::PrompterPlay),
+        (json!({ "speedBy": 5 }), Action::PrompterSpeed),
+        (json!("pause"), Action::PrompterPause),
+        (json!({ "mode": "script" }), Action::PrompterMode),
+        (json!({ "blackout": "on" }), Action::PrompterBlackout),
+    ] {
+        assert!(apply_socket_command(&mut project, "teleprompter", Some(&payload), NOW), "{payload}");
+        let note = socket_note(&project, "teleprompter", Some(&payload), None).unwrap();
+        assert_eq!((note.action, note.subject), (action, keynote()), "{payload}");
+    }
+    // a refused command is never applied, so the host never asks
+    assert_eq!(socket_note(&project, "teleprompter", Some(&json!("dance")), None), None);
+}
+
+#[test]
+fn quick_repeated_speed_taps_merge_into_one_line() {
+    let mut store = Store::new();
+    let faster = || Note::new(Action::PrompterSpeed).about(keynote());
+    store.record(Actor::Anyone, faster(), NOW, Retention::ROOM);
+    store.record(Actor::Anyone, faster(), NOW + 300, Retention::ROOM);
+    assert_eq!(store.chunks[&0].lines.len(), 1);
+    assert_eq!(store.chunks[&0].lines[0].times, 2);
+}
+
+#[test]
 fn the_overlay_and_aux_timers_are_not_recorded() {
     let project = room();
     assert_eq!(socket_note(&project, "message", Some(&json!({ "timer": { "text": "hi" } })), None), None);

@@ -61,6 +61,22 @@ const verbs: Record<ActivityAction, string> = {
   'members-change': 'changed who looks after the room',
   'operator-add': 'added the operator',
   'operator-remove': 'removed the operator',
+  'prompter-play': 'started the teleprompter',
+  'prompter-pause': 'paused the teleprompter',
+  'prompter-move': 'moved the teleprompter',
+  'prompter-speed': 'changed the teleprompter speed',
+  'prompter-mode': 'changed how the teleprompter reads',
+  'prompter-blackout': 'blacked out or restored the teleprompter screens',
+};
+
+/** Teleprompter lines name the event being read, joined by a preposition */
+const subjectJoins: Partial<Record<ActivityAction, string>> = {
+  'prompter-play': 'at',
+  'prompter-pause': 'at',
+  'prompter-move': 'to',
+  'prompter-speed': 'at',
+  'prompter-mode': 'at',
+  'prompter-blackout': 'at',
 };
 
 /** '+1 min', '-30 s' */
@@ -75,7 +91,10 @@ export function formatAmount(ms: number): string {
 export function describeChange(line: ActivityLine): string {
   const parts = [verbs[line.action] ?? line.action];
   const subject = [line.subject?.cue, line.subject?.title].filter(Boolean).join(' ');
-  if (subject) parts.push(subject);
+  if (subject) {
+    const join = subjectJoins[line.action];
+    parts.push(join ? `${join} ${subject}` : subject);
+  }
   if (line.amount !== undefined) parts.push(formatAmount(line.amount));
   if (line.fields?.length) parts.push(`(${line.fields.join(', ')})`);
   if (line.more) parts.push(`and ${line.more} more`);

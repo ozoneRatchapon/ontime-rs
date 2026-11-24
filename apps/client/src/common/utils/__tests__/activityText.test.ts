@@ -75,6 +75,22 @@ describe('people events', () => {
   });
 });
 
+describe('teleprompter events', () => {
+  it('name the event being read', () => {
+    expect(
+      describeChange({
+        at: 0,
+        actor: { kind: 'roomPassword' },
+        action: 'prompter-move',
+        subject: { cue: '2', title: 'Keynote' },
+      }),
+    ).toBe('moved the teleprompter to 2 Keynote');
+    expect(describeChange({ at: 0, actor: { kind: 'admin' }, action: 'prompter-speed', times: 3 })).toBe(
+      'changed the teleprompter speed ×3',
+    );
+  });
+});
+
 describe('formatAmount()', () => {
   it('uses minutes when whole, seconds otherwise', () => {
     expect(formatAmount(60_000)).toBe('+1 min');

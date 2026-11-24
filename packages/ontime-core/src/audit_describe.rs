@@ -128,6 +128,9 @@ fn rundown_note(project: &Project, method: HttpMethod, rest: &[&str], body: &Val
 ///
 /// The message overlay and the aux timers are not recorded.
 pub fn socket_note(project: &Project, tag: &str, payload: Option<&Value>, before: Option<&str>) -> Option<Note> {
+    if tag == "teleprompter" {
+        return prompter_note(project, payload?);
+    }
     let command = Command::parse(tag, payload)?;
     let loaded = project.runtime.selected_id.as_deref();
     let (action, about, amount) = match command {
@@ -145,6 +148,32 @@ pub fn socket_note(project: &Project, tag: &str, payload: Option<&Value>, before
         Some(ms) => note.with_amount(ms),
         None => note,
     })
+}
+
+/// A teleprompter command, described after it was applied. Its subject is the
+/// event the reader is in, which every command re-anchors to as it runs.
+fn prompter_note(project: &Project, payload: &Value) -> Option<Note> {
+    use crate::teleprompter::transport::{parse_command, Command as Prompt, Playback};
+    let transport = &project.prompter.transport;
+    let action = match parse_command(payload).ok()? {
+        Prompt::Play => Action::PrompterPlay,
+        Prompt::Pause => Action::PrompterPause,
+        Prompt::Toggle => match transport.playback {
+            Playback::Play => Action::PrompterPlay,
+            Playback::Pause => Action::PrompterPause,
+        },
+        Prompt::Speed { .. } | Prompt::SpeedBy { .. } => Action::PrompterSpeed,
+        Prompt::Scroll { .. } | Prompt::Next | Prompt::Previous | Prompt::Top | Prompt::Goto { .. } => {
+            Action::PrompterMove
+        }
+        Prompt::Mode { .. } => Action::PrompterMode,
+        Prompt::Blackout { .. } => Action::PrompterBlackout,
+    };
+    let subject = transport
+        .anchor
+        .as_ref()
+        .and_then(|anchor| entry_subject(project, &project.loaded, &anchor.event_id));
+    Some(Note::new(action).about(subject))
 }
 
 fn entry_subject(project: &Project, rundown: &str, id: &str) -> Option<Subject> {

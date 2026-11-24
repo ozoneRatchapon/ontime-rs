@@ -57,7 +57,14 @@ export type ActivityAction =
   | 'sign-out'
   | 'members-change'
   | 'operator-add'
-  | 'operator-remove';
+  | 'operator-remove'
+  // the shared teleprompter
+  | 'prompter-play'
+  | 'prompter-pause'
+  | 'prompter-move'
+  | 'prompter-speed'
+  | 'prompter-mode'
+  | 'prompter-blackout';
 
 export interface ActivityLine {
   /** epoch ms of the latest occurrence */
