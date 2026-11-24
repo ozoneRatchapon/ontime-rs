@@ -29,8 +29,8 @@ from upstream master `0ca4d79b2`.
 const eventStartOffset = startedAt + startDayOffset * dayInMs - (timeStart + dayOffset * dayInMs);
 ```
 
-- `startDayOffset` is the day the *show* began.
-- `startedAt` is a time of day on the day the *event* started, which here is
+- `startDayOffset` is the day the _show_ began.
+- `startedAt` is a time of day on the day the _event_ started, which here is
   one day later. The event's planned side uses its own `dayOffset`, so the two
   sides are a day apart.
 
