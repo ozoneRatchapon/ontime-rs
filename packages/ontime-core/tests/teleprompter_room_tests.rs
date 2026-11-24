@@ -150,3 +150,53 @@ fn the_sync_is_the_same_for_every_screen_at_any_moment() {
     let later = runtime_payload(&project, NOW + 900).unwrap()["teleprompterSync"].clone();
     assert_eq!(early, later, "the sync changes with commands, not with time");
 }
+
+mod cache {
+    use std::sync::Arc;
+
+    use ontime_core::teleprompter::room::script;
+
+    use super::*;
+
+    #[test]
+    fn an_unchanged_room_reuses_its_script() {
+        let project = room();
+        assert!(Arc::ptr_eq(&script(&project), &script(&project)));
+    }
+
+    #[test]
+    fn any_change_to_what_the_script_reads_rebuilds_it() {
+        let mut project = room();
+        let first = script(&project);
+
+        // even a write that skips recompute, so the revision does not move
+        let rundown = project.rundowns.get_mut("show").unwrap();
+        rundown.entries.get_mut("b").unwrap()["note"] = json!("changed words");
+        let edited = script(&project);
+        assert!(!Arc::ptr_eq(&first, &edited));
+        assert!(format!("{:?}", edited.events).contains("changed"), "the new text is in it");
+
+        project.teleprompter.chars_per_line = 20;
+        assert!(!Arc::ptr_eq(&edited, &script(&project)));
+    }
+
+    #[test]
+    fn a_change_elsewhere_keeps_it() {
+        let mut project = room();
+        let first = script(&project);
+        project.project.title = "Another title".into();
+        project.message.timer.text = "Hello".into();
+        assert!(Arc::ptr_eq(&first, &script(&project)));
+    }
+
+    #[test]
+    fn a_restore_starts_without_one() {
+        let mut project = room();
+        let first = script(&project);
+        let (_, backup) = call(&mut project, HttpMethod::Post, "/data/db/download", Value::Null);
+        call(&mut project, HttpMethod::Post, "/data/db/restore", backup);
+        let restored = script(&project);
+        assert!(!Arc::ptr_eq(&first, &restored));
+        assert_eq!(first.events, restored.events, "the same content, rebuilt");
+    }
+}

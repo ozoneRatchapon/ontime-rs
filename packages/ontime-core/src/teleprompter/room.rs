@@ -4,12 +4,14 @@
 //! evicted between messages, so here it is stored with the project
 //! ([`Prompter`]) and the script is rebuilt from the project when needed.
 
+use std::sync::{Arc, Mutex};
+
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 use super::position::Layout;
 use super::script::{revision_of, Script};
-use super::settings::TeleprompterSettings;
+use super::settings::{custom_field_of_script_source, TeleprompterSettings};
 use super::transport::{
     apply_command, describe, describe_sync, ms_until_settled, parse_command, reanchor_transport, settle, Command,
     CommandError, GotoTarget, Playback, State, Sync, Transport, TransportCommand,
@@ -34,8 +36,76 @@ pub fn time_of_day(project: &Project, epoch_ms: i64) -> f64 {
 }
 
 /// The shared script, cut from the loaded rundown with the room's settings.
-pub fn script(project: &Project) -> Script {
-    script_with(project, &project.teleprompter)
+///
+/// Cached on the project by a fingerprint of exactly what the script reads, so
+/// the runtime payload, the wake check and each command do not rewrap every
+/// event: hashing the text is far cheaper than cutting it into lines.
+pub fn script(project: &Project) -> Arc<Script> {
+    let key = fingerprint(project);
+    // a poisoned lock only means another thread panicked mid-update; the
+    // fingerprint check below still decides whether its content is usable
+    let mut cache = project.prompter_cache.0.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    match cache.as_ref() {
+        Some((cached, script)) if *cached == key => Arc::clone(script),
+        _ => {
+            let script = Arc::new(script_with(project, &project.teleprompter));
+            *cache = Some((key, Arc::clone(&script)));
+            script
+        }
+    }
+}
+
+/// Everything [`Script::build`] reads: the settings, the source field's type,
+/// and per event of the loaded rundown its id, type, skip, cue, title and text.
+fn fingerprint(project: &Project) -> [u8; 32] {
+    let mut hasher = blake3::Hasher::new();
+    let settings = &project.teleprompter;
+    hasher.update(settings.script.as_bytes());
+    hasher.update(&settings.chars_per_line.to_le_bytes());
+    hasher.update(format!("{:?}", settings.heading).as_bytes());
+    let field = custom_field_of_script_source(&settings.script).and_then(|key| project.custom_fields.get(key));
+    hasher.update(field.and_then(|field| field.get("type")).and_then(Value::as_str).unwrap_or_default().as_bytes());
+
+    let Some(rundown) = project.current() else {
+        return *hasher.finalize().as_bytes();
+    };
+    hasher.update(rundown.id.as_bytes());
+    let custom_key = custom_field_of_script_source(&settings.script);
+    for id in &rundown.flat_order {
+        let Some(entry) = rundown.entries.get(id) else { continue };
+        hasher.update(id.as_bytes());
+        let text = match custom_key {
+            Some(key) => entry.get("custom").and_then(|custom| custom.get(key)),
+            None => entry.get(settings.script.as_str()),
+        };
+        for value in [entry.get("type"), entry.get("skip"), entry.get("cue"), entry.get("title"), text] {
+            hash_value(&mut hasher, value);
+        }
+    }
+    *hasher.finalize().as_bytes()
+}
+
+/// Strings by their bytes, without the escaping `to_string` would do; the
+/// tag keeps a missing value, a string and anything else apart.
+fn hash_value(hasher: &mut blake3::Hasher, value: Option<&Value>) {
+    match value {
+        None => hasher.update(b"\0n"),
+        Some(Value::String(text)) => hasher.update(b"\0s").update(&(text.len() as u64).to_le_bytes()).update(text.as_bytes()),
+        Some(other) => hasher.update(b"\0v").update(other.to_string().as_bytes()),
+    };
+}
+
+/// The cached script, kept with the project but never stored: a restore,
+/// which replaces the project, starts without one. A mutex rather than a
+/// cell, because the native host shares rooms across threads.
+#[derive(Debug, Default)]
+pub struct ScriptCache(Mutex<Option<([u8; 32], Arc<Script>)>>);
+
+impl Clone for ScriptCache {
+    fn clone(&self) -> Self {
+        let held = self.0.lock().map(|cache| cache.clone()).unwrap_or_default();
+        Self(Mutex::new(held))
+    }
 }
 
 fn script_with(project: &Project, settings: &TeleprompterSettings) -> Script {
@@ -51,11 +121,11 @@ fn script_with(project: &Project, settings: &TeleprompterSettings) -> Script {
 
 /// The script as `GET /data/teleprompter/script?source=` serves it. Another
 /// source is built on each read, and has revision 0, as nothing follows it.
-pub fn script_for_source(project: &mut Project, source: Option<&str>, epoch_ms: i64) -> Script {
+pub fn script_for_source(project: &mut Project, source: Option<&str>, epoch_ms: i64) -> Arc<Script> {
     match source {
         Some(source) if source != project.teleprompter.script => {
             let settings = TeleprompterSettings { script: source.to_string(), ..project.teleprompter.clone() };
-            Script { revision: 0, ..script_with(project, &settings) }
+            Arc::new(Script { revision: 0, ..script_with(project, &settings) })
         }
         _ => {
             let script = script(project);
@@ -177,7 +247,7 @@ pub fn after_change(project: &mut Project, previous: &Script, epoch_ms: i64) -> 
 
 /// The script before a change, when anything follows it; `None` otherwise,
 /// which saves building it for rooms nobody prompts from.
-pub fn before_change(project: &Project) -> Option<Script> {
+pub fn before_change(project: &Project) -> Option<Arc<Script>> {
     project.prompter.built.then(|| script(project))
 }
 

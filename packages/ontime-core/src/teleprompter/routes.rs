@@ -36,7 +36,7 @@ pub(crate) fn handle(
             if project.prompter.built != was_built {
                 effects.push(Effect::Persist);
             }
-            ApiResponse::json(&script)
+            ApiResponse::json(&*script)
         }
         _ => ApiResponse::error("Not found", 404),
     }

@@ -106,14 +106,19 @@ improvement and must be added to both sides.
 - **Socket commands get no `{tag:'teleprompter'}` reply.** Screens read
   `runtime-data`, and the reply matters only to OSC, which the Worker doesn't
   have.
-- **Teleprompter commands are not written to the audit log yet.**
 
 **For later:**
-- **Script cache.** The script is built whenever the prompter is in use: a
-  command, the runtime payload, or a wake check. That is fine for normal
-  rundowns. The native host asks for its wake time every 50 ms, so it would
-  benefit first.
-- **`api.rs` is at 966 lines.** Split it before it grows further.
+- **Script cache:** done on 2026-11-24.
+  - It is keyed on a blake3 fingerprint of exactly what the script reads, so
+    it stays correct even for a write that skips `recompute`.
+  - It is held on `Project` but never serialized, so a restore starts fresh.
+  - A build takes 1.03 ms and a cache hit 89 µs, for 100 events. See
+    `benchmarks/001_teleprompter_script_cache.md`.
+- **Teleprompter commands in the audit log:** done on 2026-11-24, with their
+  own area and actions. Quick repeated taps merge into one line.
+- **`api.rs` split by responsibility:** done on 2026-11-24 into `api/`. The
+  largest file is 304 lines, and the public paths are unchanged.
+
 
 ## T2 design notes (written before building it)
 
