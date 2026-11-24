@@ -1,7 +1,50 @@
 # 003 — What to take from upstream ontime v4.11 → v4.15.2
 
-Status (2026-11-24): **A1–A9 implemented and tested locally; not committed or
-deployed.** B, C and D not started.
+Status (2026-11-24):
+- **A1–A9 deployed.** Worker version `f366b3c1`; the rollback point is `1bf1ba98`.
+- **B1 + B2 on branch `feature/upstream-4.15`, tested locally, client not deployed.**
+
+## B — what was done (branch `feature/upstream-4.15`)
+
+- **B1:** 90 of the 97 clean patches.
+  - Seven were left out because each needs a patch we did not pull:
+    - timeline secondary text;
+    - share link offers all views;
+    - sentry logging;
+    - rundown cursor across editor layouts;
+    - cuesheet delay rows;
+    - quick add menu UX;
+    - title list follows the live event.
+  - Most depend on 979de757, "scope rundown data sources": 52 files, still to pull.
+- **B2:** client side of
+  - 2436ec2f: silently dropped sockets;
+  - 4c656950: unreported close;
+  - 6e02d3a9: watchdog backoff;
+  - 43cbce05: disconnected state;
+  - 58774ecd: the displayed clock compensates for network delay, using A1's `clock`;
+  - 1191d467: Pong matching.
+  - Plus our own fix: the local timer engine stops on every lost socket, the
+    watchdog's included.
+- **Aux timer naming, client side (84b28083):** the settings panel and the names in
+  the studio view, which uses A2.
+- **Dependencies:** a lockfile for the patches' bumps. `@tanstack/react-table`
+  went from 8 to 9.
+- **Two upstream test cases are skipped,** each with a note. Their code is in
+  patches not pulled yet:
+  - 759ea78e, countdown with skipped events. It needs a `getExpected` refactor,
+    so it is left for D3.
+  - An Excel-upload message test, which needs 979de757.
+
+Tests:
+- client typecheck: only the 3 known errors;
+- client unit tests: 386 pass, 2 skipped;
+- utils unit tests: 428 pass;
+- e2e: 261 checks, plus admin 34, people 35, members 36;
+- browser:
+  - people and members walk-throughs;
+  - `upstream.mjs`, 9 checks: ping/pong with clock, aux names in the studio
+    view, the room time on the timer view;
+  - reconnect after a Worker restart.
 
 ## A — what was done
 
