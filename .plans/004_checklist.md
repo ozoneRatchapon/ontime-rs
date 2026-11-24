@@ -124,7 +124,7 @@ How to use it:
 - [x] Pushed `feat/rust-cloud-backend` to `origin` (public), 2026-11-24, at
   `ba61bdd6`. The hook checked 113 commits and found them clean. From now on push to both remotes,
   and let the hook run.
-- [ ] **[ต้องถาม]** Deploy the client after that push, so the source link
+- [x] Client deployed 2026-11-24 (Pages `1e580e95`). The source link on production opens github.com/ozoneRatchapon/ontime-rs. Previously:
   points at current source.
 - [ ] **[ต้องถาม]** Back up the real schedules to a separate private repo,
   `ontime-ops`. The user creates the repo.
