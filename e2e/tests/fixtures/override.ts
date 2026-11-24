@@ -1,5 +1,7 @@
 import { test as base, expect } from '@playwright/test';
 
+export { expect };
+
 // fail tests which contain errors
 export const test = base.extend({
   page: async ({ page }, use) => {
