@@ -163,17 +163,19 @@ check('anchored to a whole second', resumed._engine.inputs.startedAt % 1000, 0);
 console.log('== addtime ==');
 assertSocketAlive('addtime');
 send('addtime', 30000);
-await wait(400);
-check('addedTime recorded', latest().timer.addedTime, 30000);
-check('duration extended', latest().timer.duration, 36000);
+// await the packet the command caused, as for stop below: a fixed sleep read a
+// stale packet on a slow runner
+const added = await until((p) => p.timer.addedTime === 30000, 'the added time to apply');
+check('addedTime recorded', added.timer.addedTime, 30000);
+check('duration extended', added.timer.duration, 36000);
 
 console.log('== load next ==');
 assertSocketAlive('load next');
 send('load', 'next');
-await wait(400);
-check('event B loaded', latest().eventNow?.id, b.id);
-check('armed, not running', latest().timer.playback, 'armed');
-check('addedTime reset', latest().timer.addedTime, 0);
+const loaded = await until((p) => p.eventNow?.id === b.id, 'the next event to load');
+check('event B loaded', loaded.eventNow?.id, b.id);
+check('armed, not running', loaded.timer.playback, 'armed');
+check('addedTime reset', loaded.timer.addedTime, 0);
 
 console.log('== stop ==');
 // await the packet the command caused: sleeping races the round trip, and over
