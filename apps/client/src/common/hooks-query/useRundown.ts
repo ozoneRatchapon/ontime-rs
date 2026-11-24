@@ -33,10 +33,6 @@ export function useFlatRundown() {
   return { data: useFlatEntries(data), status };
 }
 
-export function useFlatRundownWithMetadata() {
-  const { data, status } = useRundown();
-  return { data: useFlatRundownMetadata(data, useScopedSelectedEventId()), status };
-}
 
 export function useEntry(entryId: EntryId | null): OntimeEntry | null {
   const { data: rundown } = useRundown();

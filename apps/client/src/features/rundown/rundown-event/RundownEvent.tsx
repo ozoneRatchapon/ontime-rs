@@ -16,6 +16,7 @@ import {
 import { TbClockPin, TbFlagFilled, TbListNumbers } from 'react-icons/tb';
 
 import { useEntryActionsContext } from '../../../common/context/EntryActionsContext';
+import { useRundownScope } from '../../../common/context/RundownScopeContext';
 import { useEntry } from '../../../common/hooks-query/useRundown';
 import { useContextMenu } from '../../../common/hooks/useContextMenu';
 import { useIsEntryCopyTarget } from '../../../common/stores/entryCopyStore';
@@ -112,6 +113,7 @@ export default function RundownEvent({
   const unselect = useEventSelection((state) => state.unselect);
   const clearSelectedEvents = useEventSelection((state) => state.clearSelectedEvents);
   const selectEntry = useEventSelection((state) => state.setSelectedEvents);
+  const { selectionStore } = useRundownScope();
 
   const selectedEvents = useEventSelection((state) => state.selectedEvents);
   const isCopyTarget = useIsEntryCopyTarget(eventId);
