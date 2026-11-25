@@ -114,7 +114,8 @@ How to use it:
 - [ ] Plan 012 (OSC on native): wait until native is used with show hardware.
 - [x] Plan 013 (rate limit, audit `change`, OpenAPI): deployed 2026-11-25,
       Worker `218983cc`.
-- [ ] Plan 014 (benchmarks): planned, not started.
+- [x] Plan 014 (benchmarks): deployed 2026-11-25, Worker `f154eadf`. Commands
+      and the alarm no longer copy the rundown (`benchmarks/003`).
 
 ## Dioxus pilot
 

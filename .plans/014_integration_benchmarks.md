@@ -1,6 +1,6 @@
 # 014 — Benchmarks for the integration path
 
-Status: **done locally (2026-11-25).** Item 5 of the RIIR 5 review.
+Status: **done and deployed (2026-11-25), Worker `f154eadf`.** Item 5 of the RIIR 5 review.
 
 ## Why
 

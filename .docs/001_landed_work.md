@@ -75,3 +75,6 @@
 - **2026-11-25:** plan 013, the integration API on the public internet. Worker `218983cc`.
   - Per-room rate limit with `Retry-After`, integration edits in the activity log, and an OpenAPI document generated from the catalogue.
   - Production smoke: integration 54, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing. The activity-log check ran there for the first time, since it needs the admin token.
+- **2026-11-25:** plan 014, benchmarks. Worker `f154eadf`.
+  - Playback commands and the alarm no longer copy the whole rundown: `addtime` went from 598 µs to 35 ns on 1,000 events, and the alarm takes under 30 ns at any size (`benchmarks/002`, `003`).
+  - Production smoke: integration 54, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing.
