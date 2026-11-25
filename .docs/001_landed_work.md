@@ -63,7 +63,8 @@
   - Rerun on the real build: all e2e suites and browser checks pass, and `timer.mjs` passes on production.
 - **2026-11-25:** retired the cache-first service worker from 2026-07-22 (a5713c6f9). Pages `e8fabc91` (master) and `8805e387` (main).
   - Browsers that still had it showed the old app on a normal reload. One normal reload now removes it.
-- **2026-11-25:** RIIR 5, the integration API (plan 009, `.docs/003_integration_api.md`). Built and tested locally; not deployed.
+- **2026-11-25:** RIIR 5, the integration API (plan 009, `.docs/003_integration_api.md`). Worker `67341f2f` deployed the same day.
   - `GET /r/<room>/api/...` and websocket actions go through one parser in `ontime_core::integration`.
   - Contracts run upstream's own router, dispatcher and selection functions. 154 requests and 8 rundowns agree, with 2 deliberate differences.
   - Fixed on the way: the websocket accepts index, cue and previous, next wraps after the last event, and the Network panel's rename, redirect and identify now work.
+  - Production smoke after the deploy: integration 48, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing, each in a throwaway room.

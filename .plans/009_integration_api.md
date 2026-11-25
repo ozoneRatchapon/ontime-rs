@@ -1,6 +1,6 @@
 # 009 — The integration API, in the Rust core (RIIR 5)
 
-Status: **done locally (2026-11-25), not deployed.** Asked for by the user:
+Status: **done and deployed (2026-11-25), Worker `67341f2f`.** Asked for by the user:
 "super goat", reusable in other projects, best performance and features, and
 something to learn from. How to use it and how it fits together:
 `.docs/003_integration_api.md`.

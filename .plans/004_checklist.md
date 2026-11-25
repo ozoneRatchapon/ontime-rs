@@ -107,7 +107,7 @@ How to use it:
       `009_integration_api.md`; usage and design: `.docs/003_integration_api.md`.
   - `GET /r/<room>/api/...` and websocket actions share one parser.
   - Pinned against upstream's own router, dispatcher and selection functions.
-  - Done locally; **not deployed yet**.
+  - Deployed 2026-11-25: Worker `67341f2f`. The production smoke tests pass.
 
 ## Dioxus pilot
 
