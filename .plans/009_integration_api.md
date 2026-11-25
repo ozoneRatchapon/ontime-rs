@@ -18,9 +18,8 @@ something to learn from. How to use it and how it fits together:
 
 ## Follow-ups (not done, found on the way)
 
-- `start` while rolling: upstream keeps the event's start time and switches
-  to play. Ours restarts the event's timer from now. Not covered by any
-  contract yet.
+- ~~`start` while rolling restarts the event's timer~~: fixed and pinned in
+  plan 010.
 - `start` with nothing loaded: ours starts the first event, while upstream
   refuses ("Unable to start"). Kept for now. Check whether anything relies on
   it before matching upstream.

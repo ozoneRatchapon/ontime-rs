@@ -24,6 +24,11 @@ enum Action {
     Stop,
     Tick,
     Roll,
+    Next,
+    Previous,
+    Startnext,
+    Startprevious,
+    Reload,
 }
 
 #[derive(Deserialize)]
@@ -96,6 +101,11 @@ fn command(action: Action) -> Option<Command> {
         Action::Resume => Some(Command::Start),
         Action::Stop => Some(Command::Stop),
         Action::Roll => Some(Command::Roll),
+        Action::Next => Some(Command::LoadNext),
+        Action::Previous => Some(Command::LoadPrevious),
+        Action::Startnext => Some(Command::StartNext),
+        Action::Startprevious => Some(Command::StartPrevious),
+        Action::Reload => Some(Command::Reload),
         Action::Tick => None,
     }
 }

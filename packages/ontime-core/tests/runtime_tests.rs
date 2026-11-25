@@ -248,15 +248,33 @@ fn start_next_advances_and_runs() {
 }
 
 #[test]
-fn reload_restarts_the_current_event_and_keeps_playing() {
+fn reload_loads_the_current_event_again_armed() {
+    // upstream's reload is loadEvent(eventNow): back to the top of the event,
+    // waiting for start, whether or not it was playing (pinned by the
+    // "reload while playing" contract case)
     let (rundown, ids) = fixture();
     let mut runtime = Runtime::default();
     runtime.apply(Command::Start, &rundown, T0, 0);
     runtime.apply(Command::Reload, &rundown, T0 + 40_000, 0);
 
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
+    assert_eq!(runtime.playback, Playback::Armed);
+    assert_eq!(timer(&runtime, &rundown, T0 + 40_000)["current"], 60_000);
+}
+
+#[test]
+fn start_while_rolling_keeps_the_time_the_event_started() {
+    let (rundown, ids) = fixture();
+    let mut runtime = Runtime::default();
+    // 10:00:30, half way into the first event, which roll joins part-way
+    let at = |ms: i64| T0 - T0.rem_euclid(86_400_000) + 36_000_000 + ms;
+    runtime.apply(Command::Roll, &rundown, at(30_000), 0);
+    let started = runtime.started_at;
+    runtime.apply(Command::Start, &rundown, at(40_000), 0);
+
+    assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
     assert_eq!(runtime.playback, Playback::Play);
-    assert_eq!(timer(&runtime, &rundown, T0 + 40_000)["elapsed"], 0);
+    assert_eq!(runtime.started_at, started);
 }
 
 #[test]

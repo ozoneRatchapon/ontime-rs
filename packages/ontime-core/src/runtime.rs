@@ -249,7 +249,7 @@ impl Runtime {
             }
             Command::Pause => self.pause(now),
             Command::Stop => self.stop(),
-            Command::Reload => self.reload(rundown, now, tz_offset),
+            Command::Reload => self.reload(rundown),
             Command::AddTime(amount) => self.add_time(amount),
             Command::Roll => self.roll(rundown, now, tz_offset),
             Command::SetOffsetMode(mode) => {
@@ -283,6 +283,14 @@ impl Runtime {
 
         if self.playback == Playback::Play {
             return false;
+        }
+
+        // an event roll is already running carries on, now under play: it keeps
+        // the time it started, as upstream's start leaves `startedAt` alone
+        if self.playback == Playback::Roll && self.started_at.is_some() {
+            self.playback = Playback::Play;
+            self.secondary_target = None;
+            return true;
         }
 
         if self.selected_id.is_none() {
@@ -337,16 +345,13 @@ impl Runtime {
         true
     }
 
-    fn reload(&mut self, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
+    /// Loads the loaded event again, armed: upstream's reload is
+    /// `loadEvent(eventNow)`, which starts nothing.
+    fn reload(&mut self, rundown: &Rundown) -> bool {
         let Some(id) = self.selected_id.clone() else {
             return false;
         };
-        let was_playing = self.playback == Playback::Play;
-        self.load(rundown, Some(id));
-        if was_playing {
-            self.start(rundown, now, tz_offset);
-        }
-        true
+        self.load_event(rundown, &id)
     }
 
     /// Selects an event and arms it — loaded but not counting.

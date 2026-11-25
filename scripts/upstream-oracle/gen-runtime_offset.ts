@@ -10,8 +10,14 @@
 // Each case is a rundown and a script of operator actions at given times. The
 // clock is faked; node runs with TZ=UTC so a time of day is epoch mod 24h.
 import { makeOntimeGroup } from '@upstream/apps/server/src/api-data/rundown/__mocks__/rundown.mocks.ts';
+import { findNextRollEvent } from '@upstream/apps/server/src/services/runtime-service/roll.utils.ts';
+import {
+  findNextPlayableId,
+  findPreviousPlayableId,
+} from '@upstream/apps/server/src/services/runtime-service/runtime.utils.ts';
 import * as state from '@upstream/apps/server/src/stores/runtimeState.ts';
-import { OffsetMode } from 'ontime-types';
+import { OffsetMode, isOntimeEvent, isPlayableEvent } from 'ontime-types';
+import { validatePlayback } from 'ontime-utils';
 
 import { ev, H, MIN, processRundown, rundownOf } from './rundown.ts';
 
@@ -25,7 +31,9 @@ type Step =
   | { at: number; do: 'load'; id: string }
   | { at: number; do: 'addtime'; amount: number }
   | { at: number; do: 'mode'; mode: 'absolute' | 'relative' }
-  | { at: number; do: 'pause' | 'resume' | 'stop' | 'tick' | 'roll' };
+  | { at: number; do: 'pause' | 'resume' | 'stop' | 'tick' | 'roll' }
+  // RIIR 6: what runtime.service does on next, previous and reload
+  | { at: number; do: 'next' | 'previous' | 'startnext' | 'startprevious' | 'reload' };
 
 const show = () =>
   rundownOf([
@@ -276,6 +284,114 @@ const cases: [string, ReturnType<typeof rundownOf>, Step[]][] = [
       { at: 10 * H + 6 * MIN, do: 'roll' },
     ],
   ],
+  // RIIR 6: commands in the middle of things, as runtime.service handles them
+  [
+    'start while rolling',
+    show(),
+    [
+      { at: 10 * H + 5 * MIN, do: 'roll' },
+      { at: 10 * H + 6 * MIN, do: 'resume' },
+      { at: 10 * H + 8 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'start while roll is waiting',
+    show(),
+    [
+      { at: 9 * H + 50 * MIN, do: 'roll' },
+      { at: 9 * H + 55 * MIN, do: 'resume' },
+      { at: 9 * H + 57 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'reload while playing',
+    show(),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 10 * MIN, do: 'reload' },
+      { at: 10 * H + 11 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'reload while paused',
+    show(),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 5 * MIN, do: 'pause' },
+      { at: 10 * H + 6 * MIN, do: 'reload' },
+    ],
+  ],
+  [
+    'next while paused',
+    show(),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 5 * MIN, do: 'pause' },
+      { at: 10 * H + 6 * MIN, do: 'next' },
+    ],
+  ],
+  [
+    'next while rolling',
+    show(),
+    [
+      { at: 10 * H + 5 * MIN, do: 'roll' },
+      { at: 10 * H + 6 * MIN, do: 'next' },
+      { at: 10 * H + 7 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'next from the last event',
+    show(),
+    [
+      { at: 11 * H + 30 * MIN, do: 'start', id: 'd' },
+      { at: 11 * H + 35 * MIN, do: 'next' },
+    ],
+  ],
+  [
+    'previous at the top',
+    show(),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 5 * MIN, do: 'previous' },
+    ],
+  ],
+  [
+    'start next while playing',
+    show(),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 10 * MIN, do: 'startnext' },
+      { at: 10 * H + 12 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'start previous while playing',
+    show(),
+    [
+      { at: 10 * H + 30 * MIN, do: 'start', id: 'b' },
+      { at: 10 * H + 35 * MIN, do: 'startprevious' },
+      { at: 10 * H + 36 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'pause while rolling',
+    show(),
+    [
+      { at: 10 * H + 5 * MIN, do: 'roll' },
+      { at: 10 * H + 6 * MIN, do: 'pause' },
+      { at: 10 * H + 7 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'stop and start again',
+    show(),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 5 * MIN, do: 'stop' },
+      { at: 10 * H + 10 * MIN, do: 'start', id: 'b' },
+      { at: 10 * H + 12 * MIN, do: 'tick' },
+    ],
+  ],
 ];
 
 const run = (rundown: ReturnType<typeof rundownOf>, steps: Step[]) => {
@@ -291,6 +407,26 @@ const run = (rundown: ReturnType<typeof rundownOf>, steps: Step[]) => {
     if (state.getState().timer.playback !== 'roll') return;
     if (result.hasSecondaryTimerFinished) state.roll(processed, meta);
     else if (result.hasTimerFinished) state.rollNext(processed, meta);
+  };
+
+  const can = () => {
+    const { playback, phase } = state.getState().timer;
+    return validatePlayback(playback, phase);
+  };
+  // runtime.service loadEvent, handleLoadNext and handleLoadPrevious
+  const loadEvent = (entry: any) =>
+    isOntimeEvent(entry) && isPlayableEvent(entry) && state.load(entry, processed, meta);
+  const loadNext = () => {
+    const current = state.getState().eventNow?.id;
+    const id =
+      state.getState().timer.playback === 'roll'
+        ? findNextRollEvent(processed as any, meta, current)?.id
+        : findNextPlayableId(meta.playableEventOrder, current);
+    return id ? loadEvent(processed.entries[id]) : false;
+  };
+  const loadPrevious = () => {
+    const id = findPreviousPlayableId(meta.playableEventOrder, state.getState().eventNow?.id);
+    return id ? loadEvent(processed.entries[id]) : false;
   };
 
   for (const step of steps) {
@@ -311,15 +447,34 @@ const run = (rundown: ReturnType<typeof rundownOf>, steps: Step[]) => {
       case 'mode':
         state.setOffsetMode(step.mode === 'relative' ? OffsetMode.Relative : OffsetMode.Absolute);
         break;
+      // runtime.service checks each against validatePlayback first
       case 'pause':
-        state.pause();
+        if (can().pause) state.pause();
         break;
       case 'resume':
-        state.start();
+        if (can().start) state.start();
         break;
       case 'stop':
-        state.stop();
+        if (can().stop) state.stop();
         break;
+      case 'next':
+        loadNext();
+        break;
+      case 'previous':
+        loadPrevious();
+        break;
+      case 'startnext':
+        if (loadNext() && can().start) state.start();
+        break;
+      case 'startprevious':
+        if (loadPrevious() && can().start) state.start();
+        break;
+      case 'reload': {
+        // runtime.service reload: the loaded event, loaded again
+        const now = state.getState().eventNow;
+        if (now) loadEvent(processed.entries[now.id]);
+        break;
+      }
       case 'roll':
         state.roll(processed, meta);
         break;
