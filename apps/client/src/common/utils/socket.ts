@@ -12,7 +12,7 @@ import {
 } from 'ontime-types';
 import { generateId, millisToString } from 'ontime-utils';
 
-import { isProduction, websocketUrl } from '../../externals';
+import { isProduction, isWorkerBackend, websocketUrl } from '../../externals';
 import {
   APP_SETTINGS,
   AUTOMATION,
@@ -62,6 +62,11 @@ let watchdogInterval: NodeJS.Timeout | null = null;
 let pingTimer: NodeJS.Timeout | null = null;
 let pendingPingSentAt: number | null = null;
 let clockSamples: ClockSample[] = [];
+/** How often a connected client pings once its clock is sampled; see socketConfig. */
+export function settledPingInterval(onWorker: boolean): number {
+  return onWorker ? 7000 : 30000;
+}
+
 export const socketConfig = {
   reconnectBaseInterval: 1000,
   reconnectMaxInterval: 30000,
@@ -73,7 +78,12 @@ export const socketConfig = {
   silenceTimeout: 10000,
   connectTimeout: 10000,
   pingInterval: 1000,
-  pingIdleInterval: 30000,
+  // Upstream's server publishes every second, so a 30 s ping is plenty there.
+  // The Worker sends nothing while nothing runs, which would leave the socket
+  // silent past silenceTimeout and make the watchdog reconnect every ~10 s
+  // (measured on production, plan 017). A ping inside that window costs about
+  // 25 requests an hour a screen; each reconnect cost two plus a ping burst.
+  pingIdleInterval: settledPingInterval(isWorkerBackend),
   pingTimeout: 10000,
 } as const;
 
@@ -410,8 +420,9 @@ function registerConnectionAttempt() {
 }
 
 /**
- * Replaces silent connections. The server publishes a clock update every second, even
- * while paused, so extended silence is evidence of a dropped connection.
+ * Replaces silent connections. Upstream's server publishes a clock update every second;
+ * on the Worker, the settled ping keeps the socket from going silent (see pingIdleInterval).
+ * Either way, extended silence is evidence of a dropped connection.
  */
 function checkConnection() {
   const silentFor = Date.now() - lastContact;

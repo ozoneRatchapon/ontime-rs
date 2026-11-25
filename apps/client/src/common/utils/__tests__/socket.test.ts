@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getRundownQueryKey } from '../../api/constants';
 import { ontimeQueryClient } from '../../queryClient';
 import { addLog } from '../../stores/logger';
-import { maybeInvalidateRundownCache, socketConfig } from '../socket';
+import { maybeInvalidateRundownCache, settledPingInterval, socketConfig } from '../socket';
 
 const { watchdogInterval, silenceTimeout, connectTimeout } = socketConfig;
 
@@ -341,5 +341,15 @@ describe('maybeInvalidateRundownCache()', () => {
 
     maybeInvalidateRundownCache(5, 'rundown');
     expect(ontimeQueryClient.getQueryState(queryKey)?.isInvalidated).toBe(true);
+  });
+});
+
+describe('settledPingInterval()', () => {
+  it('on the Worker, pings inside the silence window, since the Worker sends nothing while idle', () => {
+    expect(settledPingInterval(true)).toBeLessThan(socketConfig.silenceTimeout);
+  });
+
+  it('against upstream, which publishes every second, pings rarely', () => {
+    expect(settledPingInterval(false)).toBe(30000);
   });
 });
