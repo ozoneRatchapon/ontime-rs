@@ -1,6 +1,6 @@
 # 020 — Project files to and from the Ontime app
 
-Status: **done, not deployed (2026-11-25).** Item 1 of the gaps found comparing
+Status: **done and deployed (2026-11-25), Worker `8cd66c47`, Pages `08ef7c91` (master) and `5bb2075c` (main), hash-checked.** Item 1 of the gaps found comparing
 the rooms with Ontime Cloud's paid plans (PRO, STUDIO): their "Project files
 move between Cloud and local installs". Until now the Worker hid the Project
 panel, so a show could not leave a room for the app or come in from it.
