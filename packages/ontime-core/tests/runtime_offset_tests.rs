@@ -85,6 +85,21 @@ const DELIBERATE: &[(&str, &str, &str)] = &[
     ),
 ];
 
+/// Whole cases where this fork deliberately behaves otherwise, with why.
+/// Chosen by the user on 2026-11-25 (plan 015).
+const DELIBERATE_CASES: &[(&str, &str)] = &[
+    (
+        "play-next at the last event",
+        "upstream wraps to the first event and plays it, restarting the show on its \
+         own; ours holds the last event at 00:00, paused",
+    ),
+    (
+        "load-next at the last event",
+        "upstream wraps and arms the first event; ours holds the last event at 00:00, \
+         paused, so the screens do not jump back to the top when the show ends",
+    ),
+];
+
 fn command(action: Action) -> Option<Command> {
     match action {
         Action::Start { id } => Some(Command::StartId(id)),
@@ -127,6 +142,16 @@ fn snapshot_offsets_match_upstream() {
     let mut failures = Vec::new();
 
     for case in fixture.cases {
+        if DELIBERATE_CASES.iter().any(|(name, _)| *name == case.name) {
+            // still a difference: upstream wraps to the top, which ours does not
+            assert_eq!(
+                case.expected["eventNow"],
+                Value::String("a".into()),
+                "{}: upstream no longer wraps to the first event; drop it from DELIBERATE_CASES",
+                case.name
+            );
+            continue;
+        }
         let mut rundown = case.rundown;
         rundown.recompute();
         let mut runtime = Runtime::default();

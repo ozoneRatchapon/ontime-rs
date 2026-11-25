@@ -35,6 +35,13 @@ type Step =
   // RIIR 6: what runtime.service does on next, previous and reload
   | { at: number; do: 'next' | 'previous' | 'startnext' | 'startprevious' | 'reload' };
 
+// three half-hour events from 10:00, every one ending with `action`
+const endActions = (action: string) =>
+  rundownOf([
+    ev('a', 10 * H, 30 * MIN, { endAction: action }),
+    ev('b', 10 * H + 30 * MIN, 30 * MIN, { endAction: action }),
+    ev('c', 11 * H, 30 * MIN, { endAction: action }),
+  ]);
 const show = () =>
   rundownOf([
     ev('a', 10 * H, 30 * MIN),
@@ -392,6 +399,87 @@ const cases: [string, ReturnType<typeof rundownOf>, Step[]][] = [
       { at: 10 * H + 12 * MIN, do: 'tick' },
     ],
   ],
+  // RIIR 7: end actions, which run on their own when an event finishes
+  [
+    'load-next at the end of an event',
+    endActions('load-next'),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 30 * MIN, do: 'tick' },
+      { at: 10 * H + 31 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'play-next chains into the next event',
+    endActions('play-next'),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 30 * MIN, do: 'tick' },
+      { at: 10 * H + 35 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'play-next late from the start',
+    endActions('play-next'),
+    [
+      { at: 10 * H + 10 * MIN, do: 'start', id: 'a' },
+      { at: 10 * H + 40 * MIN, do: 'tick' },
+      { at: 10 * H + 45 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'play-next at the last event',
+    endActions('play-next'),
+    [
+      { at: 11 * H, do: 'start', id: 'c' },
+      { at: 11 * H + 30 * MIN, do: 'tick' },
+      { at: 11 * H + 31 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'load-next at the last event',
+    endActions('load-next'),
+    [
+      { at: 11 * H, do: 'start', id: 'c' },
+      { at: 11 * H + 30 * MIN, do: 'tick' },
+      { at: 11 * H + 31 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'play-next passes over a skipped event',
+    rundownOf([
+      ev('a', 10 * H, 30 * MIN, { endAction: 'play-next' }),
+      ev('b', 10 * H + 30 * MIN, 30 * MIN, { skip: true }),
+      ev('c', 11 * H, 30 * MIN),
+    ]),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 30 * MIN, do: 'tick' },
+      { at: 10 * H + 32 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'play-next with added time',
+    endActions('play-next'),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 5 * MIN, do: 'addtime', amount: 2 * MIN },
+      { at: 10 * H + 30 * MIN, do: 'tick' },
+      { at: 10 * H + 32 * MIN, do: 'tick' },
+      { at: 10 * H + 33 * MIN, do: 'tick' },
+    ],
+  ],
+  [
+    'play-next after a pause',
+    endActions('play-next'),
+    [
+      { at: 10 * H, do: 'start', id: 'a' },
+      { at: 10 * H + 10 * MIN, do: 'pause' },
+      { at: 10 * H + 15 * MIN, do: 'resume' },
+      { at: 10 * H + 35 * MIN, do: 'tick' },
+      { at: 10 * H + 36 * MIN, do: 'tick' },
+    ],
+  ],
 ];
 
 const run = (rundown: ReturnType<typeof rundownOf>, steps: Step[]) => {
@@ -404,9 +492,21 @@ const run = (rundown: ReturnType<typeof rundownOf>, steps: Step[]) => {
   // runtime.service checkTimerUpdate: roll moves itself on from a tick's result
   const tick = () => {
     const result: any = state.update();
-    if (state.getState().timer.playback !== 'roll') return;
-    if (result.hasSecondaryTimerFinished) state.roll(processed, meta);
-    else if (result.hasTimerFinished) state.rollNext(processed, meta);
+    const { playback } = state.getState().timer;
+    if (playback === 'roll') {
+      if (result.hasSecondaryTimerFinished) state.roll(processed, meta);
+      else if (result.hasTimerFinished) state.rollNext(processed, meta);
+      return;
+    }
+    // RIIR 7: the end action, as runtime.service runs it once a played event
+    // finishes. Ticks land exactly on the end, so its timeouts fire at once.
+    if (playback !== 'play' || !result.hasTimerFinished) return;
+    const endAction = state.getState().eventNow?.endAction;
+    if (endAction === 'load-next') loadNext();
+    if (endAction === 'play-next') {
+      const end = result.finishedAt ?? Date.now();
+      if (loadNext() && can().start) state.start(undefined, end);
+    }
   };
 
   const can = () => {
