@@ -70,9 +70,15 @@ The first run found four real bugs:
    "… (copy)", as upstream does.
 
 The new behaviour lives in `entry_edits.rs`. It applies to edits from the
-editor and the integration API. Import and replace (`Rundown::place_entry`)
-keep entries exactly as given, since upstream's import does not invent cues
-either.
+editor and the integration API. Replace (`PUT /data/rundowns/:id`, through
+`Rundown::place_entry`) keeps entries exactly as given.
+
+**Not done, found on the way:** upstream's import (`parseRundown`) does give
+an event without a cue one. It uses the event's position (`createEvent(event,
+eventIndex)`: "1", "2", "3"…), which is a different rule from the
+add-one-to-the-previous-cue rule above. Our replace leaves such a cue empty.
+This is not pinned by any contract yet. The seed scripts always send cues, so
+it has not shown up.
 
 The comparison treats a missing field and `""` or `false` as the same. The
 fixture's starting events are upstream's partial mocks, which only fill in on
