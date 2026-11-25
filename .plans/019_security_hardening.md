@@ -1,6 +1,6 @@
 # 019 — Security hardening (review of 2026-11-25)
 
-Status: **items 1, 3 and 5 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
+Status: **items 1, 3, 5 and 4 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
 Item 2 waits for the owner's go-ahead, because existing rooms need a migration.
 
 ## 1. Wrong guesses wait — done
@@ -87,7 +87,21 @@ their passwords and share links working through a migration.
   - **`chrono` is unmaintained** (RUSTSEC-2026-0543, no fix exists):
     ignored with a reason. See item 9.
 
-## 4. Weekly upstream check (GitHub Action on the public repo)
+## 4. Weekly upstream check — done
+
+`.github/workflows/upstream_watch.yml`, Mondays and by hand: fetches upstream
+master, runs `scripts/upstream-oracle/generate.sh` over it and then the
+ontime-core tests. The tests decide, not a diff: `rundown_edits.json` comes
+out different on every run (upstream makes random ids when it clones or adds
+an event), and the tests still pass on it. Checked locally on 2026-11-25:
+the fixtures were made from upstream `0ca4d79b2`, which is still upstream
+master, and a fresh generation passes every test.
+
+The repository has issues turned off, so the job does not open one: a
+failed scheduled run is emailed to whoever last edited the workflow, and the
+run summary names both upstream commits, with a compare link. Nothing is
+committed back. The fixtures are made-up cases, so this is safe on the
+public repository.
 
 ## 7. Mutation testing (`cargo-mutants`)
 

@@ -1,0 +1,82 @@
+name: Upstream watch
+
+# Every week, runs upstream ontime's own TypeScript over our case lists again
+# (scripts/upstream-oracle/generate.sh) and checks ontime-core against what it
+# says now (plan 019, item 4). A failure means upstream changed behaviour we
+# copy. GitHub emails a failed scheduled run to whoever last edited this file,
+# and the run's summary says which commit it was.
+#
+# Safe on a public repository: the fixtures are made-up cases, never a room.
+# Nothing is committed back; refreshing the fixtures stays a reviewed change.
+
+on:
+  schedule:
+    - cron: '41 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: ''
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        # esbuild and express for the generator come from this install
+        run: pnpm install --frozen-lockfile
+
+      - name: Fetch upstream master
+        run: git fetch --depth=1 https://github.com/cpvalente/ontime.git master:refs/remotes/upstream/master
+
+      - name: Regenerate the fixtures from upstream
+        id: generate
+        run: |
+          before=$(grep -oE 'upstream ontime [0-9a-f]+' packages/ontime-core/tests/fixtures/rundown_process.json | head -n 1 | cut -d' ' -f3)
+          scripts/upstream-oracle/generate.sh upstream/master
+          now=$(git rev-parse --short upstream/master)
+          echo "before=$before" >> "$GITHUB_OUTPUT"
+          echo "now=$now" >> "$GITHUB_OUTPUT"
+
+      - name: ontime-core against upstream as it is now
+        id: contracts
+        run: cargo test --manifest-path packages/ontime-core/Cargo.toml
+
+      - name: Summary
+        if: always()
+        env:
+          BEFORE: ${{ steps.generate.outputs.before }}
+          NOW: ${{ steps.generate.outputs.now }}
+          OUTCOME: ${{ steps.contracts.outcome }}
+        run: |
+          {
+            echo "## Upstream watch"
+            echo
+            echo "- fixtures in the repository: upstream \`$BEFORE\`"
+            echo "- upstream master now: \`$NOW\` ([compare](https://github.com/cpvalente/ontime/compare/$BEFORE...$NOW))"
+            echo "- ontime-core against it: **$OUTCOME**"
+            echo
+            echo "Fixtures that changed (rundown_edits.json always does: upstream makes random ids):"
+            echo
+            echo '```'
+            git diff --stat -- packages/ontime-core/tests/fixtures || true
+            echo '```'
+            if [ "$OUTCOME" = failure ]; then
+              echo
+              echo "Upstream changed behaviour we copy. Locally: \`scripts/upstream-oracle/generate.sh\`, then \`cargo test --manifest-path packages/ontime-core/Cargo.toml\`, and follow the plan 003 distill steps."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
