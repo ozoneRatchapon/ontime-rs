@@ -92,3 +92,6 @@
   - Smoke: all five suites pass. The first integration run died on the client side (`EADDRNOTAVAIL` after the 60-call flood) before its cleanup. Its throwaway room `integration-vjtqe4tp` was deleted by hand, and the rerun passed 54/54.
 - **2026-11-25:** network outages (plan 016). Pages `be85661e` (master) and `04f4aac9` (main).
   - Through an outage screens keep counting and show an offline dot, and the editor's playback buttons are disabled until the connection is back, as the user chose. Checked on production with `tests/browser/offline.mjs`.
+- **2026-11-25:** free-tier budget (plan 017). Pages `264d9e7e` (master) and `401a4f71` (main).
+  - Fixed: an idle screen reconnected every ~10 s. The watchdog expected upstream's per-second publishing, and the Worker sends nothing while idle. On the Worker the settled ping is now 7 s.
+  - Measured: a room running 8 hours with 20 screens costs about a third of the 100,000 daily Durable Object requests.
