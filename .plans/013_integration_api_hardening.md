@@ -1,6 +1,6 @@
 # 013 — The integration API on the public internet
 
-Status: **done locally (2026-11-25).** Item 4 of the RIIR 5 review.
+Status: **done and deployed (2026-11-25), Worker `218983cc`.** Item 4 of the RIIR 5 review.
 
 ## Why
 
@@ -31,9 +31,13 @@ and a token can sit in a URL.
 1. **Rate limit**: `integration::RateLimit` in the core, held per room by both
    hosts. Limits are as planned, with reads at 200 burst and 100 a second.
    Only calls that were let in count, so an unauthorised flood cannot lock
-   the operator out. 5 unit tests. e2e: 60 parallel calls get at least 15
-   refusals with `Retry-After`, polling still answers, and calls flow again
-   after 2 seconds.
+   the operator out. 5 unit tests. e2e: 60 parallel calls are refused in
+   part, with `Retry-After`, and no more are taken than the burst plus the
+   refill over the time they took to arrive. Polling still answers, and calls
+   flow again after 2 seconds. The first version of this check expected at
+   least 15 refusals; on production the calls arrive over 0.2–0.5 s and the
+   refill takes some of them, so it now checks the bucket's own bound
+   instead (measured: 45 taken in 0.47 s, 44 in 0.30 s).
 2. **Audit `change`**: logged as `entry-edit`, with the fields changed and the
    sender, on both hosts. e2e reads it back where the admin token exists.
 3. **OpenAPI**: `.docs/integration_api.openapi.json`, generated from

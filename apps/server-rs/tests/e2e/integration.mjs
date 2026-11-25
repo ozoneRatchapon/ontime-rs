@@ -186,11 +186,21 @@ if (master) {
 }
 
 console.log('== a flood is slowed, not served ==');
+const floodStart = Date.now();
 const flood = await Promise.all(
   Array.from({ length: 60 }, () => fetch(`${base}/r/${room}/api/pause`, { headers: auth(master) })),
 );
+const floodSeconds = (Date.now() - floodStart) / 1000;
 const limited = flood.filter((r) => r.status === 429);
-check('past the burst of 40, calls are refused', limited.length >= 15, true);
+const accepted = flood.filter((r) => r.status === 202).length;
+check('a flood is refused in part', limited.length > 0, true);
+// the bucket's own bound: the burst of 40, and 20 a second while the calls
+// arrive, however spread out the network makes them
+check(
+  `no more taken than the limit allows (${accepted} in ${floodSeconds.toFixed(2)}s)`,
+  accepted <= 40 + Math.ceil(20 * floodSeconds) + 1,
+  true,
+);
 check('with Retry-After', Number(limited[0]?.headers.get('retry-after')) >= 1, true);
 check('polling still answers', (await api('/poll')).status, 202);
 // twenty a second: two seconds refill the whole burst

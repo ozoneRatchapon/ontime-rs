@@ -72,3 +72,6 @@
   - Start while rolling keeps the event's start time, and reload re-arms without starting, as upstream. 12 mixed-command cases are pinned against upstream's runtimeState.
   - `js.rs` matches node on 5,000 seeded inputs. Fixed: U+0085 read as a space, number-to-text formatting, and Express's fallback for query values with broken UTF-8.
   - Production smoke: integration 48, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing.
+- **2026-11-25:** plan 013, the integration API on the public internet. Worker `218983cc`.
+  - Per-room rate limit with `Retry-After`, integration edits in the activity log, and an OpenAPI document generated from the catalogue.
+  - Production smoke: integration 54, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing. The activity-log check ran there for the first time, since it needs the admin token.
