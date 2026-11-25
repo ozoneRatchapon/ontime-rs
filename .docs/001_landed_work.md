@@ -107,6 +107,7 @@
   - `POST /data/db/import` reads a file as upstream's `parseDatabaseModel` does (12 files pinned against upstream); `POST /data/db/export` writes one the app opens. The Worker's Project panel imports and downloads.
   - Checked locally: all e2e suites, the desktop app's own files, and the backed-up shows read back through upstream's parser.
   - Production, each in a throwaway room: project_file 16, integration 54, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing. raknong still answers 401 without its token.
-- **2026-11-25:** custom views on the Worker (plan 021), not deployed yet.
+- **2026-11-25:** custom views on the Worker (plan 021). Worker `140bc918`; Pages `e281cb68` (master) and `e5d73a83` (main), hash-checked.
   - Each room keeps its own single-file pages, served from `/r/<room>/external/<name>/`: sandboxed, and pointed at the room by a script placed first, so upstream's pages work unchanged. Usable as an OBS browser source.
-  - Pinned against upstream's name and page checks (40 cases); e2e 36 checks; in Chromium, upstream's demo under a locked room shows the running event, and the editor panel uploads and lists a page.
+  - Pinned against upstream's name and page checks (40 cases); e2e 33 checks; in Chromium, upstream's demo under a locked room shows the running event, and the editor panel uploads and lists a page.
+  - Production, each in a throwaway room: custom_views 33, project_file 16, integration 54, timer 25, offset 17, roll 14, teleprompter 35 checks, and the demo page in Chromium, all passing. raknong still answers 401 without its token.

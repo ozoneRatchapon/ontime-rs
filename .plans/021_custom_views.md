@@ -1,6 +1,6 @@
 # 021 — Custom views on the Worker
 
-Status: **done, not deployed (2026-11-25).** Chosen after plan 020, for events
+Status: **done and deployed (2026-11-25), Worker `140bc918`, Pages `e281cb68` (master) and `e5d73a83` (main), hash-checked.** Chosen after plan 020, for events
 dressed to their own theme and for OBS: a page of the room's own, added as a
 browser source. Upstream's Custom views panel was hidden on the Worker, since
 the Worker refused uploads.
@@ -46,7 +46,7 @@ the Worker refused uploads.
   pages. `tests/custom_views_tests.rs` gets the same answers and messages.
   It also checks the demo page and size limits, that the script goes before
   the page's own, and the policy.
-- `tests/e2e/custom_views.mjs` (local, in `run.sh`): 36 checks covering
+- `tests/e2e/custom_views.mjs` (in `run.sh`): 33 checks covering
   storage, refusals, serving, a locked room, removal and the log.
 - `tests/browser/custom_view.mjs` (in the browser `run.sh`):
   - upstream's demo page, unchanged, in Chromium under a locked room, shows
