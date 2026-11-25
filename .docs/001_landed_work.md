@@ -78,3 +78,7 @@
 - **2026-11-25:** plan 014, benchmarks. Worker `f154eadf`.
   - Playback commands and the alarm no longer copy the whole rundown: `addtime` went from 598 µs to 35 ns on 1,000 events, and the alarm takes under 30 ns at any size (`benchmarks/002`, `003`).
   - Production smoke: integration 54, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing.
+- **2026-11-25:** the web editor hides settings the Worker cannot serve (09e0f24bc, ced60e8). Pages `2fcdd8c6` (master) and `e4522e25` (main).
+  - Hidden: MCP Server, Server port, project files, spreadsheet import and Google Sheets, custom views, automations, Shutdown. Each one was checked against the Worker's routes (a 501 or no route) before it was hidden.
+  - The menu and the panels share one rule (`isAvailableHere`), because a panel shows every section on one page. The first deploy hid only the menu entries, and a Playwright check caught the sections still showing.
+  - Checked on both URLs with Playwright, in a throwaway room: the hidden sections are gone, the rest are there, and there are no page errors.
