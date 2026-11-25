@@ -133,8 +133,13 @@ pub struct Project {
     /// cover clients that cannot — see [`default_heartbeat_ms`].
     #[serde(default = "default_heartbeat_ms")]
     pub heartbeat_ms: i64,
-    /// Hash of this room's password. `None` means the room is open, which matches
+    /// This room's bearer token. `None` means the room is open, which matches
     /// the original server's behaviour when `SESSION_PASSWORD` is unset.
+    ///
+    /// A room locked since plan 019 holds a random token
+    /// ([`fresh_room_token`]); an older one holds the digest of the password
+    /// it was locked with ([`hash_password`]), which keeps working until the
+    /// room is locked again. The name stays for the stored projects.
     #[serde(default)]
     pub password_hash: Option<String>,
     /// Only members, the room password or the master password may control the
@@ -160,8 +165,21 @@ pub struct Project {
     pub prompter_cache: ScriptCache,
 }
 
-/// Hashes a room password. The resulting digest doubles as the bearer token, the
-/// same way the original server uses `hashPassword(password)` as its token.
+/// A new room token: 244 random bits from the platform's crypto RNG, 64 hex
+/// characters like the digests rooms locked before it.
+///
+/// Random rather than derived from a password, so no list of likely passwords
+/// gets anyone closer to it. It is stored as it is, because share links are
+/// built from it (`/data/session/url`). UUID v4 here, not v7: v7 spends bits on
+/// the time, and this is a secret, not an id.
+pub fn fresh_room_token() -> String {
+    let (a, b) = (uuid::Uuid::new_v4().simple(), uuid::Uuid::new_v4().simple());
+    format!("{a}{b}")
+}
+
+/// Hashes a password. Gives the master token (from `SESSION_PASSWORD`), and the
+/// token of a room locked before plan 019, the same way the original server
+/// uses `hashPassword(password)` as its token.
 pub fn hash_password(password: &str) -> String {
     let mut hasher = blake3::Hasher::new();
     hasher.update(b"ontime-room-v1:");

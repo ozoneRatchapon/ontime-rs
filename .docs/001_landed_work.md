@@ -98,3 +98,7 @@
 - **2026-11-25:** free backups (plan 018). Worker `7a212dc3`.
   - A launchd agent saves every room to `~/OntimeBackups` at 03:00 each night. A restore was checked entry for entry.
   - Each room keeps its own undo history: a copy before every destructive change and every ten minutes of edits, restorable by an owner or the admin. `snapshots.mjs` passed on production.
+- **2026-11-25:** security hardening (plan 019). Worker `2e9a0a11`; Pages `f01f2574` (master) and `93979b33` (main), hash-checked.
+  - Wrong guesses at the admin login, admin routes and every room wait, doubling past ten free ones. A stale token retried counts once.
+  - Pages send security headers; only the read-only views may be framed.
+  - CI: `cargo deny` weekly and on change (fixed `url` RUSTSEC-2026-0592), a weekly upstream contract check, and mutation-tested auth code.

@@ -2,7 +2,7 @@
 
 use serde_json::{json, Value};
 
-use crate::project::{hash_password, Project};
+use crate::project::{fresh_room_token, Project};
 use crate::teleprompter::{room as prompter, routes as prompter_routes};
 use crate::{custom_fields, rundown_routes};
 
@@ -179,19 +179,27 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
                 None => ApiResponse::error("Missing on", 400),
             }
         }
+        // locks the room with a new random token, or reopens it. `{ lock: true }`
+        // from our client; `{ password }` from upstream's still locks, but the
+        // password is not kept or used: nothing ever asks for it again, and a
+        // token made from it could be guessed (plan 019)
         ["data", "session", "password"] => {
             let body = req.body.clone();
-            match body.get("password").and_then(Value::as_str) {
-                Some(password) if !password.is_empty() => {
-                    let hash = hash_password(password);
-                    project.password_hash = Some(hash.clone());
+            let lock = body.get("lock").and_then(Value::as_bool) == Some(true)
+                || body
+                    .get("password")
+                    .and_then(Value::as_str)
+                    .is_some_and(|password| !password.is_empty());
+            match lock {
+                true => {
+                    let token = fresh_room_token();
+                    project.password_hash = Some(token.clone());
                     effects.push(Effect::Persist);
-                    // the hash doubles as the bearer token; it is returned once,
-                    // here, because there is no way to recover it from the hash
-                    ApiResponse::json(&json!({ "protected": true, "token": hash }))
+                    // every link made with the old token stops working
+                    ApiResponse::json(&json!({ "protected": true, "token": token }))
                 }
                 // an explicit null clears it, reopening the room
-                _ if body.get("password").map(Value::is_null).unwrap_or(false) => {
+                false if body.get("password").map(Value::is_null).unwrap_or(false) => {
                     project.password_hash = None;
                     effects.push(Effect::Persist);
                     ApiResponse::json(&json!({ "protected": false }))

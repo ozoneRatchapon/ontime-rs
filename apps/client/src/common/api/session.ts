@@ -23,13 +23,17 @@ export async function generateUrl(options: LinkOptions & { baseUrl: string; path
 }
 
 /**
- * Sets or clears this room's password. Passing null reopens the room.
- *
- * When a password is set the response carries the bearer token once — it is the
- * hash of the password and cannot be recovered later, so the caller must keep it
- * (we store it so the current session stays authorised).
+ * Locks this room with a new random token, and returns it. Locking an already
+ * locked room replaces its token, so every link shared before stops working.
+ * The token is not made from a password, so it cannot be guessed (plan 019).
  */
-export async function setRoomPassword(password: string | null): Promise<{ protected: boolean; token?: string }> {
-  const res = await axios.post(`${sessionPath}/password`, { password });
+export async function lockRoom(): Promise<{ protected: boolean; token: string }> {
+  const res = await axios.post(`${sessionPath}/password`, { lock: true });
+  return res.data;
+}
+
+/** Removes the lock: anyone with the room's address can view and edit it again. */
+export async function reopenRoom(): Promise<{ protected: boolean }> {
+  const res = await axios.post(`${sessionPath}/password`, { password: null });
   return res.data;
 }

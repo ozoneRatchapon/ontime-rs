@@ -1,7 +1,8 @@
 # 019 — Security hardening (review of 2026-11-25)
 
-Status: **items 1, 3, 5, 4 and 7 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
-Item 2 waits for the owner's go-ahead, because existing rooms need a migration.
+Status: **items 1, 3, 4, 5 and 7 deployed 2026-11-25 (Worker `2e9a0a11`, Pages
+`f01f2574` master and `93979b33` main). Item 2 done; see the landed-work log
+for its deploy.**
 
 ## 1. Wrong guesses wait — done
 
@@ -54,10 +55,44 @@ Not covered, by choice:
 - **Eviction** hands out a fresh allowance, but a guesser keeps the instance
   alive with its own requests.
 
-## 2. argon2 for passwords, a random token apart from the hash — waiting
+## 2. Random room tokens — done (argon2 dropped, on reading the code)
 
-Needs the owner's go-ahead: existing rooms (raknong among them) must keep
-their passwords and share links working through a migration.
+The review proposed argon2 for the stored password and a separate random
+token. Reading the code changed that:
+
+- **No room password is ever checked again.** There is no page that asks
+  for it: it is typed once, turned into the token, and everyone after uses a
+  link carrying `?token=`. An argon2 verifier would guard nothing, and would
+  cost CPU the free tier does not have.
+- **The token has to stay readable.** `/data/session/url` builds share links
+  for owners and the admin with it, so keeping only its digest would break
+  them.
+
+What was done instead: locking a room makes a **random** token
+(`project::fresh_room_token`, 244 bits from the crypto RNG, 64 hex like the
+old ones). The password is not kept and nothing is derived from it, so no
+list of likely passwords gets anyone closer. That ends online and offline
+guessing, which was the real risk; the guard (item 1) stays as a second line.
+
+- `POST /data/session/password`: `{ lock: true }` from our client, and
+  `{ password }` from upstream's still locks; `{ password: null }` reopens.
+  Locking a locked room makes a new token and retires the old one.
+- The client's Room access panel has no password field any more: **Lock
+  room**, **Make a new link** (asks first, as every shared link stops
+  working), **Unlock room**.
+- **Migration: none needed.** A room locked before (raknong among them)
+  keeps its token and every link made with it. It gets a random token only
+  when someone holding the link, an owner or the admin presses *Make a new
+  link*. Best done between events.
+- The master token is unchanged: the digest of `SESSION_PASSWORD`, a secret
+  kept in the Worker, not in storage.
+- Accepted: the token is stored as it is (share links need it). DO storage
+  is only reachable through our code, and backups (`/data/db/download`) strip
+  it.
+- `tests/room_token_tests.rs` (8 tests): random and distinct tokens, the
+  same password twice gives two tokens, a password's digest no longer opens
+  the room, a new link retires the old, an old room keeps its link, share
+  links carry the new token. All e2e suites and the 520 client tests pass.
 
 ## 3. Security headers on Pages — done
 
