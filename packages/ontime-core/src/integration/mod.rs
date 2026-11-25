@@ -16,16 +16,19 @@
 //! [`Change`] for the host to carry out.
 
 mod action;
+pub mod catalog;
 mod change;
 mod colour;
 mod dispatch;
 pub mod js;
+mod limit;
 mod path;
 mod types;
 
 pub use action::{parse, Action};
 pub use change::patch_for as change_patch;
 pub use dispatch::dispatch;
+pub use limit::{is_read, Bucket, RateLimit};
 pub use path::{http_call, payload_from_path, HttpCall, HELLO_MESSAGE};
 pub use types::{Change, ClientCommand, IntegrationError, Reply};
 

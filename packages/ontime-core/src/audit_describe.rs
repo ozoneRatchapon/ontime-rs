@@ -164,7 +164,8 @@ fn rundown_note(
 /// "start" names the event that actually started. `before` is the event that
 /// was loaded until then, which pause, stop and add-time are about.
 ///
-/// The message overlay, the aux timers and the offset mode are not recorded.
+/// An integration `change` is recorded as an entry edit. The message overlay,
+/// the aux timers and the offset mode are not recorded.
 pub fn socket_note(
     project: &Project,
     tag: &str,
@@ -174,10 +175,24 @@ pub fn socket_note(
     if tag == "teleprompter" {
         return prompter_note(project, payload?);
     }
-    let crate::integration::Action::Playback { command, .. } =
-        crate::integration::parse(tag, payload).ok()?
-    else {
-        return None;
+    let command = match crate::integration::parse(tag, payload).ok()? {
+        crate::integration::Action::Playback { command, .. } => command,
+        // an entry edited from outside reads as the same edit made in the editor
+        crate::integration::Action::Change { id, fields } => {
+            let names = fields
+                .iter()
+                .map(|(name, _)| match name.strip_prefix("custom:") {
+                    Some(custom) => format!("custom.{custom}"),
+                    None => name.clone(),
+                })
+                .collect();
+            return Some(
+                Note::new(Action::EntryEdit)
+                    .about(entry_subject(project, &project.loaded, &id))
+                    .with_fields(names),
+            );
+        }
+        _ => return None,
     };
     let loaded = project.runtime.selected_id.as_deref();
     let (action, about, amount) = match command {

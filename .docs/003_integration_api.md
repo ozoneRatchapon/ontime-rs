@@ -59,6 +59,12 @@ A websocket client can send the same actions as `{"tag": "start", "payload":
   host and port. It has no way to name a room or send a token, so with this
   cloud backend use Companion's generic HTTP module and the URLs above.
 
+The full list of calls, as OpenAPI 3.1: `.docs/integration_api.openapi.json`.
+It is generated from `integration/catalog.rs`. A test fails if an example in
+the catalogue does not parse, if an action upstream accepts is missing, or if
+the committed document is stale. Regenerate it with
+`cargo run -q -p ontime-core --example integration-openapi > .docs/integration_api.openapi.json`.
+
 ## How the parts fit
 
 ```
@@ -139,6 +145,13 @@ Regenerate the fixtures after pulling upstream:
 - **Members-only rooms** are driven only by a member, the room password or the
   master password. Anyone let in may still read `version` and `poll`.
 - **No room is created by a call.** An unknown room answers 404.
+- **Rate limit per room**: 40 actions at once, then 20 a second. Reads
+  (`poll`, `version`) get 200 at once, then 100 a second. Past that the
+  answer is `429` with `Retry-After`. Only calls that were let in count, so a
+  stranger flooding the room cannot use up the operator's calls. The policy
+  is `integration::RateLimit`, shared by both hosts.
+- **Edits are logged**: a `change` shows in the room's activity log as an
+  entry edit, the same as the edit made in the editor, with who sent it.
 - **Bounds**: `addtime` is at most an hour, times are within a day, and index
   and cue lookups are bounded by the rundown.
 

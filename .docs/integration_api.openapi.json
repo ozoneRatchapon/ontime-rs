@@ -1,0 +1,3441 @@
+{
+  "components": {
+    "parameters": {
+      "room": {
+        "in": "path",
+        "name": "room",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "Message": {
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "Reply": {
+        "properties": {
+          "payload": {}
+        },
+        "required": [
+          "payload"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "description": "The room's token. A cookie never counts.",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "query": {
+        "description": "The same token, for senders that cannot set headers",
+        "in": "query",
+        "name": "token",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "Drive an Ontime room from Companion, a Stream Deck or a script. Generated from ontime-core's integration catalogue; see .docs/003_integration_api.md.",
+    "title": "Ontime integration API",
+    "version": "4.11.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/r/{room}/api/addtime/add/{ms}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "ms",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Add milliseconds, at most an hour",
+        "tags": [
+          "addtime"
+        ],
+        "x-example": "/r/{room}/api/addtime/add/60000"
+      }
+    },
+    "/r/{room}/api/addtime/remove/{ms}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "ms",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Remove milliseconds, at most an hour",
+        "tags": [
+          "addtime"
+        ],
+        "x-example": "/r/{room}/api/addtime/remove/30000"
+      }
+    },
+    "/r/{room}/api/addtime/{ms}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "ms",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Add milliseconds to the running event (negative removes), at most an hour",
+        "tags": [
+          "addtime"
+        ],
+        "x-example": "/r/{room}/api/addtime/60000"
+      }
+    },
+    "/r/{room}/api/auxtimer/{timer}/addtime/{ms}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "timer",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ms",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Add to an aux timer",
+        "tags": [
+          "auxtimer"
+        ],
+        "x-example": "/r/{room}/api/auxtimer/2/addtime/-5000"
+      }
+    },
+    "/r/{room}/api/auxtimer/{timer}/direction/{direction}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "timer",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "direction",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Count an aux timer up or down",
+        "tags": [
+          "auxtimer"
+        ],
+        "x-example": "/r/{room}/api/auxtimer/3/direction/count-up"
+      }
+    },
+    "/r/{room}/api/auxtimer/{timer}/duration/{ms}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "timer",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "ms",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Set an aux timer's duration",
+        "tags": [
+          "auxtimer"
+        ],
+        "x-example": "/r/{room}/api/auxtimer/2/duration/90000"
+      }
+    },
+    "/r/{room}/api/auxtimer/{timer}/{command}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "timer",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "command",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Start, pause or stop aux timer 1, 2 or 3",
+        "tags": [
+          "auxtimer"
+        ],
+        "x-example": "/r/{room}/api/auxtimer/1/start"
+      }
+    },
+    "/r/{room}/api/change/{id}/{field}/{value}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "field",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "value",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Edit one field of an entry. Path values stay percent-encoded; send text with spaces in the query (?title=My+Title)",
+        "tags": [
+          "change"
+        ],
+        "x-example": "/r/{room}/api/change/abc123/title/Opening"
+      }
+    },
+    "/r/{room}/api/client": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Rename (rename=) or redirect (redirect=) a connected screen, by its client id (target=)",
+        "tags": [
+          "client"
+        ],
+        "x-example": "/r/{room}/api/client?target=abc&rename=Stage"
+      }
+    },
+    "/r/{room}/api/load/cue/{cue}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "cue",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Arm the next event with this cue",
+        "tags": [
+          "load"
+        ],
+        "x-example": "/r/{room}/api/load/cue/4A"
+      }
+    },
+    "/r/{room}/api/load/id/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Arm the event with this id",
+        "tags": [
+          "load"
+        ],
+        "x-example": "/r/{room}/api/load/id/abc123"
+      }
+    },
+    "/r/{room}/api/load/index/{index}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Arm the event at this position, counting from 1",
+        "tags": [
+          "load"
+        ],
+        "x-example": "/r/{room}/api/load/index/2"
+      }
+    },
+    "/r/{room}/api/load/next": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Arm the next event, wrapping to the first after the last",
+        "tags": [
+          "load"
+        ],
+        "x-example": "/r/{room}/api/load/next"
+      }
+    },
+    "/r/{room}/api/load/previous": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Arm the previous event; at the first, the first again",
+        "tags": [
+          "load"
+        ],
+        "x-example": "/r/{room}/api/load/previous"
+      }
+    },
+    "/r/{room}/api/message/secondary/{text}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "text",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "The secondary message, percent-decoded",
+        "tags": [
+          "message"
+        ],
+        "x-example": "/r/{room}/api/message/secondary/Doors%20open"
+      }
+    },
+    "/r/{room}/api/message/timer/blackout/{flag}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "flag",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Black out the timer screens",
+        "tags": [
+          "message"
+        ],
+        "x-example": "/r/{room}/api/message/timer/blackout/false"
+      }
+    },
+    "/r/{room}/api/message/timer/blink/{flag}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "flag",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Blink the timer overlay",
+        "tags": [
+          "message"
+        ],
+        "x-example": "/r/{room}/api/message/timer/blink/1"
+      }
+    },
+    "/r/{room}/api/message/timer/secondarySource/{source}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "source",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "What the timer's second line shows: aux1, aux2, aux3 or secondary",
+        "tags": [
+          "message"
+        ],
+        "x-example": "/r/{room}/api/message/timer/secondarySource/aux1"
+      }
+    },
+    "/r/{room}/api/message/timer/text/{text}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "text",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "The timer overlay's text, percent-decoded",
+        "tags": [
+          "message"
+        ],
+        "x-example": "/r/{room}/api/message/timer/text/Wrap%20up"
+      }
+    },
+    "/r/{room}/api/message/timer/visible/{flag}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "flag",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Show or hide the timer overlay",
+        "tags": [
+          "message"
+        ],
+        "x-example": "/r/{room}/api/message/timer/visible/true"
+      }
+    },
+    "/r/{room}/api/offsetmode/{mode}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "mode",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Measure the schedule as planned (absolute) or from the actual start (relative)",
+        "tags": [
+          "offsetmode"
+        ],
+        "x-example": "/r/{room}/api/offsetmode/relative"
+      }
+    },
+    "/r/{room}/api/pause": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Pause",
+        "tags": [
+          "pause"
+        ],
+        "x-example": "/r/{room}/api/pause"
+      }
+    },
+    "/r/{room}/api/poll": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Everything the screens are sent: playback, timers, the overlay and the teleprompter",
+        "tags": [
+          "poll"
+        ],
+        "x-example": "/r/{room}/api/poll"
+      }
+    },
+    "/r/{room}/api/reload": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Load the loaded event again, armed",
+        "tags": [
+          "reload"
+        ],
+        "x-example": "/r/{room}/api/reload"
+      }
+    },
+    "/r/{room}/api/roll": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Follow the wall clock: play whatever is due now",
+        "tags": [
+          "roll"
+        ],
+        "x-example": "/r/{room}/api/roll"
+      }
+    },
+    "/r/{room}/api/start": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Start or resume the loaded event",
+        "tags": [
+          "start"
+        ],
+        "x-example": "/r/{room}/api/start"
+      }
+    },
+    "/r/{room}/api/start/cue/{cue}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "cue",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Start the next event with this cue",
+        "tags": [
+          "start"
+        ],
+        "x-example": "/r/{room}/api/start/cue/4A"
+      }
+    },
+    "/r/{room}/api/start/id/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Start the event with this id",
+        "tags": [
+          "start"
+        ],
+        "x-example": "/r/{room}/api/start/id/abc123"
+      }
+    },
+    "/r/{room}/api/start/index/{index}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Start the event at this position, counting from 1, skipped events included",
+        "tags": [
+          "start"
+        ],
+        "x-example": "/r/{room}/api/start/index/3"
+      }
+    },
+    "/r/{room}/api/start/next": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Load the next event and start it",
+        "tags": [
+          "start"
+        ],
+        "x-example": "/r/{room}/api/start/next"
+      }
+    },
+    "/r/{room}/api/start/previous": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Load the previous event and start it",
+        "tags": [
+          "start"
+        ],
+        "x-example": "/r/{room}/api/start/previous"
+      }
+    },
+    "/r/{room}/api/stop": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Stop and unload",
+        "tags": [
+          "stop"
+        ],
+        "x-example": "/r/{room}/api/stop"
+      }
+    },
+    "/r/{room}/api/teleprompter/blackout/{state}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Hide the following screens: on, off or toggle",
+        "tags": [
+          "teleprompter"
+        ],
+        "x-example": "/r/{room}/api/teleprompter/blackout/toggle"
+      }
+    },
+    "/r/{room}/api/teleprompter/goto/loaded": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Jump to the event Ontime has loaded",
+        "tags": [
+          "teleprompter"
+        ],
+        "x-example": "/r/{room}/api/teleprompter/goto/loaded"
+      }
+    },
+    "/r/{room}/api/teleprompter/goto/{by}/{value}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "by",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "value",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Jump to an event by cue, id or index",
+        "tags": [
+          "teleprompter"
+        ],
+        "x-example": "/r/{room}/api/teleprompter/goto/cue/4A"
+      }
+    },
+    "/r/{room}/api/teleprompter/mode/{mode}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "mode",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Stop at each event (event) or read through (script), or toggle",
+        "tags": [
+          "teleprompter"
+        ],
+        "x-example": "/r/{room}/api/teleprompter/mode/script"
+      }
+    },
+    "/r/{room}/api/teleprompter/scroll/{lines}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "lines",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Nudge the reader by lines",
+        "tags": [
+          "teleprompter"
+        ],
+        "x-example": "/r/{room}/api/teleprompter/scroll/3"
+      }
+    },
+    "/r/{room}/api/teleprompter/speed/{lpm}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "lpm",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Reading speed in lines per minute; negative reads back up",
+        "tags": [
+          "teleprompter"
+        ],
+        "x-example": "/r/{room}/api/teleprompter/speed/120"
+      }
+    },
+    "/r/{room}/api/teleprompter/speedBy/{lpm}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "lpm",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "Change the reading speed by this much",
+        "tags": [
+          "teleprompter"
+        ],
+        "x-example": "/r/{room}/api/teleprompter/speedBy/-20"
+      }
+    },
+    "/r/{room}/api/teleprompter/{command}": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          },
+          {
+            "in": "path",
+            "name": "command",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "A members-only room, driven only by a member or its password"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "play, pause, toggle, next, previous or top",
+        "tags": [
+          "teleprompter"
+        ],
+        "x-example": "/r/{room}/api/teleprompter/play"
+      }
+    },
+    "/r/{room}/api/version": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/room"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reply"
+                }
+              }
+            },
+            "description": "Done. `payload` is upstream's reply: \"success\", or the state asked for."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Refused, with upstream's message"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "The room needs its token"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "No such room; a call never creates one"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Too many calls; wait for Retry-After seconds"
+          }
+        },
+        "summary": "The Ontime version this server speaks",
+        "tags": [
+          "version"
+        ],
+        "x-example": "/r/{room}/api/version"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    },
+    {
+      "query": []
+    }
+  ]
+}

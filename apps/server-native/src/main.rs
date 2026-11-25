@@ -44,6 +44,8 @@ struct Room {
     /// The newest audit chunk, loaded with the room so recording a change
     /// needs no disk read while the room is locked.
     audit_head: Option<Chunk>,
+    /// How often this room takes integration calls, as on the Worker.
+    rate_limit: ontime_core::integration::RateLimit,
 }
 
 impl Room {
@@ -59,6 +61,7 @@ impl Room {
             project,
             outbound,
             audit_head,
+            rate_limit: Default::default(),
         }
     }
 

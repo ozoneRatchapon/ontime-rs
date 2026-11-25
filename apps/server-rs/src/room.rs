@@ -101,6 +101,9 @@ pub struct OntimeProject {
     /// The newest audit chunk, kept once loaded so each change does not read
     /// it again. Lost on eviction, which only costs one read.
     audit_head: Option<Chunk>,
+    /// How often this room takes integration calls. In memory: an eviction
+    /// only hands out a fresh burst.
+    rate_limit: ontime_core::integration::RateLimit,
 }
 
 #[durable_object]
@@ -116,6 +119,7 @@ impl DurableObject for OntimeProject {
             last_report: None,
             members: HashMap::new(),
             audit_head: None,
+            rate_limit: Default::default(),
         }
     }
 

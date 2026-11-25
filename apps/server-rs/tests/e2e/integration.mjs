@@ -177,6 +177,26 @@ const missing = await api('/client?target=nobody&rename=X');
 check('an unknown screen', [missing.status, missing.body.message], [400, 'Client "nobody" not found']);
 stage.close();
 
+if (master) {
+  console.log('== an edit from outside is in the activity log ==');
+  // reading the log is for an owner or the admin; wrangler dev has neither
+  const log = await (await fetch(`${base}/r/${room}/data/activity`, { headers: auth(master) })).json();
+  const edit = log.lines.find((line) => line.action === 'entry-edit');
+  check('the change is logged as an entry edit', edit?.subject?.title, 'Renamed');
+}
+
+console.log('== a flood is slowed, not served ==');
+const flood = await Promise.all(
+  Array.from({ length: 60 }, () => fetch(`${base}/r/${room}/api/pause`, { headers: auth(master) })),
+);
+const limited = flood.filter((r) => r.status === 429);
+check('past the burst of 40, calls are refused', limited.length >= 15, true);
+check('with Retry-After', Number(limited[0]?.headers.get('retry-after')) >= 1, true);
+check('polling still answers', (await api('/poll')).status, 202);
+// twenty a second: two seconds refill the whole burst
+await new Promise((resolve) => setTimeout(resolve, 2100));
+check('and calls flow again', (await api('/pause')).status, 202);
+
 console.log('== a protected room takes a token, never a cookie ==');
 const claim = await rest('POST', '/data/session/password', { password: 'integration-secret' }, master);
 const roomToken = claim?.token;

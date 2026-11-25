@@ -71,9 +71,18 @@ impl OntimeProject {
         };
         // a members-only room is driven by its members, its password or the
         // master password; reading the version or the state is not driving
-        let is_read = matches!(tag.to_lowercase().as_str(), "version" | "poll");
-        if !is_read && !api::may_control(&self.project, &access) {
+        if !integration::is_read(&tag) && !api::may_control(&self.project, &access) {
             return Response::error(api::NEEDS_SIGN_IN, 403);
+        }
+        // counted only once let in, so a stranger flooding the room cannot
+        // use up the operator's calls
+        if let Err(seconds) = self.rate_limit.take(&tag, now_ms()) {
+            let mut response =
+                Response::from_json(&json!({ "message": "Too many requests" }))?.with_status(429);
+            response
+                .headers_mut()
+                .set("Retry-After", &seconds.to_string())?;
+            return Ok(response);
         }
 
         let actor = audit_describe::actor(&self.project, &access, None);
@@ -134,7 +143,14 @@ impl OntimeProject {
                 self.sync_alarm().await?;
             }
             Change::Rundown { rundown_id } => {
-                self.persist(None).await?;
+                // the edit, in the room's activity log as if made in the editor
+                let note =
+                    audit_describe::socket_note(&self.project, tag, payload, before.as_deref());
+                let writes = match note {
+                    Some(note) => Some(self.audit(actor, note, now).await),
+                    None => None,
+                };
+                self.persist(writes).await?;
                 self.broadcast_refetch("rundown", Some(&rundown_id));
                 // the edited entry may be the one on air
                 self.broadcast_runtime(now);

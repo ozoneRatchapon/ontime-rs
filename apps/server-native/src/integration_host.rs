@@ -66,11 +66,22 @@ pub async fn http(
         Ok(HttpCall::Action { tag, payload }) => (tag, payload),
         Err(error) => return refusal(StatusCode::BAD_REQUEST, &error.message),
     };
-    let ((authorised, may_drive, actor), _) = with_room(state, room_name, |room| {
+    let now = now_ms();
+    let ((authorised, may_drive, actor, limited), _) = with_room(state, room_name, |room| {
+        let authorised = api::is_authorised(&room.project, &access);
+        let may_drive = api::may_control(&room.project, &access);
+        // counted only once let in, so a stranger flooding the room cannot use
+        // up the operator's calls
+        let counted = authorised && !tag.is_empty() && (integration::is_read(&tag) || may_drive);
+        let limited = match counted {
+            true => room.rate_limit.take(&tag, now).err(),
+            false => None,
+        };
         (
-            api::is_authorised(&room.project, &access),
-            api::may_control(&room.project, &access),
+            authorised,
+            may_drive,
             audit_describe::actor(&room.project, &access, None),
+            limited,
         )
     })
     .await;
@@ -81,9 +92,17 @@ pub async fn http(
         return axum::Json(json!({ "message": HELLO_MESSAGE })).into_response();
     }
     // reading the version or the state is not driving a members-only room
-    let is_read = matches!(tag.to_lowercase().as_str(), "version" | "poll");
-    if !is_read && !may_drive {
+    if !integration::is_read(&tag) && !may_drive {
         return refusal(StatusCode::FORBIDDEN, api::NEEDS_SIGN_IN);
+    }
+    if let Some(seconds) = limited {
+        let mut response = refusal(StatusCode::TOO_MANY_REQUESTS, "Too many requests");
+        if let Ok(value) = seconds.to_string().parse() {
+            response
+                .headers_mut()
+                .insert(axum::http::header::RETRY_AFTER, value);
+        }
+        return response;
     }
 
     match run_action(state, room_name, &tag, payload.as_ref(), actor).await {
@@ -139,6 +158,10 @@ async fn run_action(
                 save = Some(room.project.clone());
             }
             Change::Rundown { rundown_id } => {
+                // the edit, in the room's activity log as if made in the editor
+                let note =
+                    audit_describe::socket_note(&room.project, tag, payload, before.as_deref());
+                writes = note.map(|note| room.audit(actor, note, now));
                 room.broadcast_refetch("rundown", Some(rundown_id));
                 // the edited entry may be the one on air
                 room.broadcast_runtime(now);
