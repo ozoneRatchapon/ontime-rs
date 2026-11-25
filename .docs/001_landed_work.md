@@ -102,3 +102,4 @@
   - Wrong guesses at the admin login, admin routes and every room wait, doubling past ten free ones. A stale token retried counts once.
   - Pages send security headers; only the read-only views may be framed.
   - CI: `cargo deny` weekly and on change (fixed `url` RUSTSEC-2026-0592), a weekly upstream contract check, and mutation-tested auth code.
+  - Item 2, the same day: Worker `20b4e952`, Pages `c7fe82f4` (master) and `657c4f16` (main). Rooms lock with a random token; rooms locked before keep their links. Checked on production with a throwaway room.

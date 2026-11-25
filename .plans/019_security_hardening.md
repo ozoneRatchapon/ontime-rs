@@ -186,3 +186,20 @@ chrono is unmaintained. ontime-core, server-native and server-rs use it in
 four files, but `worker` 0.4 depends on it too, so dropping it means moving
 to `jiff` and to a newer `worker` together. Nothing is broken today; remove
 the ignore in `deny.toml` when this is done.
+
+## 10. Dependabot's npm alerts — triaged, low priority
+
+GitHub listed 8 on 2026-11-25, all npm, none in what is deployed:
+
+- `xlsx` (4, high, no fixed release on npm): only in `apps/server`, the
+  upstream TypeScript server, which is never deployed (and must not be run
+  locally, as it writes to the desktop app's data). The client bundle has
+  only the word `.xlsx` in file names; our spreadsheet import is calamine,
+  in Rust.
+- `minimatch`, `glob`, `uuid`, `esbuild` (medium): build and dev tooling in
+  `pnpm-lock.yaml`. `esbuild`'s advisory is about its dev server, which we do
+  not use (the upstream oracle only bundles with it).
+
+To do when convenient: `pnpm update` the four tooling packages and re-run
+the client build and tests; drop or replace `xlsx` in `apps/server` when
+the next upstream pull touches it.
