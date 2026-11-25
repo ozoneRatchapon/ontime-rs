@@ -124,6 +124,12 @@ Three layers, each catching something the others cannot:
      `js_semantics_tests.rs` compare ours.
      Differences we chose are listed in `DELIBERATE` with the reason. A test
      fails if upstream later agrees with us, so the list cannot go stale.
+   - `fixture_intent_tests.rs` reads each fixture on its own. It checks that
+     every case still exercises what its name says: an end action that
+     still fires, a "fails" case that still refuses, a corpus that still
+     reaches every branch. A contract cannot see a case that has quietly
+     stopped testing anything, since both sides agree on it. (The idea comes
+     from katgpt-rs's self-checking test vectors.)
 2. **Unit tests** in `packages/ontime-core/tests/`, for the runtime behaviour
    behind the calls.
 3. **End to end**: `apps/server-rs/tests/e2e/integration.mjs` against
