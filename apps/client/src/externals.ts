@@ -30,6 +30,12 @@ export const isDev = import.meta.env.DEV;
 export const currentHostName = window.location.hostname;
 export const isLocalhost = currentHostName === 'localhost' || currentHostName === '127.0.0.1';
 export const isOntimeCloud = document.querySelector('base')?.hasAttribute('data-is-cloud');
+/**
+ * Built against this fork's Cloudflare Worker (`VITE_WORKER_URL`, set by deploy-cloud.sh).
+ * The Worker has no filesystem, no local port, no MCP server and no long-lived
+ * outgoing connections, so the settings that drive those are hidden.
+ */
+export const isWorkerBackend = Boolean(import.meta.env.VITE_WORKER_URL);
 
 export const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 export const supportsFullscreen = document.fullscreenEnabled;

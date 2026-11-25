@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import useAppVersion from '../../common/hooks-query/useAppVersion';
-import { isDocker } from '../../externals';
+import { isDocker, isWorkerBackend } from '../../externals';
 
 export type SettingsOption = {
   id: string;
@@ -10,7 +10,7 @@ export type SettingsOption = {
   highlight?: string;
 };
 
-const staticOptions = [
+export const staticOptions = [
   {
     id: 'settings',
     label: 'Settings',
@@ -95,12 +95,46 @@ export type SettingsOptionId =
   | (typeof staticOptions)[number]['id']
   | Extract<(typeof staticOptions)[number], { secondary: object }>['secondary'][number]['id'];
 
+/**
+ * What the Cloudflare Worker answers 501 for, or has no route for at all: a
+ * menu that only leads to an error is hidden rather than shown.
+ * - MCP server and server port: there is no local process.
+ * - Project files (create, manage): there is no filesystem; a room is the project.
+ * - Spreadsheet import and Google Sheets sync: no upload handling, no OAuth.
+ * - Custom views: uploads are refused.
+ * - Automations: stored but never sent, since a Worker cannot keep connections out.
+ * - Shutdown: there is nothing to shut down.
+ */
+const notOnWorker: ReadonlySet<string> = new Set([
+  'settings__mcp',
+  'settings__port',
+  'settings__custom-views',
+  'project',
+  'manage__sheets',
+  'automation',
+  'shutdown',
+]);
+
+/** The menu without what this backend cannot do; a group left empty goes too. */
+export function availableOptions(options: Readonly<SettingsOption[]>, onWorker: boolean): SettingsOption[] {
+  if (!onWorker) return [...options];
+  return options
+    .filter((option) => !notOnWorker.has(option.id))
+    .map((option) =>
+      option.secondary
+        ? // a copy, as the highlight below makes one: the option list is shared
+          Object.assign({}, option, { secondary: option.secondary.filter((child) => !notOnWorker.has(child.id)) })
+        : option,
+    )
+    .filter((option) => !option.secondary || option.secondary.length > 0);
+}
+
 export function useAppSettingsMenu() {
   const { data } = useAppVersion();
 
   const options: Readonly<SettingsOption[]> = useMemo(
     () =>
-      staticOptions.map((option) =>
+      availableOptions(staticOptions, isWorkerBackend).map((option) =>
         // if there is an update then highlight the about setting
         option.id === 'about' && data.hasUpdates
           ? Object.assign({}, option, { highlight: 'New version available' })
