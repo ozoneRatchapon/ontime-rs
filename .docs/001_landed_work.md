@@ -82,3 +82,7 @@
   - Hidden: MCP Server, Server port, project files, spreadsheet import and Google Sheets, custom views, automations, Shutdown. Each one was checked against the Worker's routes (a 501 or no route) before it was hidden.
   - The menu and the panels share one rule (`isAvailableHere`), because a panel shows every section on one page. The first deploy hid only the menu entries, and a Playwright check caught the sections still showing.
   - Checked on both URLs with Playwright, in a throwaway room: the hidden sections are gone, the rest are there, and there are no page errors.
+- **2026-11-25:** RIIR 7 (plan 015). Worker `d4b17b86`.
+  - End actions pinned against upstream. At the last event ours holds instead of wrapping to the top, as the user chose.
+  - Rundown edits pinned against upstream's rundown service (54 cases). Fixed: new events get the next cue, an edited end or duration is kept, swap keeps each place's schedule, and a cloned group copies its entries instead of sharing them.
+  - Production: all five smoke suites pass, and the four fixes were checked one by one in a throwaway room (cue `7` gives `8`; an end edit gives `lock-end` with the duration worked out; the cloned group is `Block (copy)` with its own entries; a swap keeps the place's time).

@@ -1,6 +1,6 @@
 # 015 — End actions and rundown edits against upstream (RIIR 7)
 
-Status: **both items done locally (2026-11-25).**
+Status: **both items done and deployed (2026-11-25), Worker `d4b17b86`.**
 
 ## 1. End actions (done)
 

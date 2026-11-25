@@ -117,6 +117,9 @@ How to use it:
 - [x] Plan 014 (benchmarks): deployed 2026-11-25, Worker `f154eadf`. Commands
       and the alarm no longer copy the rundown (`benchmarks/003`).
 
+- [x] **RIIR 7 (plan 015)**: end actions and rundown edits pinned against
+      upstream, deployed 2026-11-25, Worker `d4b17b86`.
+
 ## Dioxus pilot
 
 - [ ] Try Dioxus on our own pages, `/admin`, `/join` and `/my-rooms`. Plan:
