@@ -7,13 +7,15 @@ use std::time::Duration;
 use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
 use ontime_core::audit::{Actor, Chunk, Note, Retention, Writes};
 use ontime_core::audit_describe;
-use ontime_core::project::{hash_password, Project};
+use ontime_core::guard::Guard;
+use ontime_core::project::Project;
 use ontime_core::registry::{should_report, Member, RoomReport};
 use ontime_core::socket;
 
 use serde::{Deserialize, Serialize};
 
 use crate::audit_store::{self, Batch};
+use crate::guard_host::{self, master_token};
 use crate::{presence, registry_host};
 
 #[path = "room_integration.rs"]
@@ -106,6 +108,9 @@ pub struct OntimeProject {
     /// How often this room takes integration calls. In memory: an eviction
     /// only hands out a fresh burst.
     rate_limit: ontime_core::integration::RateLimit,
+    /// Wrong guesses at this room's tokens, per client; in the registry
+    /// instance, at the admin routes'. In memory: see `ontime_core::guard`.
+    guard: Guard,
     /// The undo history's list of copies, once read. Lost on eviction, which
     /// only costs one read.
     snapshot_index: Option<Vec<i64>>,
@@ -128,6 +133,7 @@ impl DurableObject for OntimeProject {
             members: HashMap::new(),
             audit_head: None,
             rate_limit: Default::default(),
+            guard: Guard::default(),
             snapshot_index: None,
             changed_since_copy: true,
         }
@@ -136,16 +142,41 @@ impl DurableObject for OntimeProject {
     async fn fetch(&mut self, mut req: Request) -> Result<Response> {
         // the registry instance is the same class but holds no project; the
         // Worker never routes these paths to a room, only to `@registry`
+        if req.path() == guard_host::GUARD_PATH {
+            return guard_host::serve(&mut self.guard, req, now_ms()).await;
+        }
         if req.path().starts_with(registry_host::REGISTRY_PATH) {
             return registry_host::serve(&self.state, req).await;
         }
         if let Err(e) = self.hydrate().await {
             return Response::error(format!("ROOM_LOAD_ERR: {e}"), 500);
         }
-        match self.handle(&mut req).await {
-            Ok(res) => Ok(res),
-            Err(e) => Response::error(format!("ROOM_FETCH_ERR: {e}"), 500),
+
+        // a client locked out for guessing is refused whatever it presents, so
+        // a right guess cannot be told from a wrong one; one presenting nothing
+        // guesses nothing, and an open room still lets it in
+        let now = now_ms();
+        let client = guard_host::client(&req);
+        let token = Self::presented_token(&req);
+        if token.is_some() {
+            if let Err(seconds) = self.guard.check(&client, now) {
+                return guard_host::too_many(seconds);
+            }
         }
+        let response = match self.handle(&mut req).await {
+            Ok(res) => res,
+            Err(e) => return Response::error(format!("ROOM_FETCH_ERR: {e}"), 500),
+        };
+        // a refusal is a wrong guess only when the token was not one this room
+        // knows: a stale token in an open room is not refused, and is not counted
+        if let Some(token) = token {
+            let refused = matches!(response.status_code(), 401 | 403);
+            let master = master_token(&self._env);
+            if refused && !api::is_known_token(&self.project, master.as_deref(), &token) {
+                self.guard.fail(&client, now);
+            }
+        }
+        Ok(response)
     }
 
     async fn websocket_message(
@@ -579,11 +610,7 @@ impl OntimeProject {
             path: path_and_query,
             body: body(req).await,
             token: Self::presented_token(req),
-            master_token: self
-                ._env
-                .secret("SESSION_PASSWORD")
-                .ok()
-                .map(|secret| hash_password(&secret.to_string())),
+            master_token: master_token(&self._env),
             room_is_new: self.is_new,
             member: member.as_ref().map(|member| member.role),
         };

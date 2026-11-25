@@ -12,6 +12,9 @@
 //! - `DELETE /admin/people/<id>`           remove them
 //! - `GET    /admin/activity`      people events, newest first: `?before=&limit=`
 //!
+//! Wrong guesses at the password or the token are counted per client by
+//! `guard_host`, and a client past its allowance waits (plan 019).
+//!
 //! With no `SESSION_PASSWORD` configured the admin surface is closed rather than
 //! open: unlike creating a room, listing every room is never a default.
 
@@ -20,13 +23,8 @@ use worker::*;
 
 use ontime_core::project::{hash_password, token_matches};
 
+use crate::guard_host::{self, master_token};
 use crate::{bearer_token, registry_host};
-
-fn master_token(env: &Env) -> Option<String> {
-    env.secret("SESSION_PASSWORD")
-        .ok()
-        .map(|secret| hash_password(&secret.to_string()))
-}
 
 fn presented_token(req: &Request) -> Option<String> {
     if let Some(token) = bearer_token(req) {
@@ -59,13 +57,25 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
             .get("password")
             .and_then(Value::as_str)
             .unwrap_or_default();
-        return match token_matches(&master, &hash_password(password)) {
+        let ok = token_matches(&master, &hash_password(password));
+        if let Err(seconds) = guard_host::ask(env, &guard_host::client(&req), ok).await? {
+            return guard_host::too_many(seconds);
+        }
+        return match ok {
             true => Response::from_json(&json!({ "token": master })),
             false => Response::error("Wrong password", 401),
         };
     }
 
-    let authorised = presented_token(&req).is_some_and(|token| token_matches(&master, &token));
+    // the master token is as good as the password, so a guess at it is
+    // counted the same; asking without one guesses nothing
+    let Some(token) = presented_token(&req) else {
+        return Response::error("Unauthorized", 401);
+    };
+    let authorised = token_matches(&master, &token);
+    if let Err(seconds) = guard_host::ask(env, &guard_host::client(&req), authorised).await? {
+        return guard_host::too_many(seconds);
+    }
     if !authorised {
         return Response::error("Unauthorized", 401);
     }

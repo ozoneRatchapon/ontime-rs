@@ -88,6 +88,7 @@ suites=(
   "teleprompter.mjs:node" # the shared teleprompter transport (plan 008)
   "integration.mjs:node" # the integration API, HTTP and websocket (plan 009)
   "snapshots.mjs:node" # the room's undo history (plan 018, needs ADMIN_PASSWORD)
+  "guard.mjs:node"    # wrong guesses wait (plan 019, needs ADMIN_PASSWORD, local only)
 )
 
 echo

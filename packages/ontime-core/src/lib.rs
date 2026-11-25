@@ -8,6 +8,7 @@ pub mod custom_fields;
 pub mod directory;
 pub mod engine;
 mod entry_edits;
+pub mod guard;
 pub mod identity;
 pub mod integration;
 pub mod message;

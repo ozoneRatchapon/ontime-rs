@@ -1,6 +1,7 @@
 mod admin;
 mod audit_store;
 mod auth;
+mod guard_host;
 mod presence;
 mod registry_host;
 mod room;

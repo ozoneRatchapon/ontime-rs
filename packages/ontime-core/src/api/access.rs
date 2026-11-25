@@ -32,6 +32,17 @@ pub fn is_authorised(project: &Project, req: &ApiRequest) -> bool {
     }
 }
 
+/// Whether `presented` is the room password's token or the master token: a
+/// refused request carrying anything else was a wrong guess, and is counted by
+/// [`crate::guard::Guard`].
+pub fn is_known_token(project: &Project, master: Option<&str>, presented: &str) -> bool {
+    let room = project
+        .password_hash
+        .as_deref()
+        .is_some_and(|hash| token_matches(hash, presented));
+    room || master.is_some_and(|master| token_matches(master, presented))
+}
+
 /// Whether the caller holds more than a link: a membership, the room
 /// password, or the master password.
 pub fn is_privileged(project: &Project, req: &ApiRequest) -> bool {

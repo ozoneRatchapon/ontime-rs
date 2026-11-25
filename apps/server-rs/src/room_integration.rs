@@ -11,9 +11,9 @@ use ontime_core::api::{self, ApiRequest, HttpMethod};
 use ontime_core::audit::Actor;
 use ontime_core::audit_describe;
 use ontime_core::integration::{self, Change, ClientCommand, HttpCall, Reply, HELLO_MESSAGE};
-use ontime_core::project::hash_password;
 
 use super::{now_ms, ClientInfo, OntimeProject};
+use crate::guard_host::{self, master_token};
 
 /// Whether a path is the integration API's, as the Durable Object receives it.
 pub(super) fn is_integration_path(path: &str) -> bool {
@@ -49,11 +49,7 @@ impl OntimeProject {
             path: url.path().to_string(),
             body: json!({}),
             token,
-            master_token: self
-                ._env
-                .secret("SESSION_PASSWORD")
-                .ok()
-                .map(|secret| hash_password(&secret.to_string())),
+            master_token: master_token(&self._env),
             room_is_new: false,
             member: None,
         };
@@ -77,12 +73,7 @@ impl OntimeProject {
         // counted only once let in, so a stranger flooding the room cannot
         // use up the operator's calls
         if let Err(seconds) = self.rate_limit.take(&tag, now_ms()) {
-            let mut response =
-                Response::from_json(&json!({ "message": "Too many requests" }))?.with_status(429);
-            response
-                .headers_mut()
-                .set("Retry-After", &seconds.to_string())?;
-            return Ok(response);
+            return guard_host::too_many(seconds);
         }
 
         let actor = audit_describe::actor(&self.project, &access, None);
