@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { IoAdd } from 'react-icons/io5';
 
-import { restoreDemoView } from '../../../../common/api/customViews';
+import { restoreDemoView, restoreObsViews } from '../../../../common/api/customViews';
 import { maybeAxiosError } from '../../../../common/api/utils';
 import Button from '../../../../common/components/buttons/Button';
 import Info from '../../../../common/components/info/Info';
 import ExternalLink from '../../../../common/components/link/external-link/ExternalLink';
 import useCustomViews from '../../../../common/hooks-query/useCustomViews';
+import { isWorkerBackend } from '../../../../externals';
 import * as Panel from '../../panel-utils/PanelUtils';
 import CustomViewForm from './CustomViewForm';
 import { customViewsDocs } from './customViews.utils';
@@ -34,6 +35,17 @@ export default function CustomViews() {
     }
   };
 
+  // ours, on the Worker (plan 022): the countdown and timer pages for OBS
+  const handleAddObsViews = async () => {
+    try {
+      setActionError(null);
+      await restoreObsViews();
+      await refetch();
+    } catch (error) {
+      setActionError(maybeAxiosError(error));
+    }
+  };
+
   return (
     <Panel.Section>
       <Panel.Card>
@@ -44,6 +56,11 @@ export default function CustomViews() {
             <Button variant='ghosted' onClick={handleRestoreDemo} disabled={hasDemoView}>
               Restore demo
             </Button>
+            {isWorkerBackend && (
+              <Button variant='ghosted' onClick={handleAddObsViews}>
+                Add OBS views
+              </Button>
+            )}
             <Button onClick={() => setIsUploadOpen(true)}>
               New <IoAdd />
             </Button>

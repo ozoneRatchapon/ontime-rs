@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Starting soon</title>
+    <!--
+      A "starting soon" screen for OBS (plan 022). Add it as a Browser Source,
+      1920x1080. Everything is set in the address, nothing in this file:
+
+        to=19:30        count down to this time (24h, the room's clock);
+                        without it, to the first event's planned start
+        label=…         the line above the numbers   (default: Starting in)
+        done=…          shown when the count reaches zero (default: Starting now)
+        title=…         the big title (default: the project title)
+        logo=https://…  an image above the title
+        bg=0b1020       background colour, or "transparent" (default)
+        color=ffffff    text colour
+        accent=7c5cff   numbers colour
+        font=Prompt     a Google Font by name (Thai: Prompt, Kanit, Sarabun)
+        next=0          hide the line with the first event's title
+
+      The numbers are counted here from the room's clock, so they keep going
+      between the room's messages.
+    -->
+    <style>
+      :root {
+        --bg: transparent;
+        --color: #ffffff;
+        --accent: #7c5cff;
+        --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 100%; height: 100%; }
+      body {
+        background: var(--bg);
+        color: var(--color);
+        font-family: var(--font);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+      }
+      main { display: flex; flex-direction: column; align-items: center; gap: 2.5vh; padding: 4vh 4vw; }
+      #logo { max-height: 16vh; max-width: 40vw; object-fit: contain; }
+      #logo[hidden] { display: none; }
+      #title { font-size: 6vh; font-weight: 700; letter-spacing: 0.02em; }
+      #label { font-size: 3.4vh; opacity: 0.8; letter-spacing: 0.04em; }
+      #count {
+        font-size: 18vh;
+        font-weight: 800;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        text-shadow: 0 0.6vh 3vh rgba(0, 0, 0, 0.35);
+      }
+      #next { font-size: 3vh; opacity: 0.75; }
+      #next[hidden] { display: none; }
+      body.offline #count { opacity: 0.5; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img id="logo" alt="" hidden />
+      <h1 id="title"></h1>
+      <p id="label">Starting in</p>
+      <p id="count">--:--</p>
+      <p id="next" hidden></p>
+    </main>
+    <script>
+      const DAY = 24 * 60 * 60 * 1000;
+      const params = new URLSearchParams(location.search);
+      const colour = (value) => (value === 'transparent' ? value : /^[0-9a-f]{3,8}$/i.test(value) ? `#${value}` : value);
+      const root = document.documentElement.style;
+      if (params.get('bg')) root.setProperty('--bg', colour(params.get('bg')));
+      if (params.get('color')) root.setProperty('--color', colour(params.get('color')));
+      if (params.get('accent')) root.setProperty('--accent', colour(params.get('accent')));
+      const font = params.get('font');
+      if (font) {
+        const style = document.createElement('style');
+        style.textContent = `@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;700;800&display=swap');`;
+        document.head.appendChild(style);
+        root.setProperty('--font', `'${font.replace(/'/g, '')}', system-ui, sans-serif`);
+      }
+      if (params.get('logo')) {
+        const logo = document.getElementById('logo');
+        logo.src = params.get('logo');
+        logo.hidden = false;
+      }
+      const text = (id, value) => (document.getElementById(id).textContent = value);
+      if (params.get('label')) text('label', params.get('label'));
+      const doneText = params.get('done') || 'Starting now';
+      const showNext = params.get('next') !== '0';
+
+      /** "19:30" as milliseconds into the day, or null. */
+      function parseTime(value) {
+        const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(value || '');
+        if (!match) return null;
+        return ((Number(match[1]) * 60 + Number(match[2])) * 60 + Number(match[3] || 0)) * 1000;
+      }
+      const fixedTarget = parseTime(params.get('to'));
+
+      // the room's clock: what it said, and when we heard it
+      let clockAt = null;
+      let heardAt = 0;
+      let plannedStart = null;
+      let nextTitle = '';
+
+      if (params.get('title') !== null) text('title', params.get('title'));
+      else
+        fetch('/data/project')
+          .then((response) => response.json())
+          .then((project) => text('title', project.title || ''))
+          .catch(() => {});
+
+      function format(ms) {
+        const total = Math.ceil(ms / 1000);
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        const two = (n) => String(n).padStart(2, '0');
+        return h > 0 ? `${h}:${two(m)}:${two(s)}` : `${two(m)}:${two(s)}`;
+      }
+
+      function render() {
+        const target = fixedTarget ?? plannedStart;
+        if (clockAt === null || target === null) {
+          text('count', '--:--');
+        } else {
+          const now = clockAt + (performance.now() - heardAt);
+          let left = target - (now % DAY);
+          // a start just after midnight, counted from the evening before
+          if (left < -DAY / 2) left += DAY;
+          text('count', left > 0 ? format(left) : doneText);
+        }
+        const next = document.getElementById('next');
+        next.hidden = !showNext || !nextTitle;
+        next.textContent = nextTitle;
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+
+      function onRuntime(payload) {
+        if (typeof payload.clock === 'number') {
+          clockAt = payload.clock;
+          heardAt = performance.now();
+        }
+        if (payload.rundown) plannedStart = payload.rundown.plannedStart ?? null;
+        if ('eventNext' in payload || 'eventNow' in payload) {
+          const event = payload.eventNow || payload.eventNext;
+          nextTitle = event ? event.title || '' : '';
+        }
+      }
+
+      let retry = 1000;
+      function connect() {
+        const socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+        socket.onopen = () => {
+          retry = 1000;
+          document.body.classList.remove('offline');
+        };
+        socket.onmessage = (event) => {
+          const { tag, payload } = JSON.parse(event.data);
+          if (tag === 'runtime-data') onRuntime(payload);
+        };
+        socket.onclose = () => {
+          document.body.classList.add('offline');
+          setTimeout(connect, retry);
+          retry = Math.min(retry * 2, 30000);
+        };
+      }
+      connect();
+    </script>
+  </body>
+</html>

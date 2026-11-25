@@ -62,6 +62,16 @@ export async function restoreDemoView(options?: RequestOptions): Promise<Message
   ).data;
 }
 
+/** Worker only (plan 022): adds, or puts back, the countdown and timer pages for OBS. */
+export async function restoreObsViews(options?: RequestOptions): Promise<MessageResponse> {
+  return (
+    await axios.post<MessageResponse>(`${customViewsPath}/restore-obs`, null, {
+      signal: options?.signal,
+      timeout: options?.timeout ?? axiosConfig.longTimeout,
+    })
+  ).data;
+}
+
 export async function deleteCustomView(slug: string, options?: RequestOptions): Promise<void> {
   await axios.delete(`${customViewsPath}/${encodeURIComponent(slug)}`, {
     signal: options?.signal,

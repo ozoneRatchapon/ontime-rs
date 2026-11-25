@@ -103,13 +103,20 @@ impl OntimeProject {
                 Response::from_json(&json!({ "views": list }))
             }
             (Method::Post, ["restore-demo"]) => {
-                // upstream replaces the demo with a fresh copy
-                if self.view_index().await.iter().any(|s| s == DEMO_SLUG) {
-                    self.remove_view(DEMO_SLUG).await?;
+                self.replace_view(DEMO_SLUG, views::DEMO_HTML, actor).await
+            }
+            // ours (plan 022): the OBS pages, each replaced by a fresh copy
+            (Method::Post, ["restore-obs"]) => {
+                for (slug, html) in views::OBS_VIEWS {
+                    let response = self.replace_view(slug, html, actor.clone()).await?;
+                    if response.status_code() != 201 {
+                        return Ok(response);
+                    }
                 }
-                self.add_view(DEMO_SLUG, views::DEMO_HTML, actor)
-                    .await
-                    .map(|response| response.with_status(201))
+                Ok(
+                    Response::from_json(&json!({ "message": "Added the OBS views" }))?
+                        .with_status(201),
+                )
             }
             (_, [slug, ..]) if !is_valid_slug(slug) => fail(ViewError::BadName.message(), 400),
             (Method::Post, [slug, "upload"]) => {
@@ -150,6 +157,12 @@ impl OntimeProject {
             }
             _ => fail("Not found", 404),
         }
+    }
+
+    /// A built-in page put back as it ships, as upstream restores its demo.
+    async fn replace_view(&mut self, slug: &str, html: &str, actor: Actor) -> Result<Response> {
+        self.remove_view(slug).await?;
+        self.add_view(slug, html, actor).await
     }
 
     async fn remove_view(&mut self, slug: &str) -> Result<bool> {

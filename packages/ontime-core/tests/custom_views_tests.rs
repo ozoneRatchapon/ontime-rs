@@ -4,6 +4,7 @@
 
 use ontime_core::custom_views::{
     content_security_policy, is_valid_slug, serve, validate, ViewError, DEMO_HTML, MAX_BYTES,
+    OBS_VIEWS,
 };
 use serde_json::Value;
 
@@ -72,4 +73,21 @@ fn a_page_is_sandboxed_and_talks_only_to_its_worker() {
     assert!(policy.contains("default-src 'none'"));
     let local = content_security_policy("http://127.0.0.1:8787");
     assert!(local.contains("ws://127.0.0.1:8787"));
+}
+
+#[test]
+fn the_obs_views_are_pages_upstream_would_take() {
+    for (slug, html) in OBS_VIEWS {
+        assert!(is_valid_slug(slug), "{slug}");
+        assert_eq!(validate(html), Ok(()), "{slug}");
+        // they open the socket as a page written for the app does
+        assert!(html.contains("location.host}/ws"), "{slug}");
+    }
+}
+
+#[test]
+fn a_theme_font_may_come_from_google_fonts() {
+    let policy = content_security_policy("https://w.example");
+    assert!(policy.contains("style-src 'unsafe-inline' https://fonts.googleapis.com;"));
+    assert!(policy.contains("font-src * data:"));
 }

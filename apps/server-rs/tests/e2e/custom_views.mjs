@@ -92,6 +92,15 @@ try {
   const actions = log.lines.map((line) => line.action);
   check('adds logged', actions.filter((a) => a === 'custom-view-add').length, 3);
   check('the removal logged', actions.filter((a) => a === 'custom-view-remove').length, 1);
+
+  console.log('== the OBS pages (plan 022) ==');
+  check('added in one go', (await call('POST', '/data/custom-views/restore-obs')).status, 201);
+  const slugs = json(await call('GET', '/data/custom-views')).views.map((v) => v.slug);
+  check('both listed', ['obs-countdown', 'obs-timer'].every((s) => slugs.includes(s)), true);
+  check('put back, not refused, the second time', (await call('POST', '/data/custom-views/restore-obs')).status, 201);
+  const obs = await call('GET', `/external/obs-timer/?token=${lock.token}`, null, null);
+  check('served like any page', [obs.status, obs.text.includes('location.pathname.match')], [200, true]);
+  check('Google Fonts allowed for a theme', (obs.headers.get('content-security-policy') ?? '').includes('https://fonts.googleapis.com'), true);
 } finally {
   await fetch(`${base}/admin/rooms/${room}`, { method: 'DELETE', headers: { Authorization: `Bearer ${master}` } });
 }

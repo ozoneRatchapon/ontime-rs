@@ -111,3 +111,4 @@
   - Each room keeps its own single-file pages, served from `/r/<room>/external/<name>/`: sandboxed, and pointed at the room by a script placed first, so upstream's pages work unchanged. Usable as an OBS browser source.
   - Pinned against upstream's name and page checks (40 cases); e2e 33 checks; in Chromium, upstream's demo under a locked room shows the running event, and the editor panel uploads and lists a page.
   - Production, each in a throwaway room: custom_views 33, project_file 16, integration 54, timer 25, offset 17, roll 14, teleprompter 35 checks, and the demo page in Chromium, all passing. raknong still answers 401 without its token.
+- **2026-11-26:** OBS pages and a Thai guide (plan 022), not deployed yet. `obs-countdown` and `obs-timer` are added from Custom views in one click and set up from their address; they count by themselves while a room is idle. Guide: `.docs/004_obs_macbook_iphone_th.md`. License claim aligned to GPL-3.0-or-later.

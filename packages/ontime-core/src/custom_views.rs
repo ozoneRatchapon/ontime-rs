@@ -16,6 +16,15 @@ pub const MAX_VIEWS: usize = 20;
 pub const DEMO_SLUG: &str = "demo";
 /// upstream's demo page (`bundle/bundledDemoHtml.ts`), as the app restores it.
 pub const DEMO_HTML: &str = include_str!("custom_view_demo.html");
+/// Ours (plan 022): pages for OBS, set up from their address alone, added to a
+/// room in one go.
+pub const OBS_VIEWS: [(&str, &str); 2] = [
+    (
+        "obs-countdown",
+        include_str!("custom_view_obs_countdown.html"),
+    ),
+    ("obs-timer", include_str!("custom_view_obs_timer.html")),
+];
 
 /// Why a page or a name was refused.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -150,15 +159,16 @@ fn is_stylesheet_link(inside: &str) -> bool {
 
 /// The `Content-Security-Policy` a page is served with. `sandbox` gives it an
 /// origin of its own, so it reads nothing of the Worker's and nothing of the
-/// editor's; it may run its inline script and style, show images and fonts
-/// from anywhere, and talk only to the Worker it came from.
+/// editor's; it may run its inline script and style, load Google Fonts' CSS
+/// (for a theme's font), show images and fonts from anywhere, and talk only to
+/// the Worker it came from.
 pub fn content_security_policy(origin: &str) -> String {
     let socket = origin
         .replacen("https://", "wss://", 1)
         .replacen("http://", "ws://", 1);
     format!(
         "sandbox allow-scripts allow-popups allow-forms; default-src 'none'; \
-         script-src 'unsafe-inline'; style-src 'unsafe-inline'; \
+         script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; \
          img-src * data: blob:; font-src * data:; media-src * data: blob:; \
          connect-src {origin} {socket}"
     )
