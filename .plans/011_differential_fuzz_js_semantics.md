@@ -1,6 +1,6 @@
 # 011 — Differential fuzzing of the JavaScript conversions
 
-Status: **planned (2026-11-25).** Item 2 of the RIIR 5 review.
+Status: **done locally (2026-11-25).** Item 2 of the RIIR 5 review.
 
 ## Why
 
@@ -28,3 +28,24 @@ itself about inputs nobody thought of.
 
 The corpus agrees with node. A failing input is added to the fixed list, so
 it stays covered after the seed changes.
+
+## Result
+
+5,000 seeded inputs (`gen-js_semantics.ts`). Every result now matches node. The
+first run found three real differences, none of which the hand-picked cases
+had covered:
+
+1. **U+0085 (NEL).** Rust's `char::is_whitespace` counts it as white space,
+   ECMAScript does not. `Number("\u0085")` gave 0 here and NaN in node.
+   `is_js_whitespace` now lists ECMAScript's exact set.
+2. **Number to text.** JavaScript prints `1e+21`, `1e-7` and the shortest
+   digits (`39007199254740990`). We printed every digit. `number_to_string`
+   now follows ECMAScript Number::toString, using Rust's shortest round trip
+   for the digits.
+3. **Query values with broken UTF-8.** node first decodes only a value that
+   contains a valid `%XX`. When `decodeURIComponent` throws, it falls back to
+   `unescapeBuffer` and reads the bytes with U+FFFD. We returned the raw text.
+   Confirmed in node's own `querystring.parse` source before changing it.
+
+Also: `hex_byte` no longer takes a sign (`%+1`), which `u8::from_str_radix`
+allowed.

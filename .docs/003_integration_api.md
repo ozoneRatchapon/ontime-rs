@@ -111,7 +111,11 @@ Three layers, each catching something the others cannot:
      refused with.
    - `gen-selection.ts` runs upstream's `runtime.utils` and `roll.utils` over
      eight rundowns: which event next, previous, an index and a cue pick.
-   - `integration_contract_tests.rs` and `selection_tests.rs` compare ours.
+   - `gen-js_semantics.ts` asks node itself about 5,000 seeded strings:
+     `Number()`, `String()`, `decodeURI()` and Express's query decoding
+     (differential fuzzing, plan 011).
+   - `integration_contract_tests.rs`, `selection_tests.rs` and
+     `js_semantics_tests.rs` compare ours.
      Differences we chose are listed in `DELIBERATE` with the reason. A test
      fails if upstream later agrees with us, so the list cannot go stale.
 2. **Unit tests** in `packages/ontime-core/tests/`, for the runtime behaviour

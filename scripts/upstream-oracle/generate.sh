@@ -8,6 +8,8 @@
 # - integration.json: what upstream's integration router and dispatcher make
 #   of each request, with its services replaced by recorders (RIIR 5)
 # - selection.json: which event next, previous, an index and a cue pick (RIIR 5)
+# - js_semantics.json: node's Number(), String(), decodeURI() and query decoding
+#   over a seeded corpus, to fuzz integration/js.rs against (plan 011)
 #
 #   scripts/upstream-oracle/generate.sh [upstream-ref]   # default upstream/master
 #
@@ -41,7 +43,7 @@ cp -R "$here/integration-stubs/apps" "$work/stubbed/"
 mkdir -p "$work/out/node_modules"
 ln -s "$root/node_modules/.pnpm/node_modules/express" "$work/out/node_modules/express"
 
-for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection; do
+for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection js_semantics; do
   tree="$work/upstream"
   if [ "$name" = integration ]; then tree="$work/stubbed"; fi
   "$esbuild" "$here/gen-$name.ts" --bundle --platform=node --format=esm --log-level=error \

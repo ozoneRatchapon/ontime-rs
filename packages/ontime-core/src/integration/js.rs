@@ -77,9 +77,24 @@ fn integer_in_radix(digits: &str, radix: u32) -> Option<f64> {
     })
 }
 
-/// The characters StringToNumber trims: white space and line terminators.
+/// The characters StringToNumber trims: ECMAScript's WhiteSpace and
+/// LineTerminator. Narrower than Rust's `char::is_whitespace`, which also
+/// takes U+0085 (found by the differential fuzz, plan 011).
 fn is_js_whitespace(c: char) -> bool {
-    c.is_whitespace() || c == '\u{feff}'
+    matches!(
+        c,
+        '\u{9}'..='\u{d}'
+            | ' '
+            | '\u{a0}'
+            | '\u{1680}'
+            | '\u{2000}'..='\u{200a}'
+            | '\u{2028}'
+            | '\u{2029}'
+            | '\u{202f}'
+            | '\u{205f}'
+            | '\u{3000}'
+            | '\u{feff}'
+    )
 }
 
 /// `String(value)`.
@@ -107,17 +122,41 @@ pub fn string_or_undefined(value: Option<&Value>) -> String {
     value.map_or_else(|| "undefined".to_string(), string)
 }
 
-/// Number.prototype.toString for the values that come up here: whole numbers
-/// print without a fraction, everything else as Rust's shortest round trip,
-/// which is the same digits.
+/// Number.prototype.toString (ECMAScript Number::toString, radix 10): the
+/// shortest digits that read back as the same number, laid out as JavaScript
+/// does, with an exponent from 1e21 up and below 1e-6.
 pub fn number_to_string(number: f64) -> String {
     match number {
         n if n.is_nan() => "NaN".to_string(),
         n if n.is_infinite() && n > 0.0 => "Infinity".to_string(),
         n if n.is_infinite() => "-Infinity".to_string(),
         0.0 => "0".to_string(),
-        n if n.fract() == 0.0 && n.abs() < 1e21 => format!("{n:.0}"),
-        n => format!("{n}"),
+        n if n < 0.0 => format!("-{}", number_to_string(-n)),
+        n => {
+            // Rust's `{:e}` is the shortest round trip, as "1.2345e-7"
+            let scientific = format!("{n:e}");
+            let (mantissa, exponent) = scientific.split_once('e').unwrap_or((&scientific, "0"));
+            let digits: String = mantissa.chars().filter(char::is_ascii_digit).collect();
+            let k = digits.len() as i64;
+            let n = exponent.parse::<i64>().unwrap_or(0) + 1;
+            match n {
+                n if k <= n && n <= 21 => format!("{digits}{}", "0".repeat((n - k) as usize)),
+                n if 0 < n && n <= 21 => {
+                    format!("{}.{}", &digits[..n as usize], &digits[n as usize..])
+                }
+                n if -6 < n && n <= 0 => format!("0.{}{digits}", "0".repeat((-n) as usize)),
+                n => {
+                    let sign = if n - 1 < 0 { '-' } else { '+' };
+                    let (first, rest) = digits.split_at(1);
+                    let fraction = if rest.is_empty() {
+                        String::new()
+                    } else {
+                        format!(".{rest}")
+                    };
+                    format!("{first}{fraction}e{sign}{}", (n - 1).abs())
+                }
+            }
+        }
     }
 }
 
@@ -132,6 +171,16 @@ pub struct MalformedUri;
 /// those for reserved characters. A broken sequence is an error, as the
 /// `URIError` JavaScript throws.
 pub fn decode_uri(text: &str) -> Result<String, MalformedUri> {
+    decode(text, RESERVED)
+}
+
+/// `decodeURIComponent(text)`: as `decode_uri`, with nothing left encoded.
+pub fn decode_uri_component(text: &str) -> Result<String, MalformedUri> {
+    decode(text, b"")
+}
+
+/// ECMAScript's Decode: `%XX` to UTF-8, leaving `reserved` ASCII encoded.
+fn decode(text: &str, reserved: &[u8]) -> Result<String, MalformedUri> {
     let bytes = text.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut i = 0;
@@ -143,7 +192,7 @@ pub fn decode_uri(text: &str) -> Result<String, MalformedUri> {
         }
         let first = hex_byte(bytes, i).ok_or(MalformedUri)?;
         if first < 0x80 {
-            match RESERVED.contains(&first) {
+            match reserved.contains(&first) {
                 true => out.extend_from_slice(&bytes[i..i + 3]),
                 false => out.push(first),
             }
@@ -165,6 +214,7 @@ pub fn decode_uri(text: &str) -> Result<String, MalformedUri> {
             }
             sequence.push(hex_byte(bytes, at).ok_or(MalformedUri)?);
         }
+        // rejects overlong forms and surrogates, as Decode does
         let character = std::str::from_utf8(&sequence).map_err(|_| MalformedUri)?;
         out.extend_from_slice(character.as_bytes());
         i += 3 * length;
@@ -172,31 +222,55 @@ pub fn decode_uri(text: &str) -> Result<String, MalformedUri> {
     String::from_utf8(out).map_err(|_| MalformedUri)
 }
 
+/// The two hex digits after a `%` at `at`. Only digits: `u8::from_str_radix`
+/// would also take a sign, as in `%+1`.
 fn hex_byte(bytes: &[u8], at: usize) -> Option<u8> {
     let pair = bytes.get(at + 1..at + 3)?;
+    if !pair.iter().all(u8::is_ascii_hexdigit) {
+        return None;
+    }
     let text = std::str::from_utf8(pair).ok()?;
     u8::from_str_radix(text, 16).ok()
 }
 
-/// `decodeURIComponent`, as Express's query parser applies it (with `+` as a
-/// space). Unlike `decode_uri` nothing stays encoded; a broken sequence is
-/// kept as it was, which is what the `qs` package does.
+/// A query value as Express 5 reads it (node's `querystring`): `+` is a
+/// space; a value with no valid `%XX` is taken as it is, and any other goes
+/// through `decodeURIComponent`. When that throws, node falls back to
+/// `unescapeBuffer`: each valid `%XX` is a byte, every other UTF-16 unit is
+/// kept as its low byte, and the bytes are read as UTF-8 with U+FFFD for
+/// anything malformed.
 pub fn decode_query_component(text: &str) -> String {
     let spaced = text.replace('+', " ");
-    let bytes = spaced.as_bytes();
-    let mut out = Vec::with_capacity(bytes.len());
+    // querystring.parse decodes a value only once it has seen an escape
+    let has_escape = (0..spaced.len())
+        .any(|i| spaced.as_bytes()[i] == b'%' && hex_byte(spaced.as_bytes(), i).is_some());
+    if !has_escape {
+        return spaced;
+    }
+    if let Ok(decoded) = decode_uri_component(&spaced) {
+        return decoded;
+    }
+    let units: Vec<u16> = spaced.encode_utf16().collect();
+    let mut bytes = Vec::with_capacity(units.len());
     let mut i = 0;
-    while i < bytes.len() {
-        match (bytes[i], hex_byte(bytes, i)) {
-            (b'%', Some(byte)) => {
-                out.push(byte);
+    while i < units.len() {
+        let escaped = (units[i] == u16::from(b'%'))
+            .then(|| units.get(i + 1..i + 3))
+            .flatten()
+            .and_then(|pair| {
+                let text = String::from_utf16(pair).ok()?;
+                hex_byte(format!("%{text}").as_bytes(), 0)
+            });
+        match escaped {
+            Some(byte) => {
+                bytes.push(byte);
                 i += 3;
             }
-            (byte, _) => {
-                out.push(byte);
+            None => {
+                bytes.push((units[i] & 0xff) as u8);
                 i += 1;
             }
         }
     }
-    String::from_utf8(out).unwrap_or(spaced)
+    String::from_utf8_lossy(&bytes).into_owned()
 }
