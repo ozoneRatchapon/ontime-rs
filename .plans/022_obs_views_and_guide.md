@@ -1,6 +1,6 @@
 # 022 — OBS pages and a guide for MacBook + iPhone
 
-Status: **done, not deployed (2026-11-26).** Chosen by the user after plan 021,
+Status: **done and deployed (2026-11-26), Worker `82a3fda0`, Pages `9e03647b` (master) and `9220b816` (main), hash-checked.** Chosen by the user after plan 021,
 as the first step towards running live events as a service: an online event
 with only a MacBook, an iPhone and OBS.
 
