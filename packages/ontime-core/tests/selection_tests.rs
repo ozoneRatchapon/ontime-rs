@@ -91,6 +91,9 @@ fn the_selection_functions_match_upstream() {
             let current = from.current.as_deref();
             let at = |what: &str| format!("{} from {current:?}: {what}", case.name);
             let current_index = current.and_then(|id| case.timed.iter().position(|e| e == id));
+            let timed_ids: Vec<&str> = case.timed.iter().map(String::as_str).collect();
+            let playable_ids: Vec<&str> = case.playable.iter().map(String::as_str).collect();
+            let owned = |id: Option<&str>| id.map(str::to_string);
 
             let mut check = |what: String, ours: Option<String>, want: &Option<String>| {
                 if ours != *want {
@@ -99,42 +102,49 @@ fn the_selection_functions_match_upstream() {
             };
             check(
                 at("next"),
-                next_playable(&case.playable, current).cloned(),
+                owned(next_playable(&playable_ids, current)),
                 &from.next,
             );
             check(
                 at("previous"),
-                previous_playable(&case.playable, current).cloned(),
+                owned(previous_playable(&playable_ids, current)),
                 &from.previous,
             );
             check(
                 at("roll next"),
-                next_roll_event(rundown, current),
+                owned(next_roll_event(rundown, current)),
                 &from.roll_next,
             );
             for cue in &from.cues {
-                let pick = |order: &[String], allow| {
-                    next_with_cue(rundown, order, &cue.cue, current_index, allow)
+                let pick = |order: &[&str], allow| {
+                    owned(next_with_cue(
+                        rundown,
+                        order,
+                        &cue.cue,
+                        current_index,
+                        allow,
+                    ))
                 };
                 check(
                     at(&format!("start cue {}", cue.cue)),
-                    pick(&case.timed, false),
+                    pick(&timed_ids, false),
                     &cue.start,
                 );
                 check(
                     at(&format!("start armed cue {}", cue.cue)),
-                    pick(&case.timed, true),
+                    pick(&timed_ids, true),
                     &cue.start_armed,
                 );
                 check(
                     at(&format!("load cue {}", cue.cue)),
-                    pick(&case.playable, false),
+                    pick(&playable_ids, false),
                     &cue.load,
                 );
             }
         }
         for index in &case.indices {
-            let ours = event_at_index(&case.timed, index.index).cloned();
+            let timed_ids: Vec<&str> = case.timed.iter().map(String::as_str).collect();
+            let ours = event_at_index(&timed_ids, index.index).map(str::to_string);
             if ours != index.id {
                 failures.push(format!(
                     "{}: index {}: upstream {:?}, ours {ours:?}",

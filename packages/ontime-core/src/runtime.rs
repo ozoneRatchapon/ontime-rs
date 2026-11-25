@@ -294,7 +294,7 @@ impl Runtime {
         }
 
         if self.selected_id.is_none() {
-            let first = playable(rundown).first().cloned();
+            let first = playable(rundown).first().map(|id| id.to_string());
             if first.is_none() {
                 return false;
             }
@@ -380,35 +380,35 @@ impl Runtime {
         let current = self.selected_id.as_deref();
         let next = match self.playback {
             Playback::Roll => next_roll_event(rundown, current),
-            _ => next_playable(&playable(rundown), current).cloned(),
+            _ => next_playable(&playable(rundown), current),
         };
-        next.is_some_and(|id| self.load_event(rundown, &id))
+        next.is_some_and(|id| self.load_event(rundown, id))
     }
 
     /// The previous event; at the top, the first again (upstream handleLoadPrevious).
     fn load_previous(&mut self, rundown: &Rundown) -> bool {
-        let previous = previous_playable(&playable(rundown), self.selected_id.as_deref()).cloned();
-        previous.is_some_and(|id| self.load_event(rundown, &id))
+        let previous = previous_playable(&playable(rundown), self.selected_id.as_deref());
+        previous.is_some_and(|id| self.load_event(rundown, id))
     }
 
     fn load_index(&mut self, rundown: &Rundown, index: usize) -> bool {
-        let chosen = event_at_index(&timed(rundown), index).cloned();
-        chosen.is_some_and(|id| self.load_event(rundown, &id))
+        let chosen = event_at_index(&timed(rundown), index);
+        chosen.is_some_and(|id| self.load_event(rundown, id))
     }
 
     fn load_cue(
         &mut self,
         rundown: &Rundown,
-        order: &[String],
+        order: &[&str],
         cue: &str,
         allow_current: bool,
     ) -> bool {
         let current_index = self
             .selected_id
-            .as_ref()
-            .and_then(|id| timed(rundown).iter().position(|e| e == id));
+            .as_deref()
+            .and_then(|id| timed(rundown).iter().position(|e| *e == id));
         let chosen = next_with_cue(rundown, order, cue, current_index, allow_current);
-        chosen.is_some_and(|id| self.load_event(rundown, &id))
+        chosen.is_some_and(|id| self.load_event(rundown, id))
     }
 
     /// Moves the selection by `offset` positions through the playable events.
@@ -428,10 +428,10 @@ impl Runtime {
                 if target < 0 || target as usize >= events.len() {
                     return false;
                 }
-                events[target as usize].clone()
+                events[target as usize].to_string()
             }
             // nothing loaded: stepping forward starts at the top
-            None if offset > 0 => events[0].clone(),
+            None if offset > 0 => events[0].to_string(),
             None => return false,
         };
 
@@ -622,7 +622,7 @@ impl Runtime {
         // event that just ended past midnight again, as the next day's.
         match next_roll_event(rundown, self.selected_id.as_deref()) {
             Some(next) => {
-                self.selected_id = Some(next);
+                self.selected_id = Some(next.to_string());
                 self.roll_into_loaded(rundown, now, tz_offset)
             }
             None => self.roll(rundown, now, tz_offset),
@@ -730,16 +730,16 @@ impl Runtime {
                     && event.get("flag").and_then(Value::as_bool).unwrap_or(false)
                 {
                     result.flag = Some(LookAheadTarget {
-                        id: id.clone(),
+                        id: id.to_string(),
                         accumulated_gap,
                         is_linked_to_loaded,
                     });
                 }
             }
 
-            if result.group_end.is_none() && last_in_group.as_deref() == Some(id.as_str()) {
+            if result.group_end.is_none() && last_in_group.as_deref() == Some(*id) {
                 result.group_end = Some(LookAheadTarget {
-                    id: id.clone(),
+                    id: id.to_string(),
                     accumulated_gap,
                     is_linked_to_loaded,
                 });
@@ -748,7 +748,7 @@ impl Runtime {
 
         if let Some(last) = events.last() {
             result.rundown_end = Some(LookAheadTarget {
-                id: last.clone(),
+                id: last.to_string(),
                 accumulated_gap,
                 is_linked_to_loaded,
             });

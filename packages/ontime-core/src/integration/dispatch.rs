@@ -65,15 +65,15 @@ fn playback(
         Some(message) => Err(IntegrationError::new(message)),
         None => Ok(Reply::success(Change::None)),
     };
-    let Some(rundown) = project.current().cloned() else {
-        return refused(failure);
-    };
-
     let was_playing = project.runtime.playback == Playback::Play;
     let previous_entry = project.runtime.selected_id.clone();
     let tz = project.timezone_offset;
 
-    if !project.runtime.apply(command, &rundown, now, tz) {
+    let applied = match project.runtime_and_current() {
+        (runtime, Some(rundown)) => runtime.apply(command, rundown, now, tz),
+        (_, None) => false,
+    };
+    if !applied {
         return refused(failure);
     }
 

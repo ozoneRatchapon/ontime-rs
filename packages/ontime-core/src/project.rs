@@ -235,6 +235,18 @@ impl Project {
             .or_else(|| self.rundowns.values().next())
     }
 
+    /// The runtime, and the rundown it plays, borrowed together. A command
+    /// reads the rundown while it changes the runtime; borrowing the two
+    /// fields apart saves copying the whole rundown, which was most of what a
+    /// command cost on a large one (benchmarks/003).
+    pub fn runtime_and_current(&mut self) -> (&mut Runtime, Option<&Rundown>) {
+        let rundown = self
+            .rundowns
+            .get(&self.loaded)
+            .or_else(|| self.rundowns.values().next());
+        (&mut self.runtime, rundown)
+    }
+
     pub fn current_mut(&mut self) -> Option<&mut Rundown> {
         let id = if self.rundowns.contains_key(&self.loaded) {
             self.loaded.clone()
@@ -367,9 +379,9 @@ impl Project {
         let Some(selected) = self.runtime.selected_id.as_ref() else {
             return false;
         };
-        let still_playable = self
-            .current()
-            .is_some_and(|rundown| crate::selection::playable(rundown).contains(selected));
+        let still_playable = self.current().is_some_and(|rundown| {
+            crate::selection::playable(rundown).contains(&selected.as_str())
+        });
         if still_playable {
             return false;
         }

@@ -114,9 +114,9 @@ pub fn apply_socket_command(
 pub fn on_alarm(project: &mut Project, now: i64) -> bool {
     let previous_entry = project.runtime.selected_id.clone();
     let tz = project.timezone_offset;
-    let timer = match project.current().cloned() {
-        Some(rundown) => project.runtime.on_tick(&rundown, now, tz),
-        None => false,
+    let timer = match project.runtime_and_current() {
+        (runtime, Some(rundown)) => runtime.on_tick(rundown, now, tz),
+        (_, None) => false,
     };
     // an end action may load the next event
     let followed =

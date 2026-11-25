@@ -15,13 +15,13 @@ use serde_json::Value;
 use crate::rundown::Rundown;
 
 /// Ids of the events that playback can select: real events, in order, not skipped.
-pub fn playable(rundown: &Rundown) -> Vec<String> {
+pub fn playable(rundown: &Rundown) -> Vec<&str> {
     events_where(rundown, is_playable)
 }
 
 /// Ids of every event in order, skipped ones included (upstream's
 /// `timedEventOrder`), which is what the client numbers events by.
-pub fn timed(rundown: &Rundown) -> Vec<String> {
+pub fn timed(rundown: &Rundown) -> Vec<&str> {
     events_where(rundown, |_| true)
 }
 
@@ -33,7 +33,9 @@ fn is_event(entry: &Value) -> bool {
     entry.get("type").and_then(Value::as_str) == Some("event")
 }
 
-fn events_where(rundown: &Rundown, keep: impl Fn(&Value) -> bool) -> Vec<String> {
+/// Borrowed from the rundown: a command reads the order once and copies only
+/// the id it picks (benchmarks/003).
+fn events_where(rundown: &Rundown, keep: impl Fn(&Value) -> bool) -> Vec<&str> {
     rundown
         .flat_order
         .iter()
@@ -42,7 +44,7 @@ fn events_where(rundown: &Rundown, keep: impl Fn(&Value) -> bool) -> Vec<String>
                 .get(id)
                 .is_some_and(|entry| is_event(entry) && keep(entry))
         })
-        .cloned()
+        .map(String::as_str)
         .collect()
 }
 
@@ -57,53 +59,53 @@ pub fn is_loadable(rundown: &Rundown, id: &str) -> bool {
 
 /// The event after `current`, wrapping to the first after the last; the first
 /// when nothing, or something no longer playable, is loaded.
-pub fn next_playable<'a>(playable: &'a [String], current: Option<&str>) -> Option<&'a String> {
-    let first = playable.first()?;
+pub fn next_playable<'a>(playable: &[&'a str], current: Option<&str>) -> Option<&'a str> {
+    let first = *playable.first()?;
     let Some(current) = current else {
         return Some(first);
     };
-    match playable.iter().position(|id| id == current) {
-        Some(index) if index + 1 < playable.len() => playable.get(index + 1),
+    match playable.iter().position(|id| *id == current) {
+        Some(index) if index + 1 < playable.len() => playable.get(index + 1).copied(),
         _ => Some(first),
     }
 }
 
 /// The event before `current`; the first when `current` is the first, is not
 /// playable, or nothing is loaded. It never wraps to the end.
-pub fn previous_playable<'a>(playable: &'a [String], current: Option<&str>) -> Option<&'a String> {
-    let first = playable.first()?;
+pub fn previous_playable<'a>(playable: &[&'a str], current: Option<&str>) -> Option<&'a str> {
+    let first = *playable.first()?;
     let Some(current) = current else {
         return Some(first);
     };
-    match playable.iter().position(|id| id == current) {
-        Some(index) if index >= 1 => playable.get(index - 1),
+    match playable.iter().position(|id| *id == current) {
+        Some(index) if index >= 1 => playable.get(index - 1).copied(),
         _ => Some(first),
     }
 }
 
 /// The operator's `index`th event, counted in timed order from 0. It may be a
 /// skipped one, which then fails to load, as upstream.
-pub fn event_at_index(timed: &[String], index: usize) -> Option<&String> {
-    timed.get(index)
+pub fn event_at_index<'a>(timed: &[&'a str], index: usize) -> Option<&'a str> {
+    timed.get(index).copied()
 }
 
 /// The next playable event with `cue`, searching from after the loaded event
 /// (or from the loaded event itself with `allow_current`) and then from the
 /// top. `current_index` is a position in timed order, as upstream passes
 /// `selectedEventIndex` whichever order it searches.
-pub fn next_with_cue(
+pub fn next_with_cue<'a>(
     rundown: &Rundown,
-    order: &[String],
+    order: &[&'a str],
     cue: &str,
     current_index: Option<usize>,
     allow_current: bool,
-) -> Option<String> {
+) -> Option<&'a str> {
     let current = current_index.unwrap_or(0);
     let from = match allow_current {
         true => current,
         false => current + 1,
     };
-    let matches = |id: &&String| {
+    let matches = |id: &&&str| {
         rundown.get(id).is_some_and(|entry| {
             is_event(entry)
                 && is_playable(entry)
@@ -115,19 +117,19 @@ pub fn next_with_cue(
         .iter()
         .find(matches)
         .or_else(|| order[..from].iter().find(matches))
-        .cloned()
+        .copied()
 }
 
 /// The event roll moves to after `from`, wrapping to the top after the last.
 /// Zero-length events are passed over, or roll would stick on them
 /// (upstream findNextRollEvent).
-pub fn next_roll_event(rundown: &Rundown, from: Option<&str>) -> Option<String> {
+pub fn next_roll_event<'a>(rundown: &'a Rundown, from: Option<&str>) -> Option<&'a str> {
     let events = playable(rundown);
     let first = from
-        .and_then(|id| events.iter().position(|e| e == id))
+        .and_then(|id| events.iter().position(|e| *e == id))
         .map_or(0, |index| index + 1);
     (0..events.len())
-        .map(|step| &events[(first + step) % events.len()])
+        .map(|step| events[(first + step) % events.len()])
         .find(|id| {
             rundown
                 .get(id)
@@ -136,5 +138,4 @@ pub fn next_roll_event(rundown: &Rundown, from: Option<&str>) -> Option<String> 
                 .unwrap_or(0)
                 != 0
         })
-        .cloned()
 }

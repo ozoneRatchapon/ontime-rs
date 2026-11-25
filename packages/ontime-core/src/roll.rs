@@ -86,7 +86,7 @@ pub fn load_roll(rundown: &Rundown, clock: i64) -> Option<RollTarget> {
                 clock - time_start
             };
             return Some(RollTarget {
-                id: id.clone(),
+                id: id.to_string(),
                 time_start,
                 elapsed,
                 is_pending: false,
@@ -115,7 +115,7 @@ pub fn load_roll(rundown: &Rundown, clock: i64) -> Option<RollTarget> {
                     clock + MS_PER_DAY - later_start
                 };
                 return Some(RollTarget {
-                    id: later_id.clone(),
+                    id: later_id.to_string(),
                     time_start: later_start,
                     elapsed,
                     is_pending: false,
@@ -125,7 +125,7 @@ pub fn load_roll(rundown: &Rundown, clock: i64) -> Option<RollTarget> {
 
         // still to come
         return Some(RollTarget {
-            id: id.clone(),
+            id: id.to_string(),
             time_start,
             elapsed: 0,
             is_pending: true,
@@ -135,7 +135,7 @@ pub fn load_roll(rundown: &Rundown, clock: i64) -> Option<RollTarget> {
     // everything is behind us: arm the top of the rundown for the next day
     let event = rundown.get(first)?;
     Some(RollTarget {
-        id: first.clone(),
+        id: first.to_string(),
         time_start: field(event, "timeStart").unwrap_or(0),
         elapsed: 0,
         is_pending: true,
