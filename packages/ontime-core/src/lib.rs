@@ -7,6 +7,7 @@ pub mod cue;
 pub mod custom_fields;
 pub mod directory;
 pub mod engine;
+mod entry_edits;
 pub mod identity;
 pub mod integration;
 pub mod message;

@@ -354,7 +354,7 @@ impl Project {
         let mut rundown = Rundown::new(id, title.unwrap_or(&existing.title));
         for entry in entries {
             // an id already taken by an earlier entry gets a fresh one
-            rundown.add_entry(entry, crate::rundown::Insert::End);
+            rundown.place_entry(entry, crate::rundown::Insert::End);
         }
         let ids: Vec<String> = rundown.entries.keys().cloned().collect();
         crate::custom_fields::drop_unknown_values(&self.custom_fields, &mut rundown, &ids);

@@ -10,6 +10,8 @@
 # - selection.json: which event next, previous, an index and a cue pick (RIIR 5)
 # - js_semantics.json: node's Number(), String(), decodeURI() and query decoding
 #   over a seeded corpus, to fuzz integration/js.rs against (plan 011)
+# - rundown_edits.json: upstream's rundown service over scripts of everyday
+#   edits, with its storage in memory (plan 015)
 #
 #   scripts/upstream-oracle/generate.sh [upstream-ref]   # default upstream/master
 #
@@ -38,18 +40,24 @@ commit="$(git -C "$root" rev-parse --short "$ref")"
 # its services, laid over a copy so the other contracts keep the real ones
 cp -R "$work/upstream" "$work/stubbed"
 cp -R "$here/integration-stubs/apps" "$work/stubbed/"
+# the rundown edit contract runs upstream's rundown service over in-memory storage
+cp -R "$work/upstream" "$work/rundown-stubbed"
+cp -R "$here/rundown-stubs/apps" "$work/rundown-stubbed/"
 # express stays outside the bundle (node finds it next to the bundles), since
 # its CommonJS tree does not bundle cleanly
 mkdir -p "$work/out/node_modules"
 ln -s "$root/node_modules/.pnpm/node_modules/express" "$work/out/node_modules/express"
+ln -s "$root/node_modules/.pnpm/node_modules/express-validator" "$work/out/node_modules/express-validator"
 
-for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection js_semantics; do
+for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection js_semantics rundown_edits; do
   tree="$work/upstream"
   if [ "$name" = integration ]; then tree="$work/stubbed"; fi
+  if [ "$name" = rundown_edits ]; then tree="$work/rundown-stubbed"; fi
   "$esbuild" "$here/gen-$name.ts" --bundle --platform=node --format=esm --log-level=error \
     --alias:@upstream="$tree" \
     --alias:@record="$here/integration-stubs/record.ts" \
     --external:express \
+    --external:express-validator \
     --alias:ontime-types="$work/upstream/packages/types/src/index.ts" \
     --alias:ontime-utils="$work/upstream/packages/utils/index.ts" \
     --outfile="$work/out/gen-$name.mjs"

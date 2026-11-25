@@ -1,0 +1,7305 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b2 by scripts/upstream-oracle/generate.sh; do not edit by hand.",
+ "cases": [
+  {
+   "name": "add an event at the end",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "title": "New",
+       "duration": 900000,
+       "timeStart": 43200000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c",
+       "n"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c",
+       "n"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "New",
+        "cue": "c-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 43200000,
+        "timeEnd": 44100000,
+        "duration": 900000,
+        "delay": 0,
+        "gap": 1800000,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add an event after another",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "a"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 48600000,
+        "dayOffset": 1
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 37200000,
+        "dayOffset": 1
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add an event before another",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "before": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 48600000,
+        "dayOffset": 1
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 37200000,
+        "dayOffset": 1
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add an event at the top",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "before": true
+      }
+     },
+     "after": {
+      "order": [
+       "n",
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "n",
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "1",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 35400000,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add a delay",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "delay",
+       "duration": 300000,
+       "after": "a"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add a milestone",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "milestone",
+       "title": "Doors",
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "milestone",
+        "parent": null,
+        "title": "Doors",
+        "cue": "",
+        "colour": ""
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "group",
+       "title": "Block"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c",
+       "n"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c",
+       "n"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "group",
+        "entries": [],
+        "title": "Block",
+        "colour": "",
+        "timeStart": null,
+        "timeEnd": null,
+        "duration": 0,
+        "targetDuration": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add an event into a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "parent": "g"
+      }
+     },
+     "after": {
+      "order": [
+       "g",
+       "c"
+      ],
+      "flatOrder": [
+       "g",
+       "a",
+       "b",
+       "n",
+       "c"
+      ],
+      "entries": {
+       "g": {
+        "type": "group",
+        "entries": [
+         "a",
+         "b",
+         "n"
+        ],
+        "title": "Block",
+        "timeStart": 36000000,
+        "timeEnd": 600000,
+        "duration": 51000000
+       },
+       "a": {
+        "type": "event",
+        "parent": "g",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": "g",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": "g",
+        "title": "",
+        "cue": "b-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add an event after one in a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "a"
+      }
+     },
+     "after": {
+      "order": [
+       "g",
+       "c"
+      ],
+      "flatOrder": [
+       "g",
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "g": {
+        "type": "group",
+        "entries": [
+         "a",
+         "n",
+         "b"
+        ],
+        "title": "Block",
+        "timeStart": 36000000,
+        "timeEnd": 39600000,
+        "duration": 90000000
+       },
+       "a": {
+        "type": "event",
+        "parent": "g",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": "g",
+        "title": "",
+        "cue": "a-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 48600000,
+        "dayOffset": 1
+       },
+       "b": {
+        "type": "event",
+        "parent": "g",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 37200000,
+        "dayOffset": 1
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add a linked event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "c",
+       "linkStart": true
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c",
+       "n"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c",
+       "n"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "c-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 41400000,
+        "timeEnd": 42000000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add after a numbered cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "d",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "2",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "9",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "1",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "2",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "3",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "d": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "9",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add after a decimal cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "d",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "1.09",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "9",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "1",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "1.09",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "1.10",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "d": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "9",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add after a prefixed cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "d",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "A-7",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "9",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "1",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "A-7",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "A-8",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "d": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "9",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add after a spaced cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "d",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "Scene 12",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "9",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "1",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "Scene 12",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "Scene 13",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "d": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "9",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add after a cue with zeros",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "d",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "007",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "9",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "1",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "007",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "8",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "d": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "9",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add after a cue that ends in a letter",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "d",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "4A",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "9",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "1",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "4A",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "4A-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "d": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "9",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add after an empty cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "d",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "9",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "d",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "1",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "d": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "9",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 300000,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add after a delay, after an event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "d",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "3",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "9",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "duration": 600000,
+       "after": "d"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "d",
+       "n",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "d",
+       "n",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "1",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "3",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "d": {
+        "type": "delay",
+        "parent": null,
+        "duration": 300000
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "4",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 600000,
+        "duration": 600000,
+        "delay": 300000,
+        "gap": 46800000,
+        "dayOffset": 1
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "9",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 39000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add an event with its own cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "cue": "X1",
+       "after": "a"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "n",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "X1",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 0,
+        "timeEnd": 0,
+        "duration": 0,
+        "delay": 0,
+        "gap": 48600000,
+        "dayOffset": 1
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 37800000,
+        "dayOffset": 1
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add an id that exists",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "a",
+       "type": "event",
+       "duration": 600000
+      }
+     },
+     "error": "Event with ID a already exists",
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "add a group into a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "group",
+       "parent": "g"
+      }
+     },
+     "error": "Cannot add a group to another group",
+     "after": {
+      "order": [
+       "g",
+       "c"
+      ],
+      "flatOrder": [
+       "g",
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "g": {
+        "type": "group",
+        "entries": [
+         "a",
+         "b"
+        ],
+        "title": "Block",
+        "timeStart": 36000000,
+        "timeEnd": 39600000,
+        "duration": 3600000
+       },
+       "a": {
+        "type": "event",
+        "parent": "g",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": "g",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit a duration (lock-duration)",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "a",
+       "duration": 2700000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 38700000,
+        "duration": 2700000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": -900000,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit an end (lock-duration)",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "a",
+       "timeEnd": 38400000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-end",
+        "timeStart": 36000000,
+        "timeEnd": 38400000,
+        "duration": 2400000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": -600000,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit a start (lock-duration)",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "b",
+       "timeStart": 38700000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "b",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 38700000,
+        "timeEnd": 40500000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 900000,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": -900000,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit a start (lock-end)",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "b",
+       "timeStrategy": "lock-end"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "b",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-end",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    },
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "b",
+       "timeStart": 38700000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "b",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-end",
+        "timeStart": 38700000,
+        "timeEnd": 39600000,
+        "duration": 900000,
+        "delay": 0,
+        "gap": 900000,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit a duration (lock-end)",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "b",
+       "timeStrategy": "lock-end"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "b",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-end",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    },
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "b",
+       "duration": 600000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "b",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 38400000,
+        "duration": 600000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 1200000,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit the first of a linked chain",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "a",
+       "duration": 2400000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 38400000,
+        "duration": 2400000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 38400000,
+        "timeEnd": 40200000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 40200000,
+        "timeEnd": 42000000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "unlink an event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "b",
+       "linkStart": false,
+       "timeStart": 39600000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "b",
+        "skip": false,
+        "colour": "",
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 1800000,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 41400000,
+        "timeEnd": 43200000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "link an event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "c",
+       "linkStart": true
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "c",
+        "skip": false,
+        "colour": "",
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit past midnight",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "c",
+       "timeStart": 84600000,
+       "duration": 3600000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "c",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 84600000,
+        "timeEnd": 1800000,
+        "duration": 3600000,
+        "delay": 0,
+        "gap": 45000000,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit a title and a flag",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "b",
+       "title": "Keynote",
+       "flag": true,
+       "skip": true
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "title": "Keynote",
+        "cue": "b",
+        "skip": true,
+        "flag": true,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 1800000,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit a group title",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "g",
+       "title": "Morning",
+       "targetDuration": 3600000
+      }
+     },
+     "after": {
+      "order": [
+       "g",
+       "c"
+      ],
+      "flatOrder": [
+       "g",
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "g": {
+        "type": "group",
+        "entries": [
+         "a",
+         "b"
+        ],
+        "title": "Morning",
+        "colour": "",
+        "timeStart": 36000000,
+        "timeEnd": 39600000,
+        "duration": 3600000,
+        "targetDuration": 3600000
+       },
+       "a": {
+        "type": "event",
+        "parent": "g",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": "g",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "edit an entry that does not exist",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "zz",
+       "title": "Gone"
+      }
+     },
+     "error": "Entry not found",
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "batch edit",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "batch",
+      "ids": [
+       "a",
+       "c"
+      ],
+      "data": {
+       "colour": "#FF0000",
+       "countToEnd": true
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a",
+        "skip": false,
+        "colour": "#FF0000",
+        "countToEnd": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "c",
+        "skip": false,
+        "colour": "#FF0000",
+        "countToEnd": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "delete an event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "delete",
+      "ids": [
+       "b"
+      ]
+     },
+     "after": {
+      "order": [
+       "a",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 1800000,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "delete a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "delete",
+      "ids": [
+       "g"
+      ]
+     },
+     "after": {
+      "order": [
+       "c"
+      ],
+      "flatOrder": [
+       "c"
+      ],
+      "entries": {
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "delete the last event of a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "delete",
+      "ids": [
+       "a",
+       "b"
+      ]
+     },
+     "after": {
+      "order": [
+       "g",
+       "c"
+      ],
+      "flatOrder": [
+       "g",
+       "c"
+      ],
+      "entries": {
+       "g": {
+        "type": "group",
+        "entries": [],
+        "title": "Block",
+        "colour": "",
+        "timeStart": null,
+        "timeEnd": null,
+        "duration": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "delete a linked event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "delete",
+      "ids": [
+       "b"
+      ]
+     },
+     "after": {
+      "order": [
+       "a",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "move an event after another",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "reorder",
+      "entryId": "a",
+      "destinationId": "c",
+      "order": "after"
+     },
+     "after": {
+      "order": [
+       "b",
+       "c",
+       "a"
+      ],
+      "flatOrder": [
+       "b",
+       "c",
+       "a"
+      ],
+      "entries": {
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 81000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "move an event before another",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "reorder",
+      "entryId": "c",
+      "destinationId": "a",
+      "order": "before"
+     },
+     "after": {
+      "order": [
+       "c",
+       "a",
+       "b"
+      ],
+      "flatOrder": [
+       "c",
+       "a",
+       "b"
+      ],
+      "entries": {
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 81000000,
+        "dayOffset": 1
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "move an event into a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "reorder",
+      "entryId": "c",
+      "destinationId": "g",
+      "order": "insert"
+     },
+     "after": {
+      "order": [
+       "g"
+      ],
+      "flatOrder": [
+       "g",
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "g": {
+        "type": "group",
+        "entries": [
+         "a",
+         "b",
+         "c"
+        ],
+        "title": "Block",
+        "timeStart": 36000000,
+        "timeEnd": 41400000,
+        "duration": 5400000
+       },
+       "a": {
+        "type": "event",
+        "parent": "g",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": "g",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": "g",
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "move an event out of a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "reorder",
+      "entryId": "a",
+      "destinationId": "c",
+      "order": "after"
+     },
+     "after": {
+      "order": [
+       "g",
+       "c",
+       "a"
+      ],
+      "flatOrder": [
+       "g",
+       "b",
+       "c",
+       "a"
+      ],
+      "entries": {
+       "g": {
+        "type": "group",
+        "entries": [
+         "b"
+        ],
+        "title": "Block",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000
+       },
+       "b": {
+        "type": "event",
+        "parent": "g",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 81000000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "move a linked event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "reorder",
+      "entryId": "b",
+      "destinationId": "c",
+      "order": "after"
+     },
+     "after": {
+      "order": [
+       "a",
+       "c",
+       "b"
+      ],
+      "flatOrder": [
+       "a",
+       "c",
+       "b"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "swap two events",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "swap",
+      "from": "a",
+      "to": "c"
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "swap linked events",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "swap",
+      "from": "a",
+      "to": "b"
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "apply a delay",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "d",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 600000
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration",
+      "linkStart": true
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "applydelay",
+      "id": "d"
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "linkStart": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 38400000,
+        "timeEnd": 40200000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 600000,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 40200000,
+        "timeEnd": 42000000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "clone an event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "clone",
+      "id": "b",
+      "options": {
+       "after": "b"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "2zh9z7",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "2zh9z7",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "2zh9z7": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 84600000,
+        "dayOffset": 1
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "clone a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "clone",
+      "id": "g",
+      "options": {
+       "after": "c"
+      }
+     },
+     "after": {
+      "order": [
+       "g",
+       "c",
+       "23cz5y"
+      ],
+      "flatOrder": [
+       "g",
+       "a",
+       "b",
+       "c",
+       "23cz5y",
+       "eyhtg5",
+       "pqnqwv"
+      ],
+      "entries": {
+       "g": {
+        "type": "group",
+        "entries": [
+         "a",
+         "b"
+        ],
+        "title": "Block",
+        "timeStart": 36000000,
+        "timeEnd": 39600000,
+        "duration": 3600000
+       },
+       "a": {
+        "type": "event",
+        "parent": "g",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": "g",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "23cz5y": {
+        "type": "group",
+        "entries": [
+         "eyhtg5",
+         "pqnqwv"
+        ],
+        "title": "Block (copy)",
+        "timeStart": 36000000,
+        "timeEnd": 39600000,
+        "duration": 3600000
+       },
+       "eyhtg5": {
+        "type": "event",
+        "parent": "23cz5y",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 81000000,
+        "dayOffset": 1
+       },
+       "pqnqwv": {
+        "type": "event",
+        "parent": "23cz5y",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "clone a milestone",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "m"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "m": {
+      "id": "m",
+      "type": "milestone",
+      "cue": "",
+      "title": "Doors"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "clone",
+      "id": "m",
+      "options": {
+       "after": "m"
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "m",
+       "2dkakx"
+      ],
+      "flatOrder": [
+       "a",
+       "m",
+       "2dkakx"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "m": {
+        "type": "milestone",
+        "title": "Doors",
+        "cue": ""
+       },
+       "2dkakx": {
+        "type": "milestone",
+        "title": "Doors",
+        "cue": ""
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "group events",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "group",
+      "ids": [
+       "a",
+       "b"
+      ]
+     },
+     "after": {
+      "order": [
+       "kysc5r",
+       "c"
+      ],
+      "flatOrder": [
+       "kysc5r",
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "kysc5r": {
+        "type": "group",
+        "entries": [
+         "a",
+         "b"
+        ],
+        "title": "",
+        "colour": "",
+        "timeStart": 36000000,
+        "timeEnd": 39600000,
+        "duration": 3600000,
+        "targetDuration": null
+       },
+       "a": {
+        "type": "event",
+        "parent": "kysc5r",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": "kysc5r",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "group events not side by side",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "group",
+      "ids": [
+       "a",
+       "c"
+      ]
+     },
+     "after": {
+      "order": [
+       "9rjc5f",
+       "b"
+      ],
+      "flatOrder": [
+       "9rjc5f",
+       "a",
+       "c",
+       "b"
+      ],
+      "entries": {
+       "9rjc5f": {
+        "type": "group",
+        "entries": [
+         "a",
+         "c"
+        ],
+        "title": "",
+        "colour": "",
+        "timeStart": 36000000,
+        "timeEnd": 41400000,
+        "duration": 5400000,
+        "targetDuration": null
+       },
+       "a": {
+        "type": "event",
+        "parent": "9rjc5f",
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": "9rjc5f",
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 1800000,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 82800000,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "ungroup",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ],
+      "title": "Block"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "ungroup",
+      "id": "g"
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "ungroup something that is not a group",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "ungroup",
+      "id": "a"
+     },
+     "error": "Group with ID a not found or is not a group",
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "a run of edits",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "steps": [
+    {
+     "edit": {
+      "do": "add",
+      "entry": {
+       "id": "n",
+       "type": "event",
+       "title": "Break",
+       "duration": 900000,
+       "after": "b",
+       "linkStart": true
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "cue": "a",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 37800000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "Break",
+        "cue": "b-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 40500000,
+        "duration": 900000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 85500000,
+        "dayOffset": 1
+       }
+      }
+     }
+    },
+    {
+     "edit": {
+      "do": "edit",
+      "patch": {
+       "id": "a",
+       "duration": 2100000
+      }
+     },
+     "after": {
+      "order": [
+       "a",
+       "b",
+       "n",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "b",
+       "n",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 38100000,
+        "duration": 2100000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "b": {
+        "type": "event",
+        "parent": null,
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": -300000,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": null,
+        "title": "Break",
+        "cue": "b-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 40500000,
+        "duration": 900000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 85500000,
+        "dayOffset": 1
+       }
+      }
+     }
+    },
+    {
+     "edit": {
+      "do": "group",
+      "ids": [
+       "b",
+       "n"
+      ]
+     },
+     "after": {
+      "order": [
+       "a",
+       "skn5sw",
+       "c"
+      ],
+      "flatOrder": [
+       "a",
+       "skn5sw",
+       "b",
+       "n",
+       "c"
+      ],
+      "entries": {
+       "a": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 38100000,
+        "duration": 2100000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "skn5sw": {
+        "type": "group",
+        "entries": [
+         "b",
+         "n"
+        ],
+        "title": "",
+        "colour": "",
+        "timeStart": 37800000,
+        "timeEnd": 40500000,
+        "duration": 2700000,
+        "targetDuration": null
+       },
+       "b": {
+        "type": "event",
+        "parent": "skn5sw",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": -300000,
+        "dayOffset": 0
+       },
+       "n": {
+        "type": "event",
+        "parent": "skn5sw",
+        "title": "Break",
+        "cue": "b-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 40500000,
+        "duration": 900000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 85500000,
+        "dayOffset": 1
+       }
+      }
+     }
+    },
+    {
+     "edit": {
+      "do": "reorder",
+      "entryId": "c",
+      "destinationId": "a",
+      "order": "before"
+     },
+     "after": {
+      "order": [
+       "c",
+       "a",
+       "skn5sw"
+      ],
+      "flatOrder": [
+       "c",
+       "a",
+       "skn5sw",
+       "b",
+       "n"
+      ],
+      "entries": {
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "a": {
+        "type": "event",
+        "parent": null,
+        "title": "",
+        "cue": "a",
+        "skip": false,
+        "colour": "",
+        "timeStrategy": "lock-duration",
+        "timeStart": 36000000,
+        "timeEnd": 38100000,
+        "duration": 2100000,
+        "delay": 0,
+        "gap": 81000000,
+        "dayOffset": 1
+       },
+       "skn5sw": {
+        "type": "group",
+        "entries": [
+         "b",
+         "n"
+        ],
+        "title": "",
+        "colour": "",
+        "timeStart": 37800000,
+        "timeEnd": 40500000,
+        "duration": 2700000,
+        "targetDuration": null
+       },
+       "b": {
+        "type": "event",
+        "parent": "skn5sw",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": -300000,
+        "dayOffset": 1
+       },
+       "n": {
+        "type": "event",
+        "parent": "skn5sw",
+        "title": "Break",
+        "cue": "b-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 40500000,
+        "duration": 900000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    },
+    {
+     "edit": {
+      "do": "delete",
+      "ids": [
+       "a"
+      ]
+     },
+     "after": {
+      "order": [
+       "c",
+       "skn5sw"
+      ],
+      "flatOrder": [
+       "c",
+       "skn5sw",
+       "b",
+       "n"
+      ],
+      "entries": {
+       "c": {
+        "type": "event",
+        "parent": null,
+        "cue": "c",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 41400000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 0
+       },
+       "skn5sw": {
+        "type": "group",
+        "entries": [
+         "b",
+         "n"
+        ],
+        "title": "",
+        "colour": "",
+        "timeStart": 37800000,
+        "timeEnd": 40500000,
+        "duration": 2700000,
+        "targetDuration": null
+       },
+       "b": {
+        "type": "event",
+        "parent": "skn5sw",
+        "cue": "b",
+        "skip": false,
+        "timeStrategy": "lock-duration",
+        "timeStart": 37800000,
+        "timeEnd": 39600000,
+        "duration": 1800000,
+        "delay": 0,
+        "gap": 82800000,
+        "dayOffset": 1
+       },
+       "n": {
+        "type": "event",
+        "parent": "skn5sw",
+        "title": "Break",
+        "cue": "b-2",
+        "skip": false,
+        "flag": false,
+        "colour": "",
+        "countToEnd": false,
+        "linkStart": true,
+        "timeStrategy": "lock-duration",
+        "timeStart": 39600000,
+        "timeEnd": 40500000,
+        "duration": 900000,
+        "delay": 0,
+        "gap": 0,
+        "dayOffset": 1
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

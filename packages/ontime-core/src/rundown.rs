@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
+use crate::entry_edits;
+
 use crate::cue::{nth_cue, separated_prefix, CueNumber};
 
 pub type Entries = Map<String, Value>;
@@ -126,7 +128,7 @@ impl Rundown {
             ("3", "Q&A Session", 600_000),
         ] {
             let payload = json!({ "cue": cue, "title": event_title, "duration": duration });
-            let _ = rundown.add_entry(&payload, Insert::End);
+            let _ = rundown.place_entry(&payload, Insert::End);
         }
         rundown
     }
@@ -170,7 +172,18 @@ impl Rundown {
     ///
     /// Lenient by design (see `check_add` for the strict checks): a taken id is
     /// replaced with a fresh one, and a `parent` that is not a group is ignored.
+    /// Adds an entry as the editor does: a new event works out its times from
+    /// what was sent and takes the next cue (upstream addEntry).
     pub fn add_entry(&mut self, payload: &Value, at: Insert) -> Value {
+        self.insert_entry(payload, at, true)
+    }
+
+    /// Adds an entry exactly as given, as an import or a replace does.
+    pub fn place_entry(&mut self, payload: &Value, at: Insert) -> Value {
+        self.insert_entry(payload, at, false)
+    }
+
+    fn insert_entry(&mut self, payload: &Value, at: Insert, as_editor: bool) -> Value {
         let id = payload
             .get("id")
             .and_then(Value::as_str)
@@ -179,7 +192,14 @@ impl Rundown {
             .unwrap_or_else(new_id);
 
         let mut entry = default_entry(payload.get("type").and_then(Value::as_str), &id);
+        let base = entry.clone();
         merge_patch(&mut entry, payload);
+        if as_editor && entry_type(&entry) == "event" && entry_edits::touches_times(payload) {
+            let times = entry_edits::event_times(&base, payload);
+            if let Some(object) = entry.as_object_mut() {
+                object.extend(times);
+            }
+        }
         // the payload carries insert options and an id we may have discarded
         for key in ["before", "after"] {
             entry.as_object_mut().map(|o| o.remove(key));
@@ -219,6 +239,17 @@ impl Rundown {
             }
         }
         self.recompute();
+        // a new event without a cue of its own follows the one before it
+        // (upstream createEvent with getCueCandidate); a clone keeps its cue
+        let asked_cue = payload
+            .get("cue")
+            .is_some_and(|cue| !cue.is_null() && !cue.is_object());
+        if as_editor && entry_type(&self.entries[&id]) == "event" && !asked_cue {
+            let cue = entry_edits::cue_candidate(self, &id);
+            if let Some(object) = self.entries.get_mut(&id).and_then(Value::as_object_mut) {
+                object.insert("cue".into(), json!(cue));
+            }
+        }
         self.entries.get(&id).cloned().unwrap_or(Value::Null)
     }
 
@@ -252,6 +283,14 @@ impl Rundown {
             }
             obj.remove("id");
             obj.remove("type");
+        }
+        // an end alone locks the end, a duration alone the duration (upstream
+        // createEventPatch), so the time just typed is the one that stays
+        if entry_type(entry) == "event" && entry_edits::touches_times(&sanitised) {
+            let times = entry_edits::event_times(entry, &sanitised);
+            if let Some(obj) = sanitised.as_object_mut() {
+                obj.extend(times);
+            }
         }
         merge_patch(entry, &sanitised);
         bump(entry);
@@ -337,12 +376,9 @@ impl Rundown {
         ) else {
             return false;
         };
-        let mut new_a = b;
-        let mut new_b = a;
-        set_id(&mut new_a, from);
-        set_id(&mut new_b, to);
-        bump(&mut new_a);
-        bump(&mut new_b);
+        // each place in the schedule keeps its times, its link and its group;
+        // what is in it moves (upstream swapEventData)
+        let (new_a, new_b) = entry_edits::swap_schedules(&a, &b);
         self.entries.insert(from.to_string(), new_a);
         self.entries.insert(to.to_string(), new_b);
         self.recompute();
@@ -356,7 +392,48 @@ impl Rundown {
             Insert::End => Insert::After(Some(entry_id.to_string())),
             other => other,
         };
-        Some(self.add_entry(&source, at))
+        if entry_type(&source) != "group" {
+            return Some(self.add_entry(&source, at));
+        }
+        // a group is copied with copies of its entries, never sharing them
+        // (upstream makeDeepClone): an entry in two groups breaks the order
+        let children: Vec<String> = source
+            .get("entries")
+            .and_then(Value::as_array)
+            .map(|list| {
+                list.iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_string)
+                    .collect()
+            })
+            .unwrap_or_default();
+        let title = match source
+            .get("title")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+        {
+            "" => "Untitled".to_string(),
+            title => title.to_string(),
+        };
+        let mut group = source;
+        if let Some(object) = group.as_object_mut() {
+            object.remove("id");
+            object.insert("entries".into(), json!([]));
+            object.insert("title".into(), json!(format!("{title} (copy)")));
+        }
+        let group = self.add_entry(&group, at);
+        let group_id = group["id"].as_str().unwrap_or_default().to_string();
+        for child in children {
+            let Some(mut copy) = self.entries.get(&child).cloned() else {
+                continue;
+            };
+            if let Some(object) = copy.as_object_mut() {
+                object.remove("id");
+                object.insert("parent".into(), json!(group_id));
+            }
+            self.add_entry(&copy, Insert::End);
+        }
+        self.entries.get(&group_id).cloned()
     }
 
     /// A deep copy under a fresh rundown id, with a fresh id for every entry too.
@@ -634,6 +711,11 @@ impl Rundown {
                 obj.insert("parent".into(), Value::Null);
             }
         }
+    }
+
+    /// The group an entry is in, if any.
+    pub fn parent_id(&self, id: &str) -> Option<String> {
+        self.parent_of(id)
     }
 
     fn parent_of(&self, id: &str) -> Option<String> {
