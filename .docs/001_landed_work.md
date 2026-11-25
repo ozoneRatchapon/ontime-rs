@@ -103,3 +103,6 @@
   - Pages send security headers; only the read-only views may be framed.
   - CI: `cargo deny` weekly and on change (fixed `url` RUSTSEC-2026-0592), a weekly upstream contract check, and mutation-tested auth code.
   - Item 2, the same day: Worker `20b4e952`, Pages `c7fe82f4` (master) and `657c4f16` (main). Rooms lock with a random token; rooms locked before keep their links. Checked on production with a throwaway room.
+- **2026-11-25:** project files to and from the Ontime app (plan 020), not deployed yet.
+  - `POST /data/db/import` reads a file as upstream's `parseDatabaseModel` does (12 files pinned against upstream); `POST /data/db/export` writes one the app opens. The Worker's Project panel imports and downloads.
+  - Checked locally: all e2e suites, the desktop app's own files, and the backed-up shows read back through upstream's parser.

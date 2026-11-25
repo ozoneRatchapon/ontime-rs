@@ -97,6 +97,10 @@ pub struct Project {
     pub rundowns: BTreeMap<String, Rundown>,
     /// Id of the rundown the runtime has loaded.
     pub loaded: String,
+    /// The project file's own id (upstream `projectId`), kept so a file
+    /// exported again is still the same project. Empty in a room never imported.
+    #[serde(default)]
+    pub project_id: String,
     pub project: ProjectData,
     pub settings: Settings,
     pub view_settings: ViewSettings,
@@ -215,6 +219,7 @@ impl Default for Project {
         Self {
             rundowns,
             loaded: DEFAULT_RUNDOWN_ID.to_string(),
+            project_id: String::new(),
             project: ProjectData::default(),
             settings: Settings::default(),
             view_settings: ViewSettings::default(),

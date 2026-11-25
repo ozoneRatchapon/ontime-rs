@@ -99,7 +99,8 @@ export type SettingsOptionId =
  * What the Cloudflare Worker answers 501 for, or has no route for at all: a
  * menu that only leads to an error is hidden rather than shown.
  * - MCP server and server port: there is no local process.
- * - Project files (create, manage): there is no filesystem; a room is the project.
+ * - Creating a project: there is no filesystem; a room is the project. Its
+ *   Project panel imports and exports the app's project file instead.
  * - Spreadsheet import and Google Sheets sync: no upload handling, no OAuth.
  * - Custom views: uploads are refused.
  * - Automations: stored but never sent, since a Worker cannot keep connections out.
@@ -109,7 +110,8 @@ const notOnWorker: ReadonlySet<string> = new Set([
   'settings__mcp',
   'settings__port',
   'settings__custom-views',
-  'project',
+  // the room has no project list; its Project panel moves files in and out instead
+  'project__create',
   'manage__sheets',
   'automation',
   'shutdown',

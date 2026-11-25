@@ -12,6 +12,8 @@
 #   over a seeded corpus, to fuzz integration/js.rs against (plan 011)
 # - rundown_edits.json: upstream's rundown service over scripts of everyday
 #   edits, with its storage in memory (plan 015)
+# - project_file.json: upstream's parseDatabaseModel over whole project files,
+#   what the app makes of a file it opens (plan 020)
 #
 #   scripts/upstream-oracle/generate.sh [upstream-ref]   # default upstream/master
 #
@@ -49,10 +51,10 @@ mkdir -p "$work/out/node_modules"
 ln -s "$root/node_modules/.pnpm/node_modules/express" "$work/out/node_modules/express"
 ln -s "$root/node_modules/.pnpm/node_modules/express-validator" "$work/out/node_modules/express-validator"
 
-for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection js_semantics rundown_edits import_cues; do
+for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection js_semantics rundown_edits import_cues project_file; do
   tree="$work/upstream"
   if [ "$name" = integration ]; then tree="$work/stubbed"; fi
-  if [ "$name" = rundown_edits ]; then tree="$work/rundown-stubbed"; fi
+  if [ "$name" = rundown_edits ] || [ "$name" = project_file ]; then tree="$work/rundown-stubbed"; fi
   "$esbuild" "$here/gen-$name.ts" --bundle --platform=node --format=esm --log-level=error \
     --alias:@upstream="$tree" \
     --alias:@record="$here/integration-stubs/record.ts" \

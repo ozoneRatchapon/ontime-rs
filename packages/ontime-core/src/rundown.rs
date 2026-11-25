@@ -98,7 +98,7 @@ impl Insert {
     }
 }
 
-fn new_id() -> String {
+pub(crate) fn new_id() -> String {
     Uuid::now_v7().to_string()
 }
 

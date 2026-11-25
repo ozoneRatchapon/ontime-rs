@@ -21,7 +21,7 @@ use ontime_core::snapshots::{self, Reason, INDEX_KEY};
 use super::{now_ms, OntimeProject, STORAGE_KEY};
 
 /// Whether a request removes things, and so is copied before whatever it changes:
-/// a delete, a whole rundown replaced, a backup restored.
+/// a delete, a whole rundown replaced, a backup restored, a project file imported.
 pub(super) fn is_destructive(method: &Method, path: &str) -> bool {
     let in_rundowns = path.contains("/data/rundowns");
     match method {
@@ -29,7 +29,7 @@ pub(super) fn is_destructive(method: &Method, path: &str) -> bool {
         // `PUT /data/rundowns/<id>` replaces every entry; `.../entry` and
         // `.../batch` are ordinary edits
         Method::Put => in_rundowns && !path.ends_with("/entry") && !path.ends_with("/batch"),
-        Method::Post => path.ends_with("/data/db/restore"),
+        Method::Post => path.ends_with("/data/db/restore") || path.ends_with("/data/db/import"),
         _ => false,
     }
 }

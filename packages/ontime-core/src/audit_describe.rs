@@ -75,6 +75,7 @@ pub fn http_note(project: &Project, req: &ApiRequest) -> Option<Note> {
         },
         (_, ["data", "assets", "css", ..]) => Some(Note::new(Action::Css)),
         (Post, ["data", "db", "restore"]) => Some(Note::new(Action::Restore)),
+        (Post, ["data", "db", "import"]) => Some(Note::new(Action::ProjectImport)),
         _ => None,
     }
 }

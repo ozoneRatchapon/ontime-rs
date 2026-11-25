@@ -51,6 +51,7 @@ const verbs: Record<ActivityAction, string> = {
   'members-only-on': 'turned on "editing needs sign-in"',
   'members-only-off': 'turned off "editing needs sign-in"',
   restore: 'restored the room from a backup',
+  'project-import': 'imported a project file from the Ontime app',
   'report-archive': 'archived the report',
   'report-clear': 'cleared the report',
   'person-create': 'added the person',

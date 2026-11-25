@@ -293,6 +293,7 @@ fn each_kind_of_change_is_described() {
             Action::Css,
         ),
         (Post, "/data/db/restore", json!({}), Action::Restore),
+        (Post, "/data/db/import", json!({}), Action::ProjectImport),
     ];
     for (method, path, body, action) in cases {
         let note = note_for(method, path, body)

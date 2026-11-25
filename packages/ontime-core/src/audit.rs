@@ -78,6 +78,8 @@ pub enum Action {
     MembersOnlyOn,
     MembersOnlyOff,
     Restore,
+    /// A project file from the Ontime app took the place of the show.
+    ProjectImport,
     // the report
     ReportArchive,
     ReportClear,
@@ -124,9 +126,8 @@ impl Action {
             RundownCreate | RundownImport | RundownRename | RundownReplace | RundownDelete
             | RundownLoad | RundownDuplicate => Area::RundownList,
             ProjectData | Settings | ViewSettings | CustomFields | UrlPresets | Css
-            | PasswordSet | PasswordCleared | MembersOnlyOn | MembersOnlyOff | Restore => {
-                Area::Room
-            }
+            | PasswordSet | PasswordCleared | MembersOnlyOn | MembersOnlyOff | Restore
+            | ProjectImport => Area::Room,
             ReportArchive | ReportClear => Area::Report,
             PersonCreate | PersonRemove | InviteIssue | InviteRedeem | SignOut | MembersChange
             | OperatorAdd | OperatorRemove => Area::People,

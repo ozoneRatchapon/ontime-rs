@@ -159,3 +159,23 @@ async function fileDownload(fileName: string): Promise<{ data: DatabaseModel; na
 
   return { data: response.data, name };
 }
+
+/** What the Worker answers to an imported project file: what it had to drop or default. */
+export type ImportedProjectFile = { imported: true; warnings: string[] };
+
+/**
+ * Worker only (plan 020): a project file from the Ontime app in place of this
+ * room's show. Sent as its text, so the order of its rundowns survives.
+ */
+export async function importProjectFile(file: File): Promise<ImportedProjectFile> {
+  const text = await file.text();
+  const res = await axios.post(`${dbPath}/import`, { file: text }, { timeout: axiosConfig.longTimeout });
+  return res.data;
+}
+
+/** Worker only (plan 020): downloads this room as a project file the Ontime app opens. */
+export async function exportProjectFile(fileName: string) {
+  const res = await axios.post(`${dbPath}/export`, null, { timeout: axiosConfig.longTimeout });
+  const blob = createBlob(JSON.stringify(res.data, null, 2), 'application/json;charset=utf-8;');
+  downloadBlob(blob, `${fileName}.json`);
+}

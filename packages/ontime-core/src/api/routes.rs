@@ -4,7 +4,7 @@ use serde_json::{json, Value};
 
 use crate::project::{fresh_room_token, Project};
 use crate::teleprompter::{room as prompter, routes as prompter_routes};
-use crate::{custom_fields, rundown_routes};
+use crate::{custom_fields, project_file, rundown_routes};
 
 use super::*;
 
@@ -283,6 +283,31 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
                     ApiResponse::json(&json!({ "restored": true }))
                 }
                 Err(error) => ApiResponse::error(format!("Invalid backup file: {error}"), 400),
+            }
+        }
+
+        // the room as a project file the Ontime app opens (plan 020)
+        ["data", "db", "export"] if req.method == HttpMethod::Post => {
+            ApiResponse::json(&project_file::export(project))
+        }
+
+        // a project file from the Ontime app, sent as its text, in place of the
+        // room's show; the undo history keeps a copy of what it replaced
+        ["data", "db", "import"] if req.method == HttpMethod::Post => {
+            let file = req.body.get("file").and_then(Value::as_str);
+            match file.map(project_file::import) {
+                None => ApiResponse::error("Send the project file as text in \"file\"", 400),
+                Some(Ok(imported)) => {
+                    project_file::import_into(project, imported.project, now);
+                    effects.push(Effect::Persist);
+                    effects.push(Effect::refetch("all", None));
+                    effects.push(Effect::Reschedule);
+                    ApiResponse::json(&json!({
+                        "imported": true,
+                        "warnings": imported.warnings,
+                    }))
+                }
+                Some(Err(error)) => ApiResponse::error(error.message(), 400),
             }
         }
 
