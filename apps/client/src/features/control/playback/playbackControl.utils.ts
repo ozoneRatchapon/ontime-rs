@@ -8,6 +8,12 @@ export interface PlaybackControlInput {
   numEvents: number;
   selectedEventIndex: number | null;
   timerPhase: TimerPhase;
+  /**
+   * The connection to the server is lost. Every control is disabled, since a
+   * press now would not arrive, and one that arrived late, after the operator
+   * gave up on it, would be worse (plan 016).
+   */
+  isOffline?: boolean;
 }
 
 export interface PlaybackControlState {
@@ -48,6 +54,7 @@ export function getPlaybackControlState({
   numEvents,
   selectedEventIndex,
   timerPhase,
+  isOffline = false,
 }: PlaybackControlInput): PlaybackControlState {
   const isFirst = selectedEventIndex === 0;
   const isLast = selectedEventIndex === numEvents - 1;
@@ -66,15 +73,15 @@ export function getPlaybackControlState({
     isFirst,
     isLast,
     noEvents,
-    disableGo: isRolling || noEvents,
-    disableNext: isRolling || noEvents || isLast,
-    disablePrev: isRolling || noEvents || isFirst,
-    disableStart: !playbackCan.start,
-    disablePause: !playbackCan.pause,
-    disableRoll: !playbackCan.roll || noEvents,
-    disableStop: !playbackCan.stop,
-    disableReload: !playbackCan.reload,
-    disableAddTime: playback !== Playback.Play && playback !== Playback.Pause,
+    disableGo: isOffline || isRolling || noEvents,
+    disableNext: isOffline || isRolling || noEvents || isLast,
+    disablePrev: isOffline || isRolling || noEvents || isFirst,
+    disableStart: isOffline || !playbackCan.start,
+    disablePause: isOffline || !playbackCan.pause,
+    disableRoll: isOffline || !playbackCan.roll || noEvents,
+    disableStop: isOffline || !playbackCan.stop,
+    disableReload: isOffline || !playbackCan.reload,
+    disableAddTime: isOffline || (playback !== Playback.Play && playback !== Playback.Pause),
     goAction,
     goLabel,
   };

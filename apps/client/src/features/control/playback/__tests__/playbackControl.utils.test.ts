@@ -69,4 +69,25 @@ describe('getPlaybackControlState()', () => {
     expect(stateFor({ playback: Playback.Roll, selectedEventIndex: 0 }).disableAddTime).toBe(true);
     expect(stateFor({ playback: Playback.Stop }).disableAddTime).toBe(true);
   });
+
+  describe('while the connection is lost', () => {
+    it('disables every control, since a press would not arrive', () => {
+      const state = stateFor({ playback: Playback.Play, selectedEventIndex: 1, isOffline: true });
+      expect(state.disableGo).toBe(true);
+      expect(state.disableNext).toBe(true);
+      expect(state.disablePrev).toBe(true);
+      expect(state.disableStart).toBe(true);
+      expect(state.disablePause).toBe(true);
+      expect(state.disableRoll).toBe(true);
+      expect(state.disableStop).toBe(true);
+      expect(state.disableReload).toBe(true);
+      expect(state.disableAddTime).toBe(true);
+    });
+
+    it('gives them back once connected', () => {
+      const state = stateFor({ playback: Playback.Play, selectedEventIndex: 1, isOffline: false });
+      expect(state.disablePause).toBe(false);
+      expect(state.disableAddTime).toBe(false);
+    });
+  });
 });

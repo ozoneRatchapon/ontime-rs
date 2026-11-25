@@ -12,6 +12,7 @@ import {
   usePlaybackControl,
   useTimer,
 } from '../../../../common/hooks/useSocket';
+import { ConnectionStatus, useConnectionStore } from '../../../../common/stores/connectionStore';
 import { enDash } from '../../../../common/utils/styleUtils';
 import { formatDuration } from '../../../../common/utils/time';
 import { getPlaybackControlState } from '../playbackControl.utils';
@@ -30,11 +31,13 @@ export default function TrackingPlaybackBar() {
 
   const [addTimeInMs] = useLocalStorage({ key: 'add-time', defaultValue: 300_000 });
 
+  const isOffline = useConnectionStore((state) => state.status !== ConnectionStatus.Connected);
   const { disableGo, disableNext, disableAddTime, isPlaying, goAction, goLabel } = getPlaybackControlState({
     playback,
     numEvents,
     selectedEventIndex,
     timerPhase: timer.phase,
+    isOffline,
   });
 
   const disableAddTimeWithAmount = disableAddTime || addTimeInMs === 0;

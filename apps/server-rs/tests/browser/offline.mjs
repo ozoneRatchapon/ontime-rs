@@ -1,9 +1,10 @@
 // What a show sees when the venue's network drops: a timer screen and an
 // operator's editor each lose the connection for a while, then get it back.
 //
-// It measures rather than asserts most of it, since what is right during an
-// outage is a choice; it fails only on what is wrong whatever is chosen: a
-// screen that does not come back, or comes back showing the wrong time.
+// What it checks is what the user chose on 2026-11-25 (plan 016): a screen
+// keeps counting through an outage and marks itself offline; the editor's
+// playback buttons are disabled until the connection is back; and once it is,
+// everything agrees with the server again.
 //
 // Run with ./run.sh (see there); BROWSER_APP, BROWSER_API and ADMIN_PASSWORD
 // override the local defaults.
@@ -96,6 +97,16 @@ try {
   note('shown during the outage', samples.join(', '));
   note(`shown ${OUTAGE_S} s into the outage`, offlineEnd);
   note('socket messages', socketLog.join(' | ') || 'none');
+  const counted = before - offlineEnd;
+  check(
+    `the screen keeps counting through the outage (${counted} s in ${OUTAGE_S} s)`,
+    Math.abs(counted - OUTAGE_S) <= 3,
+  );
+  const marked = await screen
+    .getByRole('status', { name: 'Offline' })
+    .isVisible()
+    .catch(() => false);
+  check('and marks itself offline', marked);
 
   const server = await playback();
   await screenContext.setOffline(false);
@@ -117,7 +128,7 @@ try {
   await operatorContext.setOffline(true);
   await wait(OUTAGE_S * 1000 - 3000);
   const enabled = await start.isEnabled();
-  note('start button while offline', enabled ? 'still enabled' : 'disabled');
+  check('the start button is disabled while offline', !enabled);
   if (enabled) await start.click();
   await wait(1500);
   const offlineBanner = await editor
@@ -132,10 +143,9 @@ try {
   await operatorContext.setOffline(false);
   await wait(8000);
   const afterOutage = await playback();
-  note(
-    'the press made while offline',
-    afterOutage.playback === 'play' ? 'arrived after reconnecting' : `was lost (still ${afterOutage.playback})`,
-  );
+  note('the server after the operator reconnects', afterOutage.playback);
+  const usable = await until(async () => start.isEnabled(), 15000);
+  check('the buttons come back with the connection', usable !== null);
   const back = await until(async () => {
     const value = await shown(screen);
     return value !== null && Math.abs(value - Math.round(afterOutage.current / 1000)) <= 1;

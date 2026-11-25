@@ -125,14 +125,6 @@ export function applyEngineState(enginePayload: unknown): boolean {
   return true;
 }
 
-/** Stops the loop; call when the socket closes so a stale timer does not keep running. */
-export function stopTimerEngine() {
-  if (frame !== null) {
-    cancelAnimationFrame(frame);
-    frame = null;
-  }
-}
-
 /**
  * Schedules the next frame, replacing any already pending.
  *

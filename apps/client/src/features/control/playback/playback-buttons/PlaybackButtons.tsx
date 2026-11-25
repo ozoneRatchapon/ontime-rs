@@ -2,6 +2,7 @@ import { Playback, TimerPhase } from 'ontime-types';
 import { IoPause, IoPlay, IoPlaySkipBack, IoPlaySkipForward, IoReload, IoStop } from 'react-icons/io5';
 
 import { setPlayback } from '../../../../common/hooks/useSocket';
+import { ConnectionStatus, useConnectionStore } from '../../../../common/stores/connectionStore';
 import { getPlaybackControlState } from '../playbackControl.utils';
 import TapButton from '../tap-button/TapButton';
 
@@ -15,6 +16,7 @@ interface PlaybackButtonsProps {
 }
 
 export default function PlaybackButtons({ playback, numEvents, selectedEventIndex, timerPhase }: PlaybackButtonsProps) {
+  const isOffline = useConnectionStore((state) => state.status !== ConnectionStatus.Connected);
   const {
     isPlaying,
     isPaused,
@@ -34,6 +36,7 @@ export default function PlaybackButtons({ playback, numEvents, selectedEventInde
     numEvents,
     selectedEventIndex,
     timerPhase,
+    isOffline,
   });
 
   return (

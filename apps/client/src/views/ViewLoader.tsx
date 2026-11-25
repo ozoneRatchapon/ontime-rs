@@ -1,5 +1,6 @@
 import { PropsWithChildren, Suspense } from 'react';
 
+import OfflineMarker from '../common/components/offline-marker/OfflineMarker';
 import useCssOverride from '../common/hooks-query/useCssOverride';
 import useViewSettings from '../common/hooks-query/useViewSettings';
 import Loader from './common/loader/Loader';
@@ -35,6 +36,7 @@ export default function ViewLoader({ children }: PropsWithChildren) {
       >
         <OverrideStyles />
         {children}
+        <OfflineMarker />
       </Suspense>
     </>
   );

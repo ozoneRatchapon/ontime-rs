@@ -49,7 +49,7 @@ import { addLog } from '../stores/logger';
 import { patchRuntime, patchRuntimeProperty } from '../stores/runtime';
 import { type ClockSample, clockSampleCount, measurePong } from './clockSync';
 import { nowInMillis } from './time';
-import { applyEngineState, initTimerEngine, stopTimerEngine } from './timerEngine';
+import { applyEngineState, initTimerEngine } from './timerEngine';
 
 let websocket: WebSocket | null = null;
 /**
@@ -303,9 +303,10 @@ export const connectSocket = () => {
 
 function scheduleReconnect() {
   stopPinging();
-  // every way of losing the socket ends here, the watchdog's included: stop
-  // advancing a timer we can no longer trust; it resumes on the next packet
-  stopTimerEngine();
+  // The local engine keeps counting from the last state it was sent. A stage
+  // clock that stops in front of a presenter is worse than one that may be
+  // a pause behind; the screen marks itself offline, and the first packet
+  // after reconnecting puts it right (plan 016, the user's choice 2026-11-25).
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;

@@ -1,6 +1,6 @@
 # 016 — When the venue's network drops (free-tier work, item 1)
 
-Status: **measured (2026-11-25); waiting for the user's choices.**
+Status: **done locally (2026-11-25), as the user chose.**
 
 `apps/server-rs/tests/browser/offline.mjs` drives a real timer screen and a
 real editor in Chromium against the Worker, and takes each one offline
@@ -29,3 +29,24 @@ socket. Upstream runs on a LAN, where this rarely matters.
 2. While the editor is offline, should the playback buttons be **disabled**,
    so a press is not silently lost? Queueing presses was ruled out: one that
    arrives late, after the operator has given up on it, is worse than none.
+
+## The user's choices (2026-11-25), as built
+
+1. **Keep counting, with a mark.** `scheduleReconnect` no longer stops the
+   local engine (this reverses dd51ea6b1), so a screen counts on from the last
+   state it was sent. Every view (`ViewLoader`) shows a small pulsing dot in
+   the corner while the connection is lost (`OfflineMarker`). The editor keeps
+   its fuller "Reconnecting / Disconnected" notice.
+2. **Disable the buttons.** `getPlaybackControlState` takes `isOffline`, and
+   `PlaybackButtons` and `TrackingPlaybackBar` pass the connection status, so
+   every playback control is disabled while the connection is lost.
+
+`offline.mjs` now checks both, with a 30 s outage: the screen counted 30 s in
+30 s and showed the mark; the start button was disabled and came back with
+the connection; the screen was back in step 0.2 s after the network returned.
+It runs in `tests/browser/run.sh`, and all five browser checks pass.
+
+Still true, and not changeable from the client: for the first ~10 s of an
+outage the socket still looks open (the browser buffers), so a press then is
+sent late when the network returns. The buttons disable once the watchdog
+notices the silence and the reconnect attempts fail.
