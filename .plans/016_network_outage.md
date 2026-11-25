@@ -1,6 +1,6 @@
 # 016 — When the venue's network drops (free-tier work, item 1)
 
-Status: **done locally (2026-11-25), as the user chose.**
+Status: **done and deployed (2026-11-25), Pages `be85661e` (master) and `04f4aac9` (main), as the user chose.**
 
 `apps/server-rs/tests/browser/offline.mjs` drives a real timer screen and a
 real editor in Chromium against the Worker, and takes each one offline
@@ -50,3 +50,8 @@ Still true, and not changeable from the client: for the first ~10 s of an
 outage the socket still looks open (the browser buffers), so a press then is
 sent late when the network returns. The buttons disable once the watchdog
 notices the silence and the reconnect attempts fail.
+
+On production (the deployed client against the Worker) `offline.mjs` passed
+the same way: 30 s counted in 30 s, the mark showed, the buttons were disabled
+and came back, and the screen was back in step in 0.2 s. No test room was left
+behind.

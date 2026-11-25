@@ -90,3 +90,5 @@
   - Cueless events are numbered by position, and given cues are kept.
   - Nested entries are no longer linked into their group twice. A read-back-and-resend round trip on production kept `a, g, x, y`, with cues `1`, `2` and the given `Y`.
   - Smoke: all five suites pass. The first integration run died on the client side (`EADDRNOTAVAIL` after the 60-call flood) before its cleanup. Its throwaway room `integration-vjtqe4tp` was deleted by hand, and the rerun passed 54/54.
+- **2026-11-25:** network outages (plan 016). Pages `be85661e` (master) and `04f4aac9` (main).
+  - Through an outage screens keep counting and show an offline dot, and the editor's playback buttons are disabled until the connection is back, as the user chose. Checked on production with `tests/browser/offline.mjs`.
