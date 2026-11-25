@@ -2,6 +2,7 @@ import useScrollIntoView from '../../../../common/hooks/useScrollIntoView';
 import { isDocker } from '../../../../externals';
 import type { PanelBaseProps } from '../../panel-list/PanelList';
 import * as Panel from '../../panel-utils/PanelUtils';
+import { isAvailableHere } from '../../useAppSettingsMenu';
 import CustomViews from '../manage-panel/CustomViews';
 import AuxTimerSettings from './AuxTimerSettings';
 import GeneralSettings from './GeneralSettings';
@@ -39,13 +40,17 @@ export default function SettingsPanel({ location }: PanelBaseProps) {
       <div ref={teleprompterRef}>
         <TeleprompterSettings />
       </div>
-      <div ref={customViewsRef}>
-        <CustomViews />
-      </div>
-      <div ref={mcpRef}>
-        <McpSection />
-      </div>
-      {!isDocker && (
+      {isAvailableHere('settings__custom-views') && (
+        <div ref={customViewsRef}>
+          <CustomViews />
+        </div>
+      )}
+      {isAvailableHere('settings__mcp') && (
+        <div ref={mcpRef}>
+          <McpSection />
+        </div>
+      )}
+      {!isDocker && isAvailableHere('settings__port') && (
         <div ref={portRef}>
           <ServerPortSettings />
         </div>

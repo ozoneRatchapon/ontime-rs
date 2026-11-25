@@ -1,6 +1,7 @@
 import useScrollIntoView from '../../../../common/hooks/useScrollIntoView';
 import type { PanelBaseProps } from '../../panel-list/PanelList';
 import * as Panel from '../../panel-utils/PanelUtils';
+import { isAvailableHere } from '../../useAppSettingsMenu';
 import CustomFieldSettings from './CustomFields';
 import ManageRundowns from './ManageRundowns';
 import RundownDefaultSettings from './RundownDefaultSettings';
@@ -24,9 +25,11 @@ export default function ManagePanel({ location }: PanelBaseProps) {
       <div ref={rundownsRef}>
         <ManageRundowns />
       </div>
-      <div ref={sheetsRef}>
-        <SourcesPanel />
-      </div>
+      {isAvailableHere('manage__sheets') && (
+        <div ref={sheetsRef}>
+          <SourcesPanel />
+        </div>
+      )}
     </>
   );
 }

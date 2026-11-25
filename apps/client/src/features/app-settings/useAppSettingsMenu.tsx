@@ -115,6 +115,15 @@ const notOnWorker: ReadonlySet<string> = new Set([
   'shutdown',
 ]);
 
+/**
+ * Whether a settings section works on this backend. The panels ask too, since
+ * a panel shows all its sections on one page and hiding the menu entry alone
+ * leaves the section in view.
+ */
+export function isAvailableHere(id: SettingsOptionId, onWorker = isWorkerBackend): boolean {
+  return !onWorker || !notOnWorker.has(id);
+}
+
 /** The menu without what this backend cannot do; a group left empty goes too. */
 export function availableOptions(options: Readonly<SettingsOption[]>, onWorker: boolean): SettingsOption[] {
   if (!onWorker) return [...options];
