@@ -1,0 +1,375 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b2 by scripts/upstream-oracle/generate.sh; do not edit by hand.",
+ "cases": [
+  {
+   "name": "no event has a cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "order": [
+    "a",
+    "b",
+    "c"
+   ],
+   "flatOrder": [
+    "a",
+    "b",
+    "c"
+   ],
+   "cues": {
+    "a": "1",
+    "b": "2",
+    "c": "3"
+   }
+  },
+  {
+   "name": "some events have a cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "Intro",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "order": [
+    "a",
+    "b",
+    "c"
+   ],
+   "flatOrder": [
+    "a",
+    "b",
+    "c"
+   ],
+   "cues": {
+    "a": "Intro",
+    "b": "2",
+    "c": "3"
+   }
+  },
+  {
+   "name": "an empty cue is kept",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "order": [
+    "a",
+    "b"
+   ],
+   "flatOrder": [
+    "a",
+    "b"
+   ],
+   "cues": {
+    "a": "",
+    "b": "2"
+   }
+  },
+  {
+   "name": "a numeric cue",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": 5,
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "order": [
+    "a",
+    "b"
+   ],
+   "flatOrder": [
+    "a",
+    "b"
+   ],
+   "cues": {
+    "a": "5",
+    "b": "2"
+   }
+  },
+  {
+   "name": "delays and milestones are not counted",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "d",
+     "m",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "id": "d",
+      "type": "delay",
+      "duration": 300000
+     },
+     "m": {
+      "id": "m",
+      "type": "milestone",
+      "cue": "",
+      "title": "Doors"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "order": [
+    "a",
+    "d",
+    "m",
+    "b"
+   ],
+   "flatOrder": [
+    "a",
+    "d",
+    "m",
+    "b"
+   ],
+   "cues": {
+    "a": "1",
+    "d": null,
+    "m": "",
+    "b": "2"
+   }
+  },
+  {
+   "name": "events in a group are counted in order",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "g",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "timeStart": 32400000,
+      "duration": 1800000,
+      "timeEnd": 34200000,
+      "timeStrategy": "lock-duration"
+     },
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "x",
+       "y"
+      ]
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "x": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "x",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "y": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "y",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "order": [
+    "a",
+    "g",
+    "c"
+   ],
+   "flatOrder": [
+    "a",
+    "g",
+    "x",
+    "y",
+    "c"
+   ],
+   "cues": {
+    "a": "1",
+    "x": "2",
+    "y": "3",
+    "g": null,
+    "c": "4"
+   }
+  }
+ ]
+}

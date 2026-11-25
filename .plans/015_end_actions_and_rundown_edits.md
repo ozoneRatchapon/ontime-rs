@@ -73,12 +73,20 @@ The new behaviour lives in `entry_edits.rs`. It applies to edits from the
 editor and the integration API. Replace (`PUT /data/rundowns/:id`, through
 `Rundown::place_entry`) keeps entries exactly as given.
 
-**Not done, found on the way:** upstream's import (`parseRundown`) does give
-an event without a cue one. It uses the event's position (`createEvent(event,
-eventIndex)`: "1", "2", "3"…), which is a different rule from the
-add-one-to-the-previous-cue rule above. Our replace leaves such a cue empty.
-This is not pinned by any contract yet. The seed scripts always send cues, so
-it has not shown up.
+**Follow-up, done:** a whole rundown now keeps and numbers its cues as
+upstream's `parseRundown` does. `gen-import_cues.ts` and `import_cues_tests.rs`
+send six rundowns through `PUT /data/rundowns/:id`.
+
+- An event without a cue is numbered by its place among the events, nested
+  ones included ("1", "2"…).
+- A cue it brings is kept, even an empty one. A numeric cue becomes text.
+
+The same contract found one more bug. A rundown sent the way it is read back
+(each group listing its entries, each entry naming its group) linked every
+nested entry into its group twice, so `x, y` became `x, y, x, y`. Exporting a
+rundown and sending it back would have broken it. Membership is now taken
+from the entries; the group's own list only fills in an entry that does not
+name its group.
 
 The comparison treats a missing field and `""` or `false` as the same. The
 fixture's starting events are upstream's partial mocks, which only fill in on

@@ -49,7 +49,7 @@ mkdir -p "$work/out/node_modules"
 ln -s "$root/node_modules/.pnpm/node_modules/express" "$work/out/node_modules/express"
 ln -s "$root/node_modules/.pnpm/node_modules/express-validator" "$work/out/node_modules/express-validator"
 
-for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection js_semantics rundown_edits; do
+for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection js_semantics rundown_edits import_cues; do
   tree="$work/upstream"
   if [ "$name" = integration ]; then tree="$work/stubbed"; fi
   if [ "$name" = rundown_edits ]; then tree="$work/rundown-stubbed"; fi

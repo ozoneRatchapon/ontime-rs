@@ -352,9 +352,83 @@ impl Project {
         }
 
         let mut rundown = Rundown::new(id, title.unwrap_or(&existing.title));
+        // A rundown read back lists each group's entries in the group and names
+        // the group in each entry. Membership is taken from the entries alone,
+        // or every nested entry would be linked into its group twice; the
+        // group's own list only fills in an entry that does not name its group.
+        let mut group_of = std::collections::HashMap::new();
+        for group in entries
+            .iter()
+            .filter(|e| crate::rundown::entry_type(e) == "group")
+        {
+            let group_id = group.get("id").and_then(Value::as_str).unwrap_or_default();
+            for child in group
+                .get("entries")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                if let Some(child) = child.as_str() {
+                    group_of.insert(child.to_string(), group_id.to_string());
+                }
+            }
+        }
+        let mut cueless = Vec::new();
         for entry in entries {
+            let mut entry = entry.clone();
+            if let Some(object) = entry.as_object_mut() {
+                match crate::rundown::entry_type(&Value::Object(object.clone())) {
+                    "group" => {
+                        object.insert("entries".into(), json!([]));
+                    }
+                    _ => {
+                        let named = object.get("parent").and_then(Value::as_str).is_some();
+                        let listed = object
+                            .get("id")
+                            .and_then(Value::as_str)
+                            .and_then(|id| group_of.get(id));
+                        if let (false, Some(group)) = (named, listed) {
+                            object.insert("parent".into(), json!(group));
+                        }
+                    }
+                }
+                // upstream makeString: a number reads as its digits
+                if let Some(cue) = object.get("cue").filter(|cue| cue.is_number()) {
+                    let cue = cue.to_string();
+                    object.insert("cue".into(), json!(cue));
+                }
+            }
             // an id already taken by an earlier entry gets a fresh one
-            rundown.place_entry(entry, crate::rundown::Insert::End);
+            let placed = rundown.place_entry(&entry, crate::rundown::Insert::End);
+            let has_cue = entry
+                .get("cue")
+                .is_some_and(|cue| !cue.is_null() && !cue.is_object());
+            if crate::rundown::entry_type(&placed) == "event" && !has_cue {
+                cueless.push(placed["id"].as_str().unwrap_or_default().to_string());
+            }
+        }
+        // an event that brings no cue is numbered by its place among the events,
+        // nested ones included (upstream parseRundown with createEvent)
+        let events: Vec<String> = rundown
+            .flat_order
+            .iter()
+            .filter(|id| {
+                rundown
+                    .get(id)
+                    .is_some_and(|e| crate::rundown::entry_type(e) == "event")
+            })
+            .cloned()
+            .collect();
+        for (index, event_id) in events.iter().enumerate() {
+            if cueless.contains(event_id) {
+                if let Some(object) = rundown
+                    .entries
+                    .get_mut(event_id)
+                    .and_then(Value::as_object_mut)
+                {
+                    object.insert("cue".into(), json!((index + 1).to_string()));
+                }
+            }
         }
         let ids: Vec<String> = rundown.entries.keys().cloned().collect();
         crate::custom_fields::drop_unknown_values(&self.custom_fields, &mut rundown, &ids);
