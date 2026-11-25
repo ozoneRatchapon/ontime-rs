@@ -20,6 +20,8 @@ use crate::{presence, registry_host};
 
 #[path = "room_integration.rs"]
 mod integration;
+#[path = "room_public.rs"]
+mod public;
 #[path = "room_snapshots.rs"]
 mod snapshots;
 #[path = "room_views.rs"]
@@ -119,6 +121,8 @@ pub struct OntimeProject {
     /// Whether anything was written since the newest copy. Assumed so after an
     /// eviction, which at worst costs one copy too many.
     changed_since_copy: bool,
+    /// What the audience was sent last (plan 023).
+    public_sent: public::LastSent,
 }
 
 #[durable_object]
@@ -138,6 +142,7 @@ impl DurableObject for OntimeProject {
             guard: Guard::default(),
             snapshot_index: None,
             changed_since_copy: true,
+            public_sent: Default::default(),
         }
     }
 
@@ -186,6 +191,10 @@ impl DurableObject for OntimeProject {
         ws: WebSocket,
         message: WebSocketIncomingMessage,
     ) -> Result<()> {
+        // the audience only listens: whatever it sends changes nothing
+        if self.is_public_socket(&ws) {
+            return Ok(());
+        }
         self.hydrate().await?;
 
         let WebSocketIncomingMessage::String(text) = message else {
@@ -288,6 +297,10 @@ impl DurableObject for OntimeProject {
         _reason: String,
         _clean: bool,
     ) -> Result<()> {
+        // someone in the audience leaving is not a client leaving
+        if self.is_public_socket(&ws) {
+            return Ok(());
+        }
         let leaving = ws
             .deserialize_attachment::<ClientInfo>()
             .ok()
@@ -393,7 +406,7 @@ impl OntimeProject {
         };
         let packet = json!({ "tag": "refetch", "payload": payload }).to_string();
 
-        for socket in self.state.get_websockets() {
+        for socket in self.operator_sockets() {
             let _ = socket.send_with_str(&packet);
         }
     }
@@ -407,7 +420,7 @@ impl OntimeProject {
     fn broadcast_client_list(&self, leaving: Option<&str>) {
         let clients = self.client_map(leaving);
         let packet = json!({ "tag": "client-list", "payload": clients }).to_string();
-        for socket in self.state.get_websockets() {
+        for socket in self.operator_sockets() {
             let _ = socket.send_with_str(&packet);
         }
     }
@@ -415,7 +428,7 @@ impl OntimeProject {
     /// Every connected client keyed by id, without the one that is `leaving`.
     fn client_map(&self, leaving: Option<&str>) -> serde_json::Map<String, Value> {
         let mut clients = serde_json::Map::new();
-        for socket in self.state.get_websockets() {
+        for socket in self.operator_sockets() {
             if let Ok(Some(info)) = socket.deserialize_attachment::<ClientInfo>() {
                 if leaving == Some(info.id.as_str()) {
                     continue;
@@ -475,9 +488,10 @@ impl OntimeProject {
         };
         let packet = json!({ "tag": "runtime-data", "payload": payload }).to_string();
 
-        for socket in self.state.get_websockets() {
+        for socket in self.operator_sockets() {
             let _ = socket.send_with_str(&packet);
         }
+        self.publish_public(now);
     }
 
     /// Schedules the next wake-up, and only while something is actually running.
@@ -503,7 +517,8 @@ impl OntimeProject {
     fn next_wake(&self) -> Option<Duration> {
         // with no sockets attached there is nobody to broadcast to, so a room
         // whose timer was left running stops costing anything
-        let has_clients = !self.state.get_websockets().is_empty();
+        // the audience counts by itself and never needs the heartbeat
+        let has_clients = !self.operator_sockets().is_empty();
         api::next_wake_in(&self.project, now_ms(), has_clients)
             .map(|ms| Duration::from_millis(ms as u64))
     }
@@ -620,6 +635,11 @@ impl OntimeProject {
         // presented token matches
         let actor = audit_describe::actor(&self.project, &api_request, member.as_ref());
 
+        // what the room shows its audience, without a token (plan 023).
+        // Before the upgrade test: its socket is not an editor's.
+        if public::is_public_path(&path) {
+            return self.public_http(req).await;
+        }
         // the room's custom views (plan 021), stored apart from the project.
         // Before the upgrade test, which a page named `ws-…` would also match.
         if views::is_page_path(&path) {

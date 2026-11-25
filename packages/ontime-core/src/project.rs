@@ -151,6 +151,10 @@ pub struct Project {
     /// behaves as it always has until its owner turns it on.
     #[serde(default)]
     pub members_only: bool,
+    /// What the room shows its audience without a token (plan 023). Off until
+    /// the room turns it on.
+    #[serde(default)]
+    pub public_feed: crate::public_feed::PublicFeed,
     /// Which chunks of the audit log exist. The lines are stored apart, see
     /// [`crate::audit`]. It lives here because this document is written with
     /// every change, so a change and its log line are written together.
@@ -242,6 +246,7 @@ impl Default for Project {
             heartbeat_ms: default_heartbeat_ms(),
             password_hash: None,
             members_only: false,
+            public_feed: Default::default(),
             audit: AuditIndex::default(),
             teleprompter: TeleprompterSettings::default(),
             prompter: Prompter::default(),

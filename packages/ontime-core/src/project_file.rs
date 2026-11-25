@@ -125,9 +125,11 @@ pub fn export(project: &Project) -> Value {
 
 /// Puts an imported file in place of the room's show. The room keeps what
 /// belongs to the room rather than the show: its password and members, its
-/// activity log and report archive, its CSS, and its clock settings.
+/// audience feed, its activity log and report archive, its CSS, and its clock
+/// settings.
 pub fn import_into(project: &mut Project, mut imported: Project, now: i64) {
     imported.members_only = project.members_only;
+    imported.public_feed = project.public_feed.clone();
     imported.report_archive = std::mem::take(&mut project.report_archive);
     imported.css_override = std::mem::take(&mut project.css_override);
     imported.timezone_offset = project.timezone_offset;

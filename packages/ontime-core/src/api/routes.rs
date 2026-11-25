@@ -4,7 +4,7 @@ use serde_json::{json, Value};
 
 use crate::project::{fresh_room_token, Project};
 use crate::teleprompter::{room as prompter, routes as prompter_routes};
-use crate::{custom_fields, project_file, rundown_routes};
+use crate::{custom_fields, project_file, public_feed, rundown_routes};
 
 use super::*;
 
@@ -283,6 +283,21 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
                     ApiResponse::json(&json!({ "restored": true }))
                 }
                 Err(error) => ApiResponse::error(format!("Invalid backup file: {error}"), 400),
+            }
+        }
+
+        // what the room shows its audience without a token (plan 023)
+        ["data", "public-feed"] if req.method == HttpMethod::Get => {
+            ApiResponse::json(&json!(project.public_feed))
+        }
+        ["data", "public-feed"] if req.method == HttpMethod::Post => {
+            match public_feed::update(project, &req.body) {
+                Ok(()) => {
+                    effects.push(Effect::Persist);
+                    effects.push(Effect::refetch("public-feed", None));
+                    ApiResponse::json(&json!(project.public_feed))
+                }
+                Err(error) => ApiResponse::error(error.message(), 400),
             }
         }
 

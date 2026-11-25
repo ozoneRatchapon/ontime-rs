@@ -178,6 +178,9 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             || p.starts_with("/user/")
             // a room's custom views (plan 021)
             || p.starts_with("/external/")
+            // what a room shows its audience (plan 023)
+            || p == "/public"
+            || p.starts_with("/public/")
             || p == "/api"
             || p.starts_with("/api/") =>
         {

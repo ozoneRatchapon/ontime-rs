@@ -18,6 +18,7 @@ pub mod offset;
 pub mod parser;
 pub mod project;
 pub mod project_file;
+pub mod public_feed;
 pub mod registry;
 pub mod registry_audit;
 mod roll;

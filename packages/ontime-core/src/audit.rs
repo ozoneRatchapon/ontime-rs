@@ -83,6 +83,8 @@ pub enum Action {
     /// A custom view page was added to the room, or removed from it (plan 021).
     CustomViewAdd,
     CustomViewRemove,
+    /// The audience feed was turned on or off, or its fields changed (plan 023).
+    PublicFeed,
     // the report
     ReportArchive,
     ReportClear,
@@ -130,7 +132,7 @@ impl Action {
             | RundownLoad | RundownDuplicate => Area::RundownList,
             ProjectData | Settings | ViewSettings | CustomFields | UrlPresets | Css
             | PasswordSet | PasswordCleared | MembersOnlyOn | MembersOnlyOff | Restore
-            | ProjectImport | CustomViewAdd | CustomViewRemove => Area::Room,
+            | ProjectImport | CustomViewAdd | CustomViewRemove | PublicFeed => Area::Room,
             ReportArchive | ReportClear => Area::Report,
             PersonCreate | PersonRemove | InviteIssue | InviteRedeem | SignOut | MembersChange
             | OperatorAdd | OperatorRemove => Area::People,

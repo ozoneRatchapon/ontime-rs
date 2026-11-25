@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Agenda</title>
+    <!--
+      The room's agenda for attendees (plan 023), live: what is on now, how
+      long is left, what comes next, and whether the show runs late. It reads
+      only the room's public feed, so it needs no token and shows no notes.
+
+        lang=th|en         language (default: the phone's)
+        theme=light|dark   colours (default: the phone's)
+        accent=6b63f0      highlight colour
+        font=Inter         a Google Font (Thai falls back to Anuphan)
+        embed=1            no outer margin, for a frame inside another page
+
+      Times are the venue's clock, shown as written in the rundown.
+    -->
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Anuphan:wght@400;600;700&display=swap');
+      :root {
+        --paper: #f4f0e6;
+        --ink: #121212;
+        --muted: rgba(18, 18, 18, 0.6);
+        --line: rgba(18, 18, 18, 0.14);
+        --card: rgba(255, 255, 255, 0.55);
+        --accent: #6b63f0;
+        --warm: #af3f27;
+        --ok: #167147;
+        --font: Inter, Anuphan, system-ui, sans-serif;
+        color-scheme: light;
+      }
+      :root.dark {
+        --paper: #12152a;
+        --ink: #e9e4d3;
+        --muted: rgba(233, 228, 211, 0.62);
+        --line: rgba(241, 236, 224, 0.16);
+        --card: rgba(255, 255, 255, 0.05);
+        --accent: #8f88ff;
+        --warm: #ff7a5c;
+        --ok: #3ccf8e;
+        color-scheme: dark;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font);
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 640px; margin: 0 auto; padding: 24px 18px 40px; }
+      :root.embed main { padding: 12px; }
+      header { margin-bottom: 18px; }
+      h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+      .sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
+      .status { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+      .chip {
+        font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+        border: 1px solid var(--line); color: var(--muted);
+      }
+      .chip.live { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .chip.live::before {
+        content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+        background: #fff; margin-right: 6px; vertical-align: 1px; animation: pulse 1.6s infinite;
+      }
+      .chip.late { color: var(--warm); border-color: var(--warm); }
+      .chip.early, .chip.ontime { color: var(--ok); border-color: var(--ok); }
+      @keyframes pulse { 50% { opacity: 0.25; } }
+      .now {
+        border: 1px solid var(--line); background: var(--card); border-radius: 16px;
+        padding: 16px; margin-bottom: 22px;
+      }
+      .now[hidden] { display: none; }
+      .now .label { font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+      .now .title { font-size: 20px; font-weight: 700; margin-top: 4px; }
+      .now .fields { color: var(--muted); font-size: 14px; }
+      .now .row { display: flex; align-items: baseline; justify-content: space-between; margin-top: 12px; }
+      .now .left { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .now .left.over { color: var(--warm); }
+      .now .next { color: var(--muted); font-size: 14px; text-align: right; max-width: 55%; }
+      .bar { height: 6px; border-radius: 3px; background: var(--line); margin-top: 10px; overflow: hidden; }
+      .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.5s linear; }
+      ol { list-style: none; }
+      li { display: grid; grid-template-columns: 56px 1fr; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); }
+      li .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; padding-top: 1px; }
+      li .what { font-weight: 600; }
+      li .fields { color: var(--muted); font-size: 13px; font-weight: 400; }
+      li.done .what, li.done .time { opacity: 0.45; }
+      li.current { border-top-color: var(--accent); }
+      li.current .what { color: var(--accent); }
+      li.group { grid-template-columns: 1fr; padding-top: 18px; border-top: none; }
+      li.group .what { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+      li.milestone .what { font-weight: 400; font-style: italic; }
+      footer { color: var(--muted); font-size: 13px; margin-top: 18px; }
+      .offline footer::after { content: ' · offline, reconnecting'; color: var(--warm); }
+      .empty { color: var(--muted); padding: 30px 0; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1 id="title"></h1>
+        <p class="sub" id="rundown"></p>
+        <div class="status" id="status"></div>
+      </header>
+      <section class="now" id="now" hidden>
+        <div class="label" id="now-label"></div>
+        <div class="title" id="now-title"></div>
+        <div class="fields" id="now-fields"></div>
+        <div class="row">
+          <div class="left" id="left"></div>
+          <div class="next" id="next"></div>
+        </div>
+        <div class="bar"><i id="bar"></i></div>
+      </section>
+      <ol id="list"></ol>
+      <p class="empty" id="empty" hidden></p>
+      <footer id="footer"></footer>
+    </main>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const lang = params.get('lang') || ((navigator.language || '').toLowerCase().startsWith('th') ? 'th' : 'en');
+      /** Minutes, as hours and minutes once there is an hour. */
+      function span(minutes) {
+        const h = Math.floor(minutes / 60), m = minutes % 60;
+        const th = lang === 'th';
+        if (!h) return th ? `${m} นาที` : `${m} min`;
+        return th ? `${h} ชม.${m ? ` ${m} นาที` : ''}` : `${h} h${m ? ` ${m} min` : ''}`;
+      }
+      const words = {
+        en: {
+          live: 'Live now', paused: 'Paused', notStarted: 'Not started yet', ended: 'Not running',
+          now: 'On now', next: 'Next', late: (m) => `Running ${span(m)} late`, early: (m) => `${span(m)} ahead`,
+          onTime: 'On time', finish: (t) => `Expected to finish around ${t}`, planned: (t) => `Planned to finish at ${t}`,
+          empty: 'The agenda will appear here.', closed: 'This agenda is not public right now.',
+        },
+        th: {
+          live: 'กำลังไลฟ์', paused: 'พักชั่วคราว', notStarted: 'ยังไม่เริ่ม', ended: 'ไม่ได้เดินเวลา',
+          now: 'ตอนนี้', next: 'ถัดไป', late: (m) => `ช้ากว่ากำหนด ${span(m)}`, early: (m) => `เร็วกว่ากำหนด ${span(m)}`,
+          onTime: 'ตรงเวลา', finish: (t) => `คาดว่าจะจบราว ${t}`, planned: (t) => `กำหนดจบ ${t}`,
+          empty: 'กำหนดการจะแสดงที่นี่', closed: 'กำหนดการนี้ยังไม่เปิดให้ดู',
+        },
+      }[lang === 'th' ? 'th' : 'en'];
+      document.documentElement.lang = lang === 'th' ? 'th' : 'en';
+
+      const root = document.documentElement;
+      const theme = params.get('theme');
+      const dark = theme ? theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      root.classList.toggle('dark', dark);
+      if (params.get('embed') === '1') root.classList.add('embed');
+      const accent = params.get('accent');
+      if (accent && /^[0-9a-f]{3,8}$/i.test(accent)) root.style.setProperty('--accent', `#${accent}`);
+      const font = params.get('font');
+      if (font) {
+        const style = document.createElement('style');
+        style.textContent = `@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;600;800&display=swap');`;
+        document.head.appendChild(style);
+        root.style.setProperty('--font', `'${font.replace(/'/g, '')}', Anuphan, system-ui, sans-serif`);
+      }
+
+      const $ = (id) => document.getElementById(id);
+      const DAY = 86400000;
+      const hhmm = (ms) => {
+        if (typeof ms !== 'number') return '';
+        const m = Math.floor((((ms % DAY) + DAY) % DAY) / 60000);
+        return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+      };
+      const clockText = (ms) => {
+        const over = ms < 0;
+        const total = over ? Math.floor(-ms / 1000) : Math.ceil(ms / 1000);
+        const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+        const two = (n) => String(n).padStart(2, '0');
+        return `${over ? '-' : ''}${h ? `${h}:${two(m)}` : two(m)}:${two(s)}`;
+      };
+      const fieldsText = (fields) => Object.entries(fields || {}).map(([, value]) => value).join(' · ');
+
+      let agenda = null;
+      let live = null;
+      let heardAt = 0;
+
+      function renderAgenda() {
+        $('title').textContent = agenda.title || '';
+        $('rundown').textContent = agenda.rundown || '';
+        document.title = agenda.title || document.title;
+        const list = $('list');
+        list.replaceChildren();
+        const nowId = live && live.now;
+        const index = agenda.entries.findIndex((e) => e.id === nowId);
+        agenda.entries.forEach((entry, i) => {
+          const item = document.createElement('li');
+          item.className = entry.type;
+          if (entry.type === 'group') {
+            item.innerHTML = '<div class="what"></div>';
+            item.querySelector('.what').textContent = entry.title;
+          } else {
+            item.innerHTML = '<div class="time"></div><div><div class="what"></div><div class="fields"></div></div>';
+            item.querySelector('.time').textContent = entry.type === 'event' ? hhmm(entry.timeStart) : '';
+            item.querySelector('.what').textContent = entry.title || '';
+            item.querySelector('.fields').textContent = fieldsText(entry.fields);
+            if (index >= 0 && i < index) item.classList.add('done');
+            if (entry.id === nowId) item.classList.add('current');
+          }
+          list.appendChild(item);
+        });
+        $('empty').hidden = agenda.entries.length > 0;
+        $('empty').textContent = words.empty;
+      }
+
+      function renderStatus() {
+        const status = $('status');
+        status.replaceChildren();
+        const chip = (text, kind) => {
+          const span = document.createElement('span');
+          span.className = `chip ${kind}`;
+          span.textContent = text;
+          status.appendChild(span);
+        };
+        const playback = live ? live.playback : 'stop';
+        if (playback === 'play') chip(words.live, 'live');
+        else if (playback === 'pause') chip(words.paused, 'paused');
+        else chip(live && live.actualStart != null ? words.ended : words.notStarted, 'idle');
+        if (playback === 'play' || playback === 'pause') {
+          const offset = live.offset.mode === 'relative' ? live.offset.relative : live.offset.absolute;
+          const minutes = Math.round(Math.abs(offset) / 60000);
+          if (offset >= 60000) chip(words.late(minutes), 'late');
+          else if (offset <= -60000) chip(words.early(minutes), 'early');
+          else chip(words.onTime, 'ontime');
+        }
+        const end = live && live.offset.expectedEnd != null ? words.finish(hhmm(live.offset.expectedEnd))
+          : live && live.plannedEnd != null ? words.planned(hhmm(live.plannedEnd)) : '';
+        $('footer').textContent = end;
+      }
+
+      function tick() {
+        if (agenda && live) {
+          const event = agenda.entries.find((e) => e.id === live.now);
+          const active = (live.playback === 'play' || live.playback === 'pause') && event;
+          $('now').hidden = !active;
+          if (active) {
+            $('now-label').textContent = words.now;
+            $('now-title').textContent = event.title || '';
+            $('now-fields').textContent = fieldsText(event.fields);
+            const base = live.timer.current;
+            const left = typeof base === 'number'
+              ? live.playback === 'play' ? base - (performance.now() - heardAt) : base
+              : null;
+            $('left').textContent = left === null ? '' : clockText(left);
+            $('left').classList.toggle('over', left !== null && left < 0);
+            const total = live.timer.duration || 0;
+            $('bar').style.width = total > 0 && left !== null ? `${Math.min(100, Math.max(0, (1 - left / total) * 100))}%` : '0';
+            const next = agenda.entries.find((e) => e.id === live.next);
+            $('next').textContent = next ? `${words.next}: ${next.title}` : '';
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      const room = decodeURIComponent((location.pathname.match(/^\/r\/([^/]+)\//) || [])[1] || '');
+      let retry = 1000;
+      function connect() {
+        const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+        const socket = new WebSocket(`${scheme}://${location.host}/public/ws?room=${encodeURIComponent(room)}`);
+        socket.onopen = () => { retry = 1000; document.body.classList.remove('offline'); };
+        socket.onmessage = (message) => {
+          const { tag, payload } = JSON.parse(message.data);
+          if (tag !== 'public-data') return;
+          if (payload.agenda) agenda = payload.agenda;
+          if (payload.live) { live = payload.live; heardAt = performance.now(); }
+          if (agenda) renderAgenda();
+          renderStatus();
+        };
+        socket.onclose = (event) => {
+          document.body.classList.add('offline');
+          if (event.code === 1000 && event.reason) {
+            $('empty').hidden = false;
+            $('empty').textContent = words.closed;
+            $('list').replaceChildren();
+            $('now').hidden = true;
+          }
+          setTimeout(connect, retry);
+          retry = Math.min(retry * 2, 30000);
+        };
+      }
+      connect();
+    </script>
+  </body>
+</html>

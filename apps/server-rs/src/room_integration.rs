@@ -164,7 +164,7 @@ impl OntimeProject {
             | ClientCommand::Redirect { target, .. }
             | ClientCommand::Identify { target, .. } => target,
         };
-        let found = self.state.get_websockets().into_iter().find_map(|socket| {
+        let found = self.operator_sockets().into_iter().find_map(|socket| {
             let info = socket
                 .deserialize_attachment::<ClientInfo>()
                 .ok()

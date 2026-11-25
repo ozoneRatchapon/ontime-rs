@@ -1,10 +1,11 @@
 import useScrollIntoView from '../../../../common/hooks/useScrollIntoView';
 import { usePing } from '../../../../common/hooks/useSocket';
-import { isDocker } from '../../../../externals';
+import { isDocker, isWorkerBackend } from '../../../../externals';
 import type { PanelBaseProps } from '../../panel-list/PanelList';
 import * as Panel from '../../panel-utils/PanelUtils';
 import ClientControlPanel from './client-control/ClientControlPanel';
 import LogExport from './NetworkLogExport';
+import PublicFeed from './PublicFeed';
 import RoomAccess from './RoomAccess';
 
 export default function NetworkLogPanel({ location }: PanelBaseProps) {
@@ -15,6 +16,7 @@ export default function NetworkLogPanel({ location }: PanelBaseProps) {
     <>
       <Panel.Header>Network</Panel.Header>
       <RoomAccess />
+      {isWorkerBackend && <PublicFeed />}
       {isDocker && (
         <Panel.Section>
           <OntimeCloudStats />
