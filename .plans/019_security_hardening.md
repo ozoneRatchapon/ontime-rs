@@ -187,6 +187,12 @@ four files, but `worker` 0.4 depends on it too, so dropping it means moving
 to `jiff` and to a newer `worker` together. Nothing is broken today; remove
 the ignore in `deny.toml` when this is done.
 
+Checked 2026-11-25: the newest `worker`, 0.9.0, still depends on chrono, and
+not as an optional dependency, so the crate stays in the Worker build whatever
+we do. Moving our four files to `jiff` would not let us remove the
+`deny.toml` ignore. Blocked on upstream `worker`; look again when a release
+makes chrono optional.
+
 ## 10. Dependabot's npm alerts — triaged, low priority
 
 GitHub listed 8 on 2026-11-25, all npm, none in what is deployed:
