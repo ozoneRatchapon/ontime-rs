@@ -53,3 +53,11 @@ export async function openSocket(base, room, { timeoutMs = 10000 } = {}) {
 }
 
 export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Waits until `done()` holds, rather than for a fixed time that a slow CI
+ * runner can outlast. Gives up after `ms`; the check that follows reports it.
+ */
+export const until = async (done, ms = 5000) => {
+  for (const start = Date.now(); !done() && Date.now() - start < ms; ) await wait(20);
+};

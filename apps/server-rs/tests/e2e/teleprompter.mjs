@@ -10,7 +10,7 @@
 // A controller socket drives the transport and a follower socket sees the
 // same sync; edits keep the reader in place; Ontime loading an event moves the
 // reader in event mode; playback stops at the end of an event on the alarm.
-import { wait } from './support.mjs';
+import { until, wait } from './support.mjs';
 
 const base = process.argv[2] ?? 'http://127.0.0.1:8787';
 let failed = false;
@@ -126,11 +126,13 @@ const controller = await socket();
 const follower = await socket();
 await wait(300);
 controller.send({ goto: { cue: '2' } });
-await wait(400);
+await until(() => follower.seen.state?.event?.id === 'ev-b');
 check('goto by cue', follower.seen.state?.event?.id, 'ev-b');
 controller.send({ speed: 40 });
 controller.send('play');
-await wait(500);
+await until(() => follower.seen.sync?.playback === 'play' && follower.seen.sync?.speed === 40);
+// the controller hears the same broadcast
+await until(() => JSON.stringify(controller.seen.sync) === JSON.stringify(follower.seen.sync));
 check('the follower sees it playing', [follower.seen.sync?.playback, follower.seen.sync?.speed], ['play', 40]);
 check('both count from the same sync', JSON.stringify(follower.seen.sync), JSON.stringify(controller.seen.sync));
 check('rows from the same script', follower.seen.sync?.revision, script.revision);
@@ -156,7 +158,7 @@ check('still in event 2', follower.seen.state?.event?.id, 'ev-b');
 
 console.log('== event by event, the reader follows the loaded event ==');
 controller.raw('load', { id: 'ev-c' });
-await wait(500);
+await until(() => follower.seen.state?.event?.id === 'ev-c');
 check('moved to the loaded event', follower.seen.state?.event?.id, 'ev-c');
 controller.send({ mode: 'script' });
 controller.raw('load', { id: 'ev-a' });
@@ -165,16 +167,16 @@ check('script mode ignores loading', follower.seen.state?.event?.id, 'ev-c');
 
 console.log('== commands ==');
 controller.send('top');
-await wait(300);
+await until(() => follower.seen.state?.event?.id === 'ev-a');
 check('top', follower.seen.state?.event?.id, 'ev-a');
 controller.send('next');
-await wait(300);
+await until(() => follower.seen.state?.event?.id === 'ev-b');
 check('next', follower.seen.state?.event?.id, 'ev-b');
 controller.send({ goto: { index: 3 } });
-await wait(300);
+await until(() => follower.seen.state?.event?.id === 'ev-c');
 check('goto by index', follower.seen.state?.event?.id, 'ev-c');
 controller.send({ blackout: 'toggle' });
-await wait(300);
+await until(() => follower.seen.state?.blackout === 'on');
 check('blackout', follower.seen.state?.blackout, 'on');
 const before = follower.seen.state;
 controller.send({ goto: { cue: 'nope' } });
