@@ -1,6 +1,6 @@
 # 010 — Pin every playback command's effect against upstream (RIIR 6)
 
-Status: **done locally (2026-11-25).** Item 1 of the five from the RIIR 5 review.
+Status: **done and deployed (2026-11-25), Worker `f4c09ec0`.** Item 1 of the five from the RIIR 5 review.
 The others are plans 011–014.
 
 ## Why

@@ -1,6 +1,6 @@
 # 011 — Differential fuzzing of the JavaScript conversions
 
-Status: **done locally (2026-11-25).** Item 2 of the RIIR 5 review.
+Status: **done and deployed (2026-11-25), Worker `f4c09ec0`.** Item 2 of the RIIR 5 review.
 
 ## Why
 

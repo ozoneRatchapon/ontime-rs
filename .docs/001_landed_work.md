@@ -68,3 +68,7 @@
   - Contracts run upstream's own router, dispatcher and selection functions. 154 requests and 8 rundowns agree, with 2 deliberate differences.
   - Fixed on the way: the websocket accepts index, cue and previous, next wraps after the last event, and the Network panel's rename, redirect and identify now work.
   - Production smoke after the deploy: integration 48, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing, each in a throwaway room.
+- **2026-11-25:** RIIR 6 (plan 010) and the differential fuzz (plan 011). Worker `f4c09ec0`.
+  - Start while rolling keeps the event's start time, and reload re-arms without starting, as upstream. 12 mixed-command cases are pinned against upstream's runtimeState.
+  - `js.rs` matches node on 5,000 seeded inputs. Fixed: U+0085 read as a space, number-to-text formatting, and Express's fallback for query values with broken UTF-8.
+  - Production smoke: integration 48, timer 25, offset 17, roll 14, teleprompter 35 checks, all passing.

@@ -109,6 +109,12 @@ How to use it:
   - Pinned against upstream's own router, dispatcher and selection functions.
   - Deployed 2026-11-25: Worker `67341f2f`. The production smoke tests pass.
 
+- [x] **RIIR 6, playback commands pinned (plan 010)** and the **differential
+      fuzz of js.rs (plan 011)**: deployed 2026-11-25, Worker `f4c09ec0`.
+- [ ] Plan 012 (OSC on native): wait until native is used with show hardware.
+- [ ] Plan 013 (rate limit, audit `change`, OpenAPI) and plan 014 (benchmarks):
+      planned, not started.
+
 ## Dioxus pilot
 
 - [ ] Try Dioxus on our own pages, `/admin`, `/join` and `/my-rooms`. Plan:
