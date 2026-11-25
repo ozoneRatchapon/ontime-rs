@@ -61,3 +61,5 @@
   - CI caught it: `timer.mjs` still expected the old `duration`.
   - Fixed in 35cbe5c06. The runners now refuse a busy port and stop their whole worker tree.
   - Rerun on the real build: all e2e suites and browser checks pass, and `timer.mjs` passes on production.
+- **2026-11-25:** retired the cache-first service worker from 2026-07-22 (a5713c6f9). Pages `e8fabc91` (master) and `8805e387` (main).
+  - Browsers that still had it showed the old app on a normal reload. One normal reload now removes it.
