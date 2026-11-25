@@ -1,0 +1,191 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b2 by scripts/upstream-oracle/generate.sh; do not edit by hand.",
+ "cases": {
+  "slugs": [
+   {
+    "slug": "demo",
+    "valid": true
+   },
+   {
+    "slug": "a",
+    "valid": true
+   },
+   {
+    "slug": "stage-left",
+    "valid": true
+   },
+   {
+    "slug": "obs-2026",
+    "valid": true
+   },
+   {
+    "slug": "0",
+    "valid": true
+   },
+   {
+    "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "valid": true
+   },
+   {
+    "slug": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "valid": false
+   },
+   {
+    "slug": "",
+    "valid": false
+   },
+   {
+    "slug": "-a",
+    "valid": false
+   },
+   {
+    "slug": "a-",
+    "valid": false
+   },
+   {
+    "slug": "A",
+    "valid": false
+   },
+   {
+    "slug": "a_b",
+    "valid": false
+   },
+   {
+    "slug": "a b",
+    "valid": false
+   },
+   {
+    "slug": "a.b",
+    "valid": false
+   },
+   {
+    "slug": "ก",
+    "valid": false
+   },
+   {
+    "slug": "a--b",
+    "valid": true
+   },
+   {
+    "slug": "../x",
+    "valid": false
+   },
+   {
+    "slug": "x/y",
+    "valid": false
+   }
+  ],
+  "pages": [
+   {
+    "name": "a plain page",
+    "html": "<!doctype html><html><head><style>body{}</style></head><body><script>let a = 1;</script></body></html>",
+    "refused": null
+   },
+   {
+    "name": "the html tag first",
+    "html": "<html><body>x</body></html>",
+    "refused": null
+   },
+   {
+    "name": "spaces before",
+    "html": "  \n <!DOCTYPE html>\n<html></html>",
+    "refused": null
+   },
+   {
+    "name": "upper case doctype",
+    "html": "<!DOCTYPE HTML><html></html>",
+    "refused": null
+   },
+   {
+    "name": "doctype without a space",
+    "html": "<!doctypehtml><html></html>",
+    "refused": "File does not appear to be valid HTML. Expected <!DOCTYPE html> or <html> at the start."
+   },
+   {
+    "name": "doctype of something else",
+    "html": "<!doctype svg><svg></svg>",
+    "refused": "File does not appear to be valid HTML. Expected <!DOCTYPE html> or <html> at the start."
+   },
+   {
+    "name": "text first",
+    "html": "hello <html></html>",
+    "refused": "File does not appear to be valid HTML. Expected <!DOCTYPE html> or <html> at the start."
+   },
+   {
+    "name": "a comment first",
+    "html": "<!-- note --><!doctype html><html></html>",
+    "refused": "File does not appear to be valid HTML. Expected <!DOCTYPE html> or <html> at the start."
+   },
+   {
+    "name": "an html-ish tag",
+    "html": "<htmlx></htmlx>",
+    "refused": "File does not appear to be valid HTML. Expected <!DOCTYPE html> or <html> at the start."
+   },
+   {
+    "name": "an external script",
+    "html": "<!doctype html><html><head><script src=\"https://cdn.example/x.js\"></script></head><body></body></html>",
+    "refused": "External scripts are not allowed. Use inline <script> instead."
+   },
+   {
+    "name": "an external script, spaced",
+    "html": "<!doctype html><html><head><script type=\"module\" src = \"x.js\"></script></head><body></body></html>",
+    "refused": "External scripts are not allowed. Use inline <script> instead."
+   },
+   {
+    "name": "an inline script naming src",
+    "html": "<!doctype html><html><head><script>const src = 1;</script></head><body></body></html>",
+    "refused": null
+   },
+   {
+    "name": "data-src on a script",
+    "html": "<!doctype html><html><head><script data-src=\"x\"></script></head><body></body></html>",
+    "refused": "External scripts are not allowed. Use inline <script> instead."
+   },
+   {
+    "name": "a stylesheet link",
+    "html": "<!doctype html><html><head><link rel=\"stylesheet\" href=\"x.css\"></head><body></body></html>",
+    "refused": "External stylesheets are not allowed. Use inline <style> instead."
+   },
+   {
+    "name": "a stylesheet link unquoted",
+    "html": "<!doctype html><html><head><link href=x.css rel=stylesheet></head><body></body></html>",
+    "refused": "External stylesheets are not allowed. Use inline <style> instead."
+   },
+   {
+    "name": "a preconnect link",
+    "html": "<!doctype html><html><head><link rel=\"preconnect\" href=\"https://fonts.example\"></head><body></body></html>",
+    "refused": null
+   },
+   {
+    "name": "an icon link",
+    "html": "<!doctype html><html><head><link rel=\"icon\" href=\"data:,\"></head><body></body></html>",
+    "refused": null
+   },
+   {
+    "name": "an iframe",
+    "html": "<!doctype html><html><head></head><body><iframe src=\"x\"></iframe></body></html>",
+    "refused": "Iframes are not allowed."
+   },
+   {
+    "name": "an iframe tag with no space",
+    "html": "<!doctype html><html><head></head><body><iframe></body></html>",
+    "refused": "Iframes are not allowed."
+   },
+   {
+    "name": "an iframe-like word",
+    "html": "<!doctype html><html><head></head><body><p>use <iframes> carefully</p></body></html>",
+    "refused": null
+   },
+   {
+    "name": "an image from anywhere",
+    "html": "<!doctype html><html><head></head><body><img src=\"https://example.com/logo.png\"></body></html>",
+    "refused": null
+   },
+   {
+    "name": "upper case script",
+    "html": "<!doctype html><html><head><SCRIPT SRC=\"x.js\"></SCRIPT></head><body></body></html>",
+    "refused": "External scripts are not allowed. Use inline <script> instead."
+   }
+  ]
+ }
+}

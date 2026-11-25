@@ -22,6 +22,8 @@ use crate::{presence, registry_host};
 mod integration;
 #[path = "room_snapshots.rs"]
 mod snapshots;
+#[path = "room_views.rs"]
+mod views;
 
 /// Per-connection metadata, stored on the socket itself.
 ///
@@ -617,6 +619,15 @@ impl OntimeProject {
         // decided before the change: setting a password changes what the
         // presented token matches
         let actor = audit_describe::actor(&self.project, &api_request, member.as_ref());
+
+        // the room's custom views (plan 021), stored apart from the project.
+        // Before the upgrade test, which a page named `ws-…` would also match.
+        if views::is_page_path(&path) {
+            return self.page_http(req, &api_request).await;
+        }
+        if views::is_views_path(&path) {
+            return self.views_http(req, &api_request, actor).await;
+        }
 
         // an upgrade never reaches the shared routing, because the socket belongs
         // to the host — but it is gated by the same rule

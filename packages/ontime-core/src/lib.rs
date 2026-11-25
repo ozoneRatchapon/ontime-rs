@@ -5,6 +5,7 @@ pub mod aux_timer;
 pub mod command;
 pub mod cue;
 pub mod custom_fields;
+pub mod custom_views;
 pub mod directory;
 pub mod engine;
 mod entry_edits;

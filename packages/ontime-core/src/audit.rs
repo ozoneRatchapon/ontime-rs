@@ -80,6 +80,9 @@ pub enum Action {
     Restore,
     /// A project file from the Ontime app took the place of the show.
     ProjectImport,
+    /// A custom view page was added to the room, or removed from it (plan 021).
+    CustomViewAdd,
+    CustomViewRemove,
     // the report
     ReportArchive,
     ReportClear,
@@ -127,7 +130,7 @@ impl Action {
             | RundownLoad | RundownDuplicate => Area::RundownList,
             ProjectData | Settings | ViewSettings | CustomFields | UrlPresets | Css
             | PasswordSet | PasswordCleared | MembersOnlyOn | MembersOnlyOff | Restore
-            | ProjectImport => Area::Room,
+            | ProjectImport | CustomViewAdd | CustomViewRemove => Area::Room,
             ReportArchive | ReportClear => Area::Report,
             PersonCreate | PersonRemove | InviteIssue | InviteRedeem | SignOut | MembersChange
             | OperatorAdd | OperatorRemove => Area::People,

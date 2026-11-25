@@ -176,6 +176,8 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         p if p == "/ws"
             || p.starts_with("/data/")
             || p.starts_with("/user/")
+            // a room's custom views (plan 021)
+            || p.starts_with("/external/")
             || p == "/api"
             || p.starts_with("/api/") =>
         {

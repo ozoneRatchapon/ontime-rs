@@ -89,6 +89,7 @@ suites=(
   "integration.mjs:node" # the integration API, HTTP and websocket (plan 009)
   "snapshots.mjs:node" # the room's undo history (plan 018, needs ADMIN_PASSWORD)
   "project_file.mjs:node" # project files to and from the app (plan 020, needs ADMIN_PASSWORD)
+  "custom_views.mjs:node" # a room's own pages, sandboxed (plan 021, needs ADMIN_PASSWORD)
   "guard.mjs:node"    # wrong guesses wait (plan 019, needs ADMIN_PASSWORD, local only)
 )
 

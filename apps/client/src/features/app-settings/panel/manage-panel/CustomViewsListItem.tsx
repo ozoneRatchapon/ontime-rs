@@ -3,7 +3,8 @@ import { IoDownloadOutline, IoOpenOutline, IoTrash } from 'react-icons/io5';
 import { downloadCustomView } from '../../../../common/api/customViews';
 import { maybeAxiosError } from '../../../../common/api/utils';
 import IconButton from '../../../../common/components/buttons/IconButton';
-import { handleLinks } from '../../../../common/utils/linkUtils';
+import { handleLinks, openLink } from '../../../../common/utils/linkUtils';
+import { isWorkerBackend } from '../../../../externals';
 import * as Panel from '../../panel-utils/PanelUtils';
 import { getViewUrl } from './customViews.utils';
 
@@ -18,6 +19,11 @@ interface CustomViewsListItemProps {
 
 export default function CustomViewsListItem({ slug, index, onDelete, onError }: CustomViewsListItemProps) {
   const handlePreview = () => {
+    // on the Worker the page is served by the Worker, not by the client's host
+    if (isWorkerBackend) {
+      openLink(getViewUrl(slug));
+      return;
+    }
     handleLinks(`external/${encodeURIComponent(slug)}/`);
   };
 

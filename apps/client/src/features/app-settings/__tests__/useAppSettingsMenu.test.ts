@@ -13,7 +13,6 @@ describe('availableOptions', () => {
     for (const hidden of [
       'settings__mcp',
       'settings__port',
-      'settings__custom-views',
       'project__create',
       'manage__sheets',
       'automation',
@@ -32,6 +31,7 @@ describe('availableOptions', () => {
       'settings__aux-timers',
       'settings__view',
       'settings__teleprompter',
+      'settings__custom-views',
       'manage__defaults',
       'manage__custom',
       'project',

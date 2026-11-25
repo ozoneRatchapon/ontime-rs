@@ -50,6 +50,8 @@ export type ActivityAction =
   | 'members-only-off'
   | 'restore'
   | 'project-import'
+  | 'custom-view-add'
+  | 'custom-view-remove'
   | 'report-archive'
   | 'report-clear'
   // people events, on the admin page

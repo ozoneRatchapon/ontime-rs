@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { type CustomViewsListResponse, type MessageResponse } from 'ontime-types';
 
+import { isWorkerBackend } from '../../externals';
 import { apiEntryUrl } from './constants';
 import type { RequestOptions } from './requestOptions';
 import { axiosConfig } from './requestTimeouts';
@@ -17,6 +18,17 @@ export async function getCustomViews(options?: RequestOptions): Promise<CustomVi
 }
 
 export async function uploadCustomView(slug: string, file: File, options?: RequestOptions): Promise<MessageResponse> {
+  // the Worker takes the page as text in JSON, as it reads no multipart (plan 021)
+  if (isWorkerBackend) {
+    const html = await file.text();
+    return (
+      await axios.post<MessageResponse>(
+        `${customViewsPath}/${encodeURIComponent(slug)}/upload`,
+        { html },
+        { signal: options?.signal, timeout: options?.timeout ?? axiosConfig.longTimeout },
+      )
+    ).data;
+  }
   const formData = new FormData();
   formData.append('indexHtml', file);
 
