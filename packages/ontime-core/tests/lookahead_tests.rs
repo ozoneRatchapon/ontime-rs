@@ -368,7 +368,6 @@ fn an_unwatched_room_still_wakes_to_advance_the_rundown() {
 fn a_paused_or_aux_running_room_is_silent_without_a_watcher() {
     use ontime_core::api::next_wake_in;
     use ontime_core::project::Project;
-    use serde_json::json as j;
 
     let mut project = Project::default();
     let rundown = project.current().cloned().unwrap();
@@ -382,9 +381,12 @@ fn a_paused_or_aux_running_room_is_silent_without_a_watcher() {
     assert!(next_wake_in(&project, at(10 * HOUR + MINUTE), true).is_some());
     assert_eq!(next_wake_in(&project, at(10 * HOUR + MINUTE), false), None);
 
-    project
-        .aux_timers
-        .apply(&j!({ "1": "start" }), at(10 * HOUR));
+    project.aux_timers.run(
+        1,
+        ontime_core::aux_timer::AuxCommand::Start,
+        at(10 * HOUR),
+        "",
+    );
     assert!(next_wake_in(&project, at(10 * HOUR + MINUTE), true).is_some());
     assert_eq!(next_wake_in(&project, at(10 * HOUR + MINUTE), false), None);
 }

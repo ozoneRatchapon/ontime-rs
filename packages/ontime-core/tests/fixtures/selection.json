@@ -1,0 +1,1368 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b2 by scripts/upstream-oracle/generate.sh; do not edit by hand.",
+ "cases": [
+  {
+   "name": "plain",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "timed": [
+    "a",
+    "b",
+    "c"
+   ],
+   "playable": [
+    "a",
+    "b",
+    "c"
+   ],
+   "from": [
+    {
+     "current": null,
+     "next": "a",
+     "previous": "a",
+     "rollNext": "a",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "a",
+     "next": "b",
+     "previous": "a",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "b",
+     "next": "c",
+     "previous": "a",
+     "rollNext": "c",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "c",
+     "next": "a",
+     "previous": "b",
+     "rollNext": "a",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    }
+   ],
+   "indices": [
+    {
+     "index": 0,
+     "id": "a",
+     "loadable": true
+    },
+    {
+     "index": 1,
+     "id": "b",
+     "loadable": true
+    },
+    {
+     "index": 2,
+     "id": "c",
+     "loadable": true
+    },
+    {
+     "index": 3,
+     "id": null,
+     "loadable": false
+    }
+   ]
+  },
+  {
+   "name": "skipped events",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d",
+     "e"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "d",
+      "cue": "d",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     },
+     "e": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "e",
+      "cue": "e",
+      "timeStart": 43200000,
+      "duration": 1800000,
+      "timeEnd": 45000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "timed": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e"
+   ],
+   "playable": [
+    "b",
+    "d"
+   ],
+   "from": [
+    {
+     "current": null,
+     "next": "b",
+     "previous": "b",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "a",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "d",
+       "start": "d",
+       "startArmed": "d",
+       "load": "d"
+      },
+      {
+       "cue": "e",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "b",
+     "next": "d",
+     "previous": "b",
+     "rollNext": "d",
+     "cues": [
+      {
+       "cue": "a",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "d",
+       "start": "d",
+       "startArmed": "d",
+       "load": "d"
+      },
+      {
+       "cue": "e",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "d",
+     "next": "b",
+     "previous": "b",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "a",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "d",
+       "start": "d",
+       "startArmed": "d",
+       "load": "d"
+      },
+      {
+       "cue": "e",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    }
+   ],
+   "indices": [
+    {
+     "index": 0,
+     "id": "a",
+     "loadable": false
+    },
+    {
+     "index": 1,
+     "id": "b",
+     "loadable": true
+    },
+    {
+     "index": 2,
+     "id": "c",
+     "loadable": false
+    },
+    {
+     "index": 3,
+     "id": "d",
+     "loadable": true
+    },
+    {
+     "index": 4,
+     "id": "e",
+     "loadable": false
+    },
+    {
+     "index": 5,
+     "id": null,
+     "loadable": false
+    }
+   ]
+  },
+  {
+   "name": "groups, delays and milestones",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "m",
+     "g",
+     "x",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "m": {
+      "id": "m",
+      "type": "milestone",
+      "cue": "a",
+      "title": ""
+     },
+     "g": {
+      "id": "g",
+      "type": "group",
+      "entries": [
+       "a",
+       "b"
+      ]
+     },
+     "x": {
+      "id": "x",
+      "type": "delay",
+      "duration": 300000
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration",
+      "parent": "g"
+     }
+    },
+    "revision": 1
+   },
+   "timed": [
+    "a",
+    "b",
+    "c"
+   ],
+   "playable": [
+    "a",
+    "b",
+    "c"
+   ],
+   "from": [
+    {
+     "current": null,
+     "next": "a",
+     "previous": "a",
+     "rollNext": "a",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "a",
+     "next": "b",
+     "previous": "a",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "b",
+     "next": "c",
+     "previous": "a",
+     "rollNext": "c",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "c",
+     "next": "a",
+     "previous": "b",
+     "rollNext": "a",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    }
+   ],
+   "indices": [
+    {
+     "index": 0,
+     "id": "a",
+     "loadable": true
+    },
+    {
+     "index": 1,
+     "id": "b",
+     "loadable": true
+    },
+    {
+     "index": 2,
+     "id": "c",
+     "loadable": true
+    },
+    {
+     "index": 3,
+     "id": null,
+     "loadable": false
+    }
+   ]
+  },
+  {
+   "name": "shared cues",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c",
+     "d",
+     "e"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "1",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "2",
+      "timeStart": 37800000,
+      "duration": 1800000,
+      "timeEnd": 39600000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "1",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     },
+     "d": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "d",
+      "cue": "1",
+      "timeStart": 41400000,
+      "duration": 1800000,
+      "timeEnd": 43200000,
+      "timeStrategy": "lock-duration"
+     },
+     "e": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "e",
+      "cue": "2",
+      "timeStart": 43200000,
+      "duration": 1800000,
+      "timeEnd": 45000000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "timed": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e"
+   ],
+   "playable": [
+    "a",
+    "b",
+    "c",
+    "e"
+   ],
+   "from": [
+    {
+     "current": null,
+     "next": "a",
+     "previous": "a",
+     "rollNext": "a",
+     "cues": [
+      {
+       "cue": "1",
+       "start": "c",
+       "startArmed": "a",
+       "load": "c"
+      },
+      {
+       "cue": "2",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "a",
+     "next": "b",
+     "previous": "a",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "1",
+       "start": "c",
+       "startArmed": "a",
+       "load": "c"
+      },
+      {
+       "cue": "2",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "b",
+     "next": "c",
+     "previous": "a",
+     "rollNext": "c",
+     "cues": [
+      {
+       "cue": "1",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "2",
+       "start": "e",
+       "startArmed": "b",
+       "load": "e"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "c",
+     "next": "e",
+     "previous": "b",
+     "rollNext": "e",
+     "cues": [
+      {
+       "cue": "1",
+       "start": "a",
+       "startArmed": "c",
+       "load": "a"
+      },
+      {
+       "cue": "2",
+       "start": "e",
+       "startArmed": "e",
+       "load": "e"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "e",
+     "next": "a",
+     "previous": "c",
+     "rollNext": "a",
+     "cues": [
+      {
+       "cue": "1",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "2",
+       "start": "b",
+       "startArmed": "e",
+       "load": "b"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    }
+   ],
+   "indices": [
+    {
+     "index": 0,
+     "id": "a",
+     "loadable": true
+    },
+    {
+     "index": 1,
+     "id": "b",
+     "loadable": true
+    },
+    {
+     "index": 2,
+     "id": "c",
+     "loadable": true
+    },
+    {
+     "index": 3,
+     "id": "d",
+     "loadable": false
+    },
+    {
+     "index": 4,
+     "id": "e",
+     "loadable": true
+    },
+    {
+     "index": 5,
+     "id": null,
+     "loadable": false
+    }
+   ]
+  },
+  {
+   "name": "zero-length events",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b",
+     "c"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 0,
+      "timeEnd": 36000000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "c": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "c",
+      "cue": "c",
+      "timeStart": 37800000,
+      "duration": 0,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "timed": [
+    "a",
+    "b",
+    "c"
+   ],
+   "playable": [
+    "a",
+    "b",
+    "c"
+   ],
+   "from": [
+    {
+     "current": null,
+     "next": "a",
+     "previous": "a",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "a",
+     "next": "b",
+     "previous": "a",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "b",
+     "next": "c",
+     "previous": "a",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "c",
+     "next": "a",
+     "previous": "b",
+     "rollNext": "b",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "b",
+       "start": "b",
+       "startArmed": "b",
+       "load": "b"
+      },
+      {
+       "cue": "c",
+       "start": "c",
+       "startArmed": "c",
+       "load": "c"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    }
+   ],
+   "indices": [
+    {
+     "index": 0,
+     "id": "a",
+     "loadable": true
+    },
+    {
+     "index": 1,
+     "id": "b",
+     "loadable": true
+    },
+    {
+     "index": 2,
+     "id": "c",
+     "loadable": true
+    },
+    {
+     "index": 3,
+     "id": null,
+     "loadable": false
+    }
+   ]
+  },
+  {
+   "name": "one event",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": false,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "timed": [
+    "a"
+   ],
+   "playable": [
+    "a"
+   ],
+   "from": [
+    {
+     "current": null,
+     "next": "a",
+     "previous": "a",
+     "rollNext": "a",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    },
+    {
+     "current": "a",
+     "next": "a",
+     "previous": "a",
+     "rollNext": "a",
+     "cues": [
+      {
+       "cue": "a",
+       "start": "a",
+       "startArmed": "a",
+       "load": "a"
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    }
+   ],
+   "indices": [
+    {
+     "index": 0,
+     "id": "a",
+     "loadable": true
+    },
+    {
+     "index": 1,
+     "id": null,
+     "loadable": false
+    }
+   ]
+  },
+  {
+   "name": "only skipped",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [
+     "a",
+     "b"
+    ],
+    "flatOrder": [],
+    "entries": {
+     "a": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "a",
+      "cue": "a",
+      "timeStart": 36000000,
+      "duration": 1800000,
+      "timeEnd": 37800000,
+      "timeStrategy": "lock-duration"
+     },
+     "b": {
+      "type": "event",
+      "skip": true,
+      "revision": 1,
+      "id": "b",
+      "cue": "b",
+      "timeStart": 39600000,
+      "duration": 1800000,
+      "timeEnd": 41400000,
+      "timeStrategy": "lock-duration"
+     }
+    },
+    "revision": 1
+   },
+   "timed": [
+    "a",
+    "b"
+   ],
+   "playable": [],
+   "from": [
+    {
+     "current": null,
+     "next": null,
+     "previous": null,
+     "rollNext": null,
+     "cues": [
+      {
+       "cue": "a",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "b",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      },
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    }
+   ],
+   "indices": [
+    {
+     "index": 0,
+     "id": "a",
+     "loadable": false
+    },
+    {
+     "index": 1,
+     "id": "b",
+     "loadable": false
+    },
+    {
+     "index": 2,
+     "id": null,
+     "loadable": false
+    }
+   ]
+  },
+  {
+   "name": "empty",
+   "rundown": {
+    "id": "show",
+    "title": "Show",
+    "order": [],
+    "flatOrder": [],
+    "entries": {},
+    "revision": 1
+   },
+   "timed": [],
+   "playable": [],
+   "from": [
+    {
+     "current": null,
+     "next": null,
+     "previous": null,
+     "rollNext": null,
+     "cues": [
+      {
+       "cue": "none",
+       "start": null,
+       "startArmed": null,
+       "load": null
+      }
+     ]
+    }
+   ],
+   "indices": [
+    {
+     "index": 0,
+     "id": null,
+     "loadable": false
+    }
+   ]
+  }
+ ]
+}

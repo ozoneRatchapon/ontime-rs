@@ -86,7 +86,12 @@ fn command(action: Action) -> Option<Command> {
         Action::Load { id } => Some(Command::LoadId(id)),
         Action::Addtime { amount } => Some(Command::AddTime(amount)),
         // through the websocket parser, so the tag the editor sends is covered too
-        Action::Mode { mode } => Command::parse("offsetmode", Some(&Value::String(mode))),
+        Action::Mode { mode } => {
+            match ontime_core::integration::parse("offsetmode", Some(&Value::String(mode))) {
+                Ok(ontime_core::integration::Action::Playback { command, .. }) => Some(command),
+                _ => None,
+            }
+        }
         Action::Pause => Some(Command::Pause),
         Action::Resume => Some(Command::Start),
         Action::Stop => Some(Command::Stop),

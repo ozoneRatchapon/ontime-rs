@@ -1,0 +1,2453 @@
+{
+ "_comment": "Generated from upstream ontime 0ca4d79b2 by scripts/upstream-oracle/generate.sh; do not edit by hand.",
+ "cases": {
+  "rundown": {
+   "id": "rundown",
+   "entries": {
+    "e1": {
+     "id": "e1",
+     "type": "event",
+     "title": "Opening",
+     "note": "",
+     "cue": "1",
+     "skip": false,
+     "flag": false,
+     "countToEnd": false,
+     "colour": "",
+     "custom": {},
+     "timeWarning": 120000,
+     "timeDanger": 60000,
+     "endAction": "none",
+     "timerType": "count-down",
+     "linkStart": false,
+     "timeStrategy": "lock-duration",
+     "duration": 600000,
+     "timeStart": 36000000,
+     "timeEnd": 36600000
+    },
+    "g1": {
+     "id": "g1",
+     "type": "group",
+     "title": "Block",
+     "note": "",
+     "colour": "",
+     "custom": {},
+     "targetDuration": null,
+     "entries": []
+    },
+    "d1": {
+     "id": "d1",
+     "type": "delay",
+     "duration": 60000
+    },
+    "m1": {
+     "id": "m1",
+     "type": "milestone",
+     "title": "Doors",
+     "cue": "M",
+     "note": "",
+     "colour": "",
+     "custom": {}
+    }
+   }
+  },
+  "customFields": {
+   "lighting": {
+    "label": "Lighting",
+    "type": "text",
+    "colour": ""
+   },
+   "sound": {
+    "label": "Sound",
+    "type": "text",
+    "colour": ""
+   }
+  },
+  "http": [
+   {
+    "name": "hello",
+    "path": "/api",
+    "ok": true,
+    "status": 200,
+    "body": {
+     "message": "You have reached Ontime API server"
+    },
+    "calls": []
+   },
+   {
+    "name": "hello with a slash",
+    "path": "/api/",
+    "ok": true,
+    "status": 200,
+    "body": {
+     "message": "You have reached Ontime API server"
+    },
+    "calls": []
+   },
+   {
+    "name": "unknown action",
+    "path": "/api/explode",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Unhandled message explode"
+    },
+    "calls": []
+   },
+   {
+    "name": "action names are case-insensitive",
+    "path": "/api/PAUSE",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.pause",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "version",
+    "path": "/api/version",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "0.0.0-oracle"
+    },
+    "calls": []
+   },
+   {
+    "name": "poll",
+    "path": "/api/poll",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "poll-state"
+    },
+    "calls": [
+     {
+      "fn": "eventStore.poll",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "start",
+    "path": "/api/start",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.start",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "start fails",
+    "path": "/api/start",
+    "ok": false,
+    "status": 500,
+    "body": {
+     "message": "Unable to start"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.start",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "start next",
+    "path": "/api/start/next",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startNext",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "start next fails",
+    "path": "/api/start/next",
+    "ok": false,
+    "status": 500,
+    "body": {
+     "message": "Unable to start next event"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startNext",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "start previous",
+    "path": "/api/start/previous",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startPrevious",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "start by index",
+    "path": "/api/start/index/3",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByIndex",
+      "args": [
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by index fails",
+    "path": "/api/start/index/3",
+    "ok": false,
+    "status": 500,
+    "body": {
+     "message": "Event index not recognised or out of range 3"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByIndex",
+      "args": [
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by index zero",
+    "path": "/api/start/index/0",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Event index out of range 0"
+    },
+    "calls": []
+   },
+   {
+    "name": "start by negative index",
+    "path": "/api/start/index/-2",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Event index out of range -2"
+    },
+    "calls": []
+   },
+   {
+    "name": "start by fractional index",
+    "path": "/api/start/index/1.5",
+    "ok": false,
+    "status": 500,
+    "body": {
+     "message": "Event index not recognised or out of range 1.5"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByIndex",
+      "args": [
+       0.5
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by index not a number",
+    "path": "/api/start/index/three",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Payload is not a valid number"
+    },
+    "calls": []
+   },
+   {
+    "name": "start by index from the query",
+    "path": "/api/start?index=2",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByIndex",
+      "args": [
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by index in hex",
+    "path": "/api/start/index/0x10",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByIndex",
+      "args": [
+       15
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by index with spaces",
+    "path": "/api/start/index/%202%20",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Payload is not a valid number"
+    },
+    "calls": []
+   },
+   {
+    "name": "start by id",
+    "path": "/api/start/id/abc-123",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startById",
+      "args": [
+       "abc-123"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by id fails",
+    "path": "/api/start/id/abc-123",
+    "ok": false,
+    "status": 500,
+    "body": {
+     "message": "Unable to start ID: abc-123"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startById",
+      "args": [
+       "abc-123"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by cue",
+    "path": "/api/start/cue/12",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByCue",
+      "args": [
+       "12"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by cue fails",
+    "path": "/api/start/cue/4A",
+    "ok": false,
+    "status": 500,
+    "body": {
+     "message": "Unable to start CUE: 4A"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByCue",
+      "args": [
+       "4A"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by an encoded cue",
+    "path": "/api/start/cue/A%201",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByCue",
+      "args": [
+       "A%201"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start with a stray word",
+    "path": "/api/start/now",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "No matching start function"
+    },
+    "calls": []
+   },
+   {
+    "name": "start with a trailing slash",
+    "path": "/api/start/",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "No matching start function"
+    },
+    "calls": []
+   },
+   {
+    "name": "start with an unknown query",
+    "path": "/api/start?foo=bar",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "No matching start function"
+    },
+    "calls": []
+   },
+   {
+    "name": "start ignores the room token",
+    "path": "/api/start?token=secret",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "No matching start function"
+    },
+    "calls": []
+   },
+   {
+    "name": "load next",
+    "path": "/api/load/next",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.loadNext",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "load previous",
+    "path": "/api/load/previous",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.loadPrevious",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "load previous fails",
+    "path": "/api/load/previous",
+    "ok": false,
+    "status": 500,
+    "body": {
+     "message": "Unable to load previous event"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.loadPrevious",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "load by index",
+    "path": "/api/load/index/1",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.loadByIndex",
+      "args": [
+       0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "load by id",
+    "path": "/api/load/id/xyz",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.loadById",
+      "args": [
+       "xyz"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "load by cue",
+    "path": "/api/load/cue/3",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.loadByCue",
+      "args": [
+       "3"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "load by cue fails",
+    "path": "/api/load/cue/3",
+    "ok": false,
+    "status": 500,
+    "body": {
+     "message": "Unable to load CUE: 3"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.loadByCue",
+      "args": [
+       "3"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "load with nothing",
+    "path": "/api/load",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "No matching method provided"
+    },
+    "calls": []
+   },
+   {
+    "name": "pause",
+    "path": "/api/pause",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.pause",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "stop",
+    "path": "/api/stop",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.stop",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "reload",
+    "path": "/api/reload",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.reload",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "roll",
+    "path": "/api/roll",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.roll",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "addtime",
+    "path": "/api/addtime/60000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       60000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "addtime negative",
+    "path": "/api/addtime/-30000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       -30000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "addtime add",
+    "path": "/api/addtime/add/120000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       120000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "addtime remove",
+    "path": "/api/addtime/remove/120000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       -120000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "addtime zero",
+    "path": "/api/addtime/0",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": []
+   },
+   {
+    "name": "addtime over an hour",
+    "path": "/api/addtime/3600001",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Payload too large: 3600001"
+    },
+    "calls": []
+   },
+   {
+    "name": "addtime exactly an hour",
+    "path": "/api/addtime/-3600000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       -3600000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "addtime not a number",
+    "path": "/api/addtime/soon",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Payload is not a valid number"
+    },
+    "calls": []
+   },
+   {
+    "name": "addtime with nothing",
+    "path": "/api/addtime",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Payload is not a valid number"
+    },
+    "calls": []
+   },
+   {
+    "name": "addtime from the query",
+    "path": "/api/addtime?add=5000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       5000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "offset mode relative",
+    "path": "/api/offsetmode/relative",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.setOffsetMode",
+      "args": [
+       "relative"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "offset mode absolute",
+    "path": "/api/offsetmode/absolute",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.setOffsetMode",
+      "args": [
+       "absolute"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "offset mode unknown",
+    "path": "/api/offsetmode/sideways",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid value received"
+    },
+    "calls": []
+   },
+   {
+    "name": "message timer text",
+    "path": "/api/message/timer/text/hello",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "text": "hello"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message timer text encoded",
+    "path": "/api/message/timer/text/hello%20world",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "text": "hello world"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message timer text reserved escape",
+    "path": "/api/message/timer/text/a%2Fb",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "text": "a%2Fb"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message timer text malformed",
+    "path": "/api/message/timer/text/100%",
+    "ok": true,
+    "status": 400,
+    "body": {
+     "html": true
+    },
+    "calls": []
+   },
+   {
+    "name": "message timer visible",
+    "path": "/api/message/timer/visible/true",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "visible": true
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message timer visible yes",
+    "path": "/api/message/timer/visible/yes",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "visible": true
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message timer blink 0",
+    "path": "/api/message/timer/blink/0",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "blink": false
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message timer blackout bad",
+    "path": "/api/message/timer/blackout/maybe",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid value received"
+    },
+    "calls": []
+   },
+   {
+    "name": "message timer secondary source",
+    "path": "/api/message/timer/secondarySource/aux2",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "secondarySource": "aux2"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message timer secondary source unknown",
+    "path": "/api/message/timer/secondarySource/aux9",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "secondarySource": null
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message timer from the query",
+    "path": "/api/message/timer?text=hi+there&visible=1",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "text": "hi there",
+         "visible": true
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message secondary",
+    "path": "/api/message/secondary/look%20up",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "secondary": "look up"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message with nothing",
+    "path": "/api/message",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Unexpected payload type: undefined"
+    },
+    "calls": []
+   },
+   {
+    "name": "message timer is not an object",
+    "path": "/api/message/timer",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Unexpected payload type: timer"
+    },
+    "calls": []
+   },
+   {
+    "name": "auxtimer start",
+    "path": "/api/auxtimer/1/start",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "aux-state"
+    },
+    "calls": [
+     {
+      "fn": "auxTimerService.start",
+      "args": [
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "name": "auxtimer pause",
+    "path": "/api/auxtimer/2/pause",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "aux-state"
+    },
+    "calls": [
+     {
+      "fn": "auxTimerService.pause",
+      "args": [
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "name": "auxtimer stop",
+    "path": "/api/auxtimer/3/stop",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "aux-state"
+    },
+    "calls": [
+     {
+      "fn": "auxTimerService.stop",
+      "args": [
+       3
+      ]
+     }
+    ]
+   },
+   {
+    "name": "auxtimer bad command",
+    "path": "/api/auxtimer/1/explode",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid command"
+    },
+    "calls": []
+   },
+   {
+    "name": "auxtimer bad index",
+    "path": "/api/auxtimer/4/start",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid auxtimer index"
+    },
+    "calls": []
+   },
+   {
+    "name": "auxtimer duration",
+    "path": "/api/auxtimer/1/duration/90000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "aux-state"
+    },
+    "calls": [
+     {
+      "fn": "auxTimerService.setTime",
+      "args": [
+       90000,
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "name": "auxtimer duration not a number",
+    "path": "/api/auxtimer/1/duration/long",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Payload is not a valid number"
+    },
+    "calls": []
+   },
+   {
+    "name": "auxtimer addtime",
+    "path": "/api/auxtimer/2/addtime/-5000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "aux-state"
+    },
+    "calls": [
+     {
+      "fn": "auxTimerService.addTime",
+      "args": [
+       -5000,
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "name": "auxtimer direction",
+    "path": "/api/auxtimer/3/direction/count-up",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "aux-state"
+    },
+    "calls": [
+     {
+      "fn": "auxTimerService.setDirection",
+      "args": [
+       "count-up",
+       3
+      ]
+     }
+    ]
+   },
+   {
+    "name": "auxtimer direction unknown",
+    "path": "/api/auxtimer/3/direction/sideways",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid direction payload"
+    },
+    "calls": []
+   },
+   {
+    "name": "auxtimer unknown patch",
+    "path": "/api/auxtimer/1/speed/2",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "No matching method provided"
+    },
+    "calls": []
+   },
+   {
+    "name": "auxtimer with nothing",
+    "path": "/api/auxtimer",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Unexpected payload type: undefined"
+    },
+    "calls": []
+   },
+   {
+    "name": "client rename",
+    "path": "/api/client?target=abc&rename=Stage",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "socket.renameClient",
+      "args": [
+       "abc",
+       "Stage"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "client redirect",
+    "path": "/api/client?target=abc&redirect=%2Ftimer",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "socket.redirectClient",
+      "args": [
+       "abc",
+       "/timer"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "client identify from a string",
+    "path": "/api/client?target=abc&identify=true",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "No matching method provided"
+    },
+    "calls": []
+   },
+   {
+    "name": "client without a target",
+    "path": "/api/client?rename=Stage",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "No or invalid client target"
+    },
+    "calls": []
+   },
+   {
+    "name": "change title",
+    "path": "/api/change/e1/title/New%20title",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "title": "New%20title"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change note from the query",
+    "path": "/api/change/e1?note=hello+there",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "note": "hello there"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change cue",
+    "path": "/api/change/e1/cue/4",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "cue": "4"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change skip",
+    "path": "/api/change/e1/skip/true",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "skip": true
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change flag bad",
+    "path": "/api/change/e1/flag/sometimes",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid value received"
+    },
+    "calls": []
+   },
+   {
+    "name": "change colour name",
+    "path": "/api/change/e1/colour/Red",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "colour": "red"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change colour hex",
+    "path": "/api/change/e1/colour/%23FFAA00",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid colour name received"
+    },
+    "calls": []
+   },
+   {
+    "name": "change colour bad hex",
+    "path": "/api/change/e1/colour/%23FFAA0",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid colour name received"
+    },
+    "calls": []
+   },
+   {
+    "name": "change colour unknown name",
+    "path": "/api/change/e1/colour/blurple",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid colour name received"
+    },
+    "calls": []
+   },
+   {
+    "name": "change duration",
+    "path": "/api/change/e1/duration/900000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "duration": 900000
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change duration too long",
+    "path": "/api/change/e1/duration/86400000",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Times should be from 0 to 23:59:59"
+    },
+    "calls": []
+   },
+   {
+    "name": "change duration negative",
+    "path": "/api/change/e1/duration/-1",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Times should be from 0 to 23:59:59"
+    },
+    "calls": []
+   },
+   {
+    "name": "change time start",
+    "path": "/api/change/e1/timeStart/37800000",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "timeStart": 37800000
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change end action",
+    "path": "/api/change/e1/endAction/play-next",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "endAction": "play-next"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change end action unknown",
+    "path": "/api/change/e1/endAction/explode",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid value received"
+    },
+    "calls": []
+   },
+   {
+    "name": "change timer type",
+    "path": "/api/change/e1/timerType/clock",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "timerType": "clock"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change time strategy",
+    "path": "/api/change/e1/timeStrategy/lock-end",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "timeStrategy": "lock-end"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change link start",
+    "path": "/api/change/e1/linkStart/1",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "linkStart": true
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change custom field",
+    "path": "/api/change/e1/custom:lighting/blue",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "custom": {
+         "lighting": "blue"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change unknown custom field",
+    "path": "/api/change/e1/custom:smoke/heavy",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid property or value"
+    },
+    "calls": []
+   },
+   {
+    "name": "change custom field of a delay",
+    "path": "/api/change/d1/custom:lighting/blue",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid property or value"
+    },
+    "calls": []
+   },
+   {
+    "name": "change a field the entry lacks",
+    "path": "/api/change/d1/title/Late",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid property or value"
+    },
+    "calls": []
+   },
+   {
+    "name": "change a field not permitted",
+    "path": "/api/change/e1/id/other",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Property id not permitted"
+    },
+    "calls": []
+   },
+   {
+    "name": "change group title",
+    "path": "/api/change/g1/title/Second%20block",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "g1",
+        "title": "Second%20block"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change milestone cue",
+    "path": "/api/change/m1/cue/M2",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "m1",
+        "cue": "M2"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change unknown entry",
+    "path": "/api/change/zz/title/Gone",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "ID do not exits in rundown"
+    },
+    "calls": []
+   },
+   {
+    "name": "change with only an id",
+    "path": "/api/change/e1",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Unexpected payload type: e1"
+    },
+    "calls": []
+   },
+   {
+    "name": "change with nothing",
+    "path": "/api/change",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Unexpected payload type: undefined"
+    },
+    "calls": []
+   },
+   {
+    "name": "teleprompter play",
+    "path": "/api/teleprompter/play",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "prompter-state"
+    },
+    "calls": [
+     {
+      "fn": "handleTeleprompterCommand",
+      "args": [
+       {
+        "type": "play"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "teleprompter speed",
+    "path": "/api/teleprompter/speed/120",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "prompter-state"
+    },
+    "calls": [
+     {
+      "fn": "handleTeleprompterCommand",
+      "args": [
+       {
+        "type": "speed",
+        "value": 120
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "teleprompter speed not a number",
+    "path": "/api/teleprompter/speed/fast",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid teleprompter command"
+    },
+    "calls": []
+   },
+   {
+    "name": "teleprompter goto index",
+    "path": "/api/teleprompter/goto/index/2",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "prompter-state"
+    },
+    "calls": [
+     {
+      "fn": "handleTeleprompterCommand",
+      "args": [
+       {
+        "type": "goto",
+        "target": {
+         "index": 2
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "teleprompter goto loaded",
+    "path": "/api/teleprompter/goto/loaded",
+    "ok": true,
+    "status": 202,
+    "body": {
+     "payload": "prompter-state"
+    },
+    "calls": [
+     {
+      "fn": "handleTeleprompterCommand",
+      "args": [
+       {
+        "type": "goto",
+        "target": "loaded"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "teleprompter unknown",
+    "path": "/api/teleprompter/rewind",
+    "ok": true,
+    "status": 500,
+    "body": {
+     "message": "Invalid teleprompter command"
+    },
+    "calls": []
+   }
+  ],
+  "ws": [
+   {
+    "name": "start with nothing",
+    "tag": "start",
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.start",
+      "args": []
+     }
+    ]
+   },
+   {
+    "name": "start by index as a number",
+    "tag": "start",
+    "payload": {
+     "index": 2
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByIndex",
+      "args": [
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by id not a string",
+    "tag": "start",
+    "payload": {
+     "id": 7
+    },
+    "ok": true,
+    "error": "Unexpected payload type: 7",
+    "calls": []
+   },
+   {
+    "name": "start by cue as a number",
+    "tag": "start",
+    "payload": {
+     "cue": 7
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByCue",
+      "args": [
+       "7"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start by cue not text",
+    "tag": "start",
+    "payload": {
+     "cue": true
+    },
+    "ok": true,
+    "error": "Payload is not a valid string or number",
+    "calls": []
+   },
+   {
+    "name": "start index wins over id",
+    "tag": "start",
+    "payload": {
+     "index": 1,
+     "id": "x"
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.startByIndex",
+      "args": [
+       0
+      ]
+     }
+    ]
+   },
+   {
+    "name": "start with null",
+    "tag": "start",
+    "payload": null,
+    "ok": true,
+    "error": "No matching start function",
+    "calls": []
+   },
+   {
+    "name": "start with a list",
+    "tag": "start",
+    "payload": [],
+    "ok": true,
+    "error": "No matching start function",
+    "calls": []
+   },
+   {
+    "name": "addtime as a number",
+    "tag": "addtime",
+    "payload": 60000,
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       60000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "addtime as a fraction",
+    "tag": "addtime",
+    "payload": 1500.4,
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       1500.4
+      ]
+     }
+    ]
+   },
+   {
+    "name": "addtime add wins over remove",
+    "tag": "addtime",
+    "payload": {
+     "add": 1000,
+     "remove": 2000
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       1000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "addtime with null",
+    "tag": "addtime",
+    "payload": null,
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": []
+   },
+   {
+    "name": "addtime with a list of one",
+    "tag": "addtime",
+    "payload": [
+     5000
+    ],
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "runtimeService.addTime",
+      "args": [
+       5000
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message as the editor sends it",
+    "tag": "message",
+    "payload": {
+     "timer": {
+      "text": "Wrap up",
+      "visible": true
+     }
+    },
+    "ok": true,
+    "reply": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "text": "Wrap up",
+         "visible": true
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message secondary source cleared",
+    "tag": "message",
+    "payload": {
+     "timer": {
+      "secondarySource": null
+     }
+    },
+    "ok": true,
+    "reply": {
+     "payload": "message-state"
+    },
+    "calls": [
+     {
+      "fn": "messageService.patch",
+      "args": [
+       {
+        "timer": {
+         "secondarySource": null
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "message secondary not text",
+    "tag": "message",
+    "payload": {
+     "secondary": {
+      "a": 1
+     }
+    },
+    "ok": true,
+    "error": "Invalid value received",
+    "calls": []
+   },
+   {
+    "name": "message timer null",
+    "tag": "message",
+    "payload": {
+     "timer": null
+    },
+    "ok": true,
+    "error": "Unexpected payload type: null",
+    "calls": []
+   },
+   {
+    "name": "message not an object",
+    "tag": "message",
+    "payload": "hello",
+    "ok": true,
+    "error": "Unexpected payload type: hello",
+    "calls": []
+   },
+   {
+    "name": "auxtimer as the editor sends it",
+    "tag": "auxtimer",
+    "payload": {
+     "1": "start"
+    },
+    "ok": true,
+    "reply": {
+     "payload": "aux-state"
+    },
+    "calls": [
+     {
+      "fn": "auxTimerService.start",
+      "args": [
+       1
+      ]
+     }
+    ]
+   },
+   {
+    "name": "auxtimer duration as a number",
+    "tag": "auxtimer",
+    "payload": {
+     "2": {
+      "duration": 300000
+     }
+    },
+    "ok": true,
+    "reply": {
+     "payload": "aux-state"
+    },
+    "calls": [
+     {
+      "fn": "auxTimerService.setTime",
+      "args": [
+       300000,
+       2
+      ]
+     }
+    ]
+   },
+   {
+    "name": "auxtimer index 0",
+    "tag": "auxtimer",
+    "payload": {
+     "0": "start"
+    },
+    "ok": true,
+    "error": "Invalid auxtimer index",
+    "calls": []
+   },
+   {
+    "name": "client identify",
+    "tag": "client",
+    "payload": {
+     "target": "abc",
+     "identify": true
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "socket.identifyClient",
+      "args": [
+       "abc",
+       true
+      ]
+     }
+    ]
+   },
+   {
+    "name": "client rename wins",
+    "tag": "client",
+    "payload": {
+     "target": "abc",
+     "rename": "A",
+     "redirect": "/b"
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "socket.renameClient",
+      "args": [
+       "abc",
+       "A"
+      ]
+     }
+    ]
+   },
+   {
+    "name": "client target not text",
+    "tag": "client",
+    "payload": {
+     "target": 3,
+     "rename": "A"
+    },
+    "ok": true,
+    "error": "No or invalid client target",
+    "calls": []
+   },
+   {
+    "name": "change with booleans",
+    "tag": "change",
+    "payload": {
+     "e1": {
+      "skip": true,
+      "flag": false
+     }
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "skip": true,
+        "flag": false
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change with numbers",
+    "tag": "change",
+    "payload": {
+     "e1": {
+      "timeWarning": 30000,
+      "timeDanger": 10000
+     }
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "timeWarning": 30000,
+        "timeDanger": 10000
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change two custom fields",
+    "tag": "change",
+    "payload": {
+     "e1": {
+      "custom:lighting": "red",
+      "custom:sound": 7
+     }
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1",
+        "custom": {
+         "lighting": "red",
+         "sound": "7"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change with an empty object",
+    "tag": "change",
+    "payload": {},
+    "ok": true,
+    "error": "Payload is empty",
+    "calls": []
+   },
+   {
+    "name": "change with a number",
+    "tag": "change",
+    "payload": {
+     "e1": 5
+    },
+    "ok": true,
+    "reply": {
+     "payload": "success"
+    },
+    "calls": [
+     {
+      "fn": "editEntry",
+      "args": [
+       "rundown",
+       {
+        "id": "e1"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "change with null",
+    "tag": "change",
+    "payload": {
+     "e1": null
+    },
+    "ok": true,
+    "error": "Cannot convert undefined or null to object",
+    "calls": []
+   },
+   {
+    "name": "change with text",
+    "tag": "change",
+    "payload": {
+     "e1": "title"
+    },
+    "ok": true,
+    "error": "Invalid property or value",
+    "calls": []
+   },
+   {
+    "name": "offset mode not text",
+    "tag": "offsetmode",
+    "payload": 1,
+    "ok": true,
+    "error": "Invalid value received",
+    "calls": []
+   },
+   {
+    "name": "teleprompter speedBy",
+    "tag": "teleprompter",
+    "payload": {
+     "speedBy": -20
+    },
+    "ok": true,
+    "reply": {
+     "payload": "prompter-state"
+    },
+    "calls": [
+     {
+      "fn": "handleTeleprompterCommand",
+      "args": [
+       {
+        "type": "speedBy",
+        "value": -20
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "teleprompter goto cue",
+    "tag": "teleprompter",
+    "payload": {
+     "goto": {
+      "cue": 3
+     }
+    },
+    "ok": true,
+    "reply": {
+     "payload": "prompter-state"
+    },
+    "calls": [
+     {
+      "fn": "handleTeleprompterCommand",
+      "args": [
+       {
+        "type": "goto",
+        "target": {
+         "cue": "3"
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "teleprompter blackout",
+    "tag": "teleprompter",
+    "payload": {
+     "blackout": "toggle"
+    },
+    "ok": true,
+    "reply": {
+     "payload": "prompter-state"
+    },
+    "calls": [
+     {
+      "fn": "handleTeleprompterCommand",
+      "args": [
+       {
+        "type": "blackout",
+        "blackout": "toggle"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "teleprompter mode",
+    "tag": "teleprompter",
+    "payload": {
+     "mode": "script"
+    },
+    "ok": true,
+    "reply": {
+     "payload": "prompter-state"
+    },
+    "calls": [
+     {
+      "fn": "handleTeleprompterCommand",
+      "args": [
+       {
+        "type": "mode",
+        "mode": "script"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

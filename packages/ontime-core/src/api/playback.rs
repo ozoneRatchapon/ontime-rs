@@ -91,54 +91,22 @@ fn timer_wake_in(project: &Project, now: i64, has_clients: bool) -> Option<i64> 
     Some(delay.max(50))
 }
 
-/// Applies a websocket command to the project.
+/// Applies a websocket command to the project, through the integration
+/// dispatcher every transport shares (`crate::integration`).
 ///
-/// Playback, the overlay, the aux timers and the run report all move through
-/// here, so a host cannot implement three of the four and quietly lose the
-/// fourth — which is how the report went missing from the native server.
-///
-/// Returns true when clients should be told and the project written down.
+/// Returns true when clients should be told and the project written down. A
+/// host that also answers the sender, or carries out client commands, calls
+/// `integration::handle` itself.
 pub fn apply_socket_command(
     project: &mut Project,
     tag: &str,
     payload: Option<&Value>,
     now: i64,
 ) -> bool {
-    match tag {
-        "teleprompter" => {
-            // a refused command changes nothing; the screen keeps what it shows
-            return payload.is_some_and(|payload| prompter::command(project, payload, now).is_ok());
-        }
-        "message" => return payload.map(|p| project.message.apply(p)).unwrap_or(false),
-        "auxtimer" => {
-            return payload
-                .map(|p| project.aux_timers.apply(p, now))
-                .unwrap_or(false)
-        }
-        _ => {}
-    }
-
-    let Some(command) = crate::runtime::Command::parse(tag, payload) else {
-        return false;
-    };
-    let Some(rundown) = project.current().cloned() else {
-        return false;
-    };
-
-    let was_playing = project.runtime.playback == crate::runtime::Playback::Play;
-    let previous_entry = project.runtime.selected_id.clone();
-    let tz = project.timezone_offset;
-
-    if !project.runtime.apply(command, &rundown, now, tz) {
-        return false;
-    }
-
-    // event by event, the teleprompter follows the event Ontime loads
-    if project.runtime.selected_id != previous_entry {
-        prompter::follow_loaded(project, now);
-    }
-    record_report(project, was_playing, previous_entry, now);
-    true
+    crate::integration::handle(project, tag, payload, now).is_ok_and(|reply| {
+        use crate::integration::Change;
+        matches!(reply.change, Change::Runtime | Change::Rundown { .. })
+    })
 }
 
 /// The alarm: the timer's end action and the teleprompter reaching its end.
@@ -185,7 +153,7 @@ pub fn runtime_payload(project: &Project, now: i64) -> Option<Value> {
 ///
 /// The report is what lets an operator compare the run against the plan
 /// afterwards, so it records wall-clock time of day rather than epoch.
-fn record_report(
+pub(crate) fn record_report(
     project: &mut Project,
     was_playing: bool,
     previous_entry: Option<String>,

@@ -103,6 +103,12 @@ How to use it:
   - First run: Preview `81aa811c`, Production `89924a11`. Both URLs serve the
     same bundle.
 
+- [x] **RIIR 5, the integration API (2026-11-25).** Plan:
+      `009_integration_api.md`; usage and design: `.docs/003_integration_api.md`.
+  - `GET /r/<room>/api/...` and websocket actions share one parser.
+  - Pinned against upstream's own router, dispatcher and selection functions.
+  - Done locally; **not deployed yet**.
+
 ## Dioxus pilot
 
 - [ ] Try Dioxus on our own pages, `/admin`, `/join` and `/my-rooms`. Plan:

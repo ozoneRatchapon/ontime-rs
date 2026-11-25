@@ -28,37 +28,43 @@ fn timer(runtime: &Runtime, rundown: &Rundown, now: i64) -> Value {
     runtime.snapshot(rundown, now, 0)["timer"].clone()
 }
 
+/// The playback command a websocket packet parses to, through the parser
+/// every transport shares.
+fn parsed(tag: &str, payload: Option<Value>) -> Option<Command> {
+    match ontime_core::integration::parse(tag, payload.as_ref()) {
+        Ok(ontime_core::integration::Action::Playback { command, .. }) => Some(command),
+        _ => None,
+    }
+}
+
 #[test]
 fn parses_the_commands_the_client_sends() {
-    assert_eq!(Command::parse("start", None), Some(Command::Start));
+    assert_eq!(parsed("start", None), Some(Command::Start));
     assert_eq!(
-        Command::parse("start", Some(&json!("next"))),
+        parsed("start", Some(json!("next"))),
         Some(Command::StartNext)
     );
     assert_eq!(
-        Command::parse("start", Some(&json!({"id": "x"}))),
+        parsed("start", Some(json!({"id": "x"}))),
         Some(Command::StartId("x".into()))
     );
+    assert_eq!(parsed("load", Some(json!("next"))), Some(Command::LoadNext));
     assert_eq!(
-        Command::parse("load", Some(&json!("next"))),
-        Some(Command::LoadNext)
-    );
-    assert_eq!(
-        Command::parse("load", Some(&json!("previous"))),
+        parsed("load", Some(json!("previous"))),
         Some(Command::LoadPrevious)
     );
-    assert_eq!(Command::parse("pause", None), Some(Command::Pause));
-    assert_eq!(Command::parse("stop", None), Some(Command::Stop));
+    assert_eq!(parsed("pause", None), Some(Command::Pause));
+    assert_eq!(parsed("stop", None), Some(Command::Stop));
     // addTime is sent in milliseconds
     assert_eq!(
-        Command::parse("addtime", Some(&json!(300_000))),
+        parsed("addtime", Some(json!(300_000))),
         Some(Command::AddTime(300_000))
     );
-    assert_eq!(Command::parse("roll", None), Some(Command::Roll));
+    assert_eq!(parsed("roll", None), Some(Command::Roll));
 
     // handled elsewhere: aux timers and the overlay are not playback commands
-    assert_eq!(Command::parse("auxtimer", Some(&json!({}))), None);
-    assert_eq!(Command::parse("message", Some(&json!({}))), None);
+    assert_eq!(parsed("auxtimer", Some(json!({"1": "start"}))), None);
+    assert_eq!(parsed("message", Some(json!({}))), None);
 }
 
 #[test]
@@ -193,8 +199,20 @@ fn load_next_and_previous_walk_the_rundown() {
     runtime.apply(Command::LoadPrevious, &rundown, T0, 0);
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
 
-    // does not walk off the start
-    assert!(!runtime.apply(Command::LoadPrevious, &rundown, T0, 0));
+    // at the top, previous loads the first event again, as upstream
+    // (findPreviousPlayableId): it never wraps to the end
+    assert!(runtime.apply(Command::LoadPrevious, &rundown, T0, 0));
+    assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
+}
+
+#[test]
+fn load_next_wraps_to_the_top_after_the_last_event() {
+    let (rundown, ids) = fixture();
+    let mut runtime = Runtime::default();
+    let last = ids.last().unwrap().clone();
+
+    runtime.apply(Command::LoadId(last), &rundown, T0, 0);
+    assert!(runtime.apply(Command::LoadNext, &rundown, T0, 0));
     assert_eq!(runtime.selected_id.as_deref(), Some(ids[0].as_str()));
 }
 

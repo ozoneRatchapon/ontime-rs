@@ -131,10 +131,21 @@ fn a_timer_survives_a_serialisation_round_trip() {
 
 // --- the websocket payloads the client sends -------------------------------
 
+/// A websocket `auxtimer` payload, through the parser every transport shares.
+/// `true` when it named a timer and something to do.
+fn send(timers: &mut AuxTimers, payload: serde_json::Value, now: i64) -> bool {
+    match ontime_core::integration::parse("auxtimer", Some(&payload)) {
+        Ok(ontime_core::integration::Action::AuxTimer { index, command }) => {
+            timers.run(index, command, now, "").is_some()
+        }
+        _ => false,
+    }
+}
+
 #[test]
 fn the_client_payload_starts_the_addressed_timer_only() {
     let mut timers = AuxTimers::default();
-    assert!(timers.apply(&json!({ "2": "start" }), T0));
+    assert!(send(&mut timers, json!({ "2": "start" }), T0));
 
     assert!(!timers.timers[0].is_running());
     assert!(timers.timers[1].is_running());
@@ -145,23 +156,31 @@ fn the_client_payload_starts_the_addressed_timer_only() {
 fn the_client_payload_sets_direction_and_duration() {
     let mut timers = AuxTimers::default();
 
-    assert!(timers.apply(&json!({ "1": { "duration": 90_000 } }), T0));
+    assert!(send(
+        &mut timers,
+        json!({ "1": { "duration": 90_000 } }),
+        T0
+    ));
     assert_eq!(timers.timers[0].current(T0), 90_000);
 
-    assert!(timers.apply(&json!({ "1": { "direction": "count-up" } }), T0));
+    assert!(send(
+        &mut timers,
+        json!({ "1": { "direction": "count-up" } }),
+        T0
+    ));
     assert_eq!(timers.timers[0].direction, SimpleDirection::CountUp);
 }
 
 #[test]
 fn pause_and_stop_arrive_the_same_way() {
     let mut timers = AuxTimers::default();
-    timers.apply(&json!({ "3": { "duration": 60_000 } }), T0);
-    timers.apply(&json!({ "3": "start" }), T0);
+    send(&mut timers, json!({ "3": { "duration": 60_000 } }), T0);
+    send(&mut timers, json!({ "3": "start" }), T0);
 
-    timers.apply(&json!({ "3": "pause" }), T0 + 10_000);
+    send(&mut timers, json!({ "3": "pause" }), T0 + 10_000);
     assert_eq!(timers.timers[2].playback, SimplePlayback::Pause);
 
-    timers.apply(&json!({ "3": "stop" }), T0 + 10_000);
+    send(&mut timers, json!({ "3": "stop" }), T0 + 10_000);
     assert_eq!(timers.timers[2].playback, SimplePlayback::Stop);
     assert_eq!(timers.timers[2].current(T0 + 10_000), 60_000);
 }
@@ -169,11 +188,11 @@ fn pause_and_stop_arrive_the_same_way() {
 #[test]
 fn an_unknown_index_or_action_is_ignored() {
     let mut timers = AuxTimers::default();
-    assert!(!timers.apply(&json!({ "0": "start" }), T0));
-    assert!(!timers.apply(&json!({ "4": "start" }), T0));
-    assert!(!timers.apply(&json!({ "1": "explode" }), T0));
-    assert!(!timers.apply(&json!({ "notanumber": "start" }), T0));
-    assert!(!timers.apply(&json!("start"), T0));
+    assert!(!send(&mut timers, json!({ "0": "start" }), T0));
+    assert!(!send(&mut timers, json!({ "4": "start" }), T0));
+    assert!(!send(&mut timers, json!({ "1": "explode" }), T0));
+    assert!(!send(&mut timers, json!({ "notanumber": "start" }), T0));
+    assert!(!send(&mut timers, json!("start"), T0));
     assert!(timers.timers.iter().all(|t| !t.is_running()));
 }
 
@@ -182,10 +201,10 @@ fn any_running_reports_whether_a_tick_is_needed() {
     let mut timers = AuxTimers::default();
     assert!(!timers.any_running());
 
-    timers.apply(&json!({ "2": "start" }), T0);
+    send(&mut timers, json!({ "2": "start" }), T0);
     assert!(timers.any_running());
 
-    timers.apply(&json!({ "2": "stop" }), T0);
+    send(&mut timers, json!({ "2": "stop" }), T0);
     assert!(!timers.any_running());
 }
 

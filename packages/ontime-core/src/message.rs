@@ -3,7 +3,6 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 /// What is shown over the timer views.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -24,45 +23,53 @@ pub struct MessageState {
     pub secondary: String,
 }
 
+/// A change to the overlay. Only what is given changes: the editor sends one
+/// field at a time, `{ timer: { blink: true } }` or `{ secondary: "…" }`.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct MessagePatch {
+    pub timer: Option<TimerMessagePatch>,
+    pub secondary: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct TimerMessagePatch {
+    pub text: Option<String>,
+    pub visible: Option<bool>,
+    pub blink: Option<bool>,
+    pub blackout: Option<bool>,
+    /// `Some(None)` clears the source.
+    pub secondary_source: Option<Option<String>>,
+}
+
 impl MessageState {
-    /// Applies a `message` websocket payload. The client sends one field at a
-    /// time — `{ timer: { blink: true } }`, `{ secondary: "…" }` — so anything
-    /// absent must be left alone rather than reset to a default.
-    ///
-    /// Returns true when something changed.
-    pub fn apply(&mut self, payload: &Value) -> bool {
-        let Some(patch) = payload.as_object() else {
-            return false;
-        };
-
+    /// Returns true when something was given, which is when clients are told.
+    pub fn patch(&mut self, patch: MessagePatch) -> bool {
         let mut changed = false;
-
-        if let Some(secondary) = patch.get("secondary").and_then(Value::as_str) {
-            self.secondary = secondary.to_string();
+        if let Some(secondary) = patch.secondary {
+            self.secondary = secondary;
             changed = true;
         }
-
-        if let Some(timer) = patch.get("timer").and_then(Value::as_object) {
-            if let Some(text) = timer.get("text").and_then(Value::as_str) {
-                self.timer.text = text.to_string();
-                changed = true;
-            }
-            for (key, field) in [
-                ("visible", &mut self.timer.visible),
-                ("blink", &mut self.timer.blink),
-                ("blackout", &mut self.timer.blackout),
-            ] {
-                if let Some(value) = timer.get(key).and_then(Value::as_bool) {
-                    *field = value;
-                    changed = true;
-                }
-            }
-            if let Some(source) = timer.get("secondarySource") {
-                self.timer.secondary_source = source.as_str().map(str::to_string);
+        let Some(timer) = patch.timer else {
+            return changed;
+        };
+        if let Some(text) = timer.text {
+            self.timer.text = text;
+            changed = true;
+        }
+        for (value, field) in [
+            (timer.visible, &mut self.timer.visible),
+            (timer.blink, &mut self.timer.blink),
+            (timer.blackout, &mut self.timer.blackout),
+        ] {
+            if let Some(value) = value {
+                *field = value;
                 changed = true;
             }
         }
-
+        if let Some(source) = timer.secondary_source {
+            self.timer.secondary_source = source;
+            changed = true;
+        }
         changed
     }
 }

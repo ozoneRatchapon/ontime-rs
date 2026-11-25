@@ -8,10 +8,17 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+pub use crate::command::Command;
 use crate::offset::{
     expected_start, find_day_offset, runtime_offset, ExpectedStartInputs, OffsetInputs, OffsetMode,
 };
+use crate::roll::{is_now, normalise_roll_start};
+pub use crate::roll::{load_roll, RollTarget};
 use crate::rundown::{Rundown, MS_PER_DAY};
+use crate::selection::{
+    event_at_index, is_loadable, next_playable, next_roll_event, next_with_cue, playable,
+    previous_playable, timed,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
@@ -33,68 +40,6 @@ pub enum TimerPhase {
     Danger,
     Overtime,
     Pending,
-}
-
-/// A playback instruction received over the websocket.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Command {
-    /// Resume, or start whatever is loaded (loading the first event if nothing is).
-    Start,
-    StartNext,
-    StartId(String),
-    LoadNext,
-    LoadPrevious,
-    LoadId(String),
-    Pause,
-    Stop,
-    /// Restart the loaded event from zero.
-    Reload,
-    /// Milliseconds to add to the running event; negative removes time.
-    AddTime(i64),
-    /// Hand the rundown to the wall clock: play whatever is due now, and wait
-    /// for whatever is next.
-    Roll,
-    /// Measure the expected times against the plan, or against the plan as
-    /// shifted by when the run actually began.
-    SetOffsetMode(OffsetMode),
-}
-
-impl Command {
-    /// Maps a `{tag, payload}` websocket packet onto a command.
-    /// Returns `None` for tags this engine does not implement.
-    pub fn parse(tag: &str, payload: Option<&Value>) -> Option<Self> {
-        let as_id = || {
-            payload
-                .and_then(|p| p.get("id"))
-                .and_then(Value::as_str)
-                .map(str::to_string)
-        };
-        let as_str = || payload.and_then(Value::as_str);
-
-        match tag {
-            "start" => match as_str() {
-                Some("next") => Some(Command::StartNext),
-                _ => match as_id() {
-                    Some(id) => Some(Command::StartId(id)),
-                    None => Some(Command::Start),
-                },
-            },
-            "load" => match as_str() {
-                Some("next") => Some(Command::LoadNext),
-                Some("previous") => Some(Command::LoadPrevious),
-                _ => as_id().map(Command::LoadId),
-            },
-            "pause" => Some(Command::Pause),
-            "stop" => Some(Command::Stop),
-            "reload" => Some(Command::Reload),
-            "addtime" => payload.and_then(Value::as_i64).map(Command::AddTime),
-            "roll" => Some(Command::Roll),
-            "offsetmode" => payload
-                .and_then(|mode| OffsetMode::deserialize(mode).ok())
-                .map(Command::SetOffsetMode),
-            _ => None,
-        }
-    }
 }
 
 /// The inputs the per-frame timer computation needs.
@@ -275,17 +220,33 @@ impl Runtime {
     pub fn apply(&mut self, command: Command, rundown: &Rundown, now: i64, tz_offset: i64) -> bool {
         match command {
             Command::Start => self.start(rundown, now, tz_offset),
-            Command::StartNext => {
-                self.step(rundown, 1);
-                self.start(rundown, now, tz_offset)
+            Command::StartNext => self.load_next(rundown) && self.start(rundown, now, tz_offset),
+            Command::StartPrevious => {
+                self.load_previous(rundown) && self.start(rundown, now, tz_offset)
             }
             Command::StartId(id) => {
-                self.load(rundown, Some(id));
-                self.start(rundown, now, tz_offset)
+                self.load_event(rundown, &id) && self.start(rundown, now, tz_offset)
             }
-            Command::LoadNext => self.step(rundown, 1),
-            Command::LoadPrevious => self.step(rundown, -1),
-            Command::LoadId(id) => self.load(rundown, Some(id)),
+            Command::StartIndex(index) => {
+                self.load_index(rundown, index) && self.start(rundown, now, tz_offset)
+            }
+            Command::StartCue(cue) => {
+                // an armed event may itself be the one asked for
+                let allow_current = self.playback == Playback::Armed;
+                let order = timed(rundown);
+                self.load_cue(rundown, &order, &cue, allow_current)
+                    && self.start(rundown, now, tz_offset)
+            }
+            Command::LoadNext => self.load_next(rundown),
+            Command::LoadPrevious => self.load_previous(rundown),
+            Command::LoadId(id) => self.load_event(rundown, &id),
+            Command::LoadIndex(index) => self.load_index(rundown, index),
+            Command::LoadCue(cue) => {
+                // upstream searches the playable order here, from a position in
+                // the timed one; kept, so the same cue loads the same event
+                let order = playable(rundown);
+                self.load_cue(rundown, &order, &cue, false)
+            }
             Command::Pause => self.pause(now),
             Command::Stop => self.stop(),
             Command::Reload => self.reload(rundown, now, tz_offset),
@@ -401,6 +362,48 @@ impl Runtime {
         self.paused_total = 0;
         self.added_time = 0;
         true
+    }
+
+    /// Loads an event chosen by id, if it can be played (upstream loadEvent).
+    fn load_event(&mut self, rundown: &Rundown, id: &str) -> bool {
+        is_loadable(rundown, id) && self.load(rundown, Some(id.to_string()))
+    }
+
+    /// The next event, wrapping to the top; under roll, the next one roll
+    /// could play (upstream handleLoadNext).
+    fn load_next(&mut self, rundown: &Rundown) -> bool {
+        let current = self.selected_id.as_deref();
+        let next = match self.playback {
+            Playback::Roll => next_roll_event(rundown, current),
+            _ => next_playable(&playable(rundown), current).cloned(),
+        };
+        next.is_some_and(|id| self.load_event(rundown, &id))
+    }
+
+    /// The previous event; at the top, the first again (upstream handleLoadPrevious).
+    fn load_previous(&mut self, rundown: &Rundown) -> bool {
+        let previous = previous_playable(&playable(rundown), self.selected_id.as_deref()).cloned();
+        previous.is_some_and(|id| self.load_event(rundown, &id))
+    }
+
+    fn load_index(&mut self, rundown: &Rundown, index: usize) -> bool {
+        let chosen = event_at_index(&timed(rundown), index).cloned();
+        chosen.is_some_and(|id| self.load_event(rundown, &id))
+    }
+
+    fn load_cue(
+        &mut self,
+        rundown: &Rundown,
+        order: &[String],
+        cue: &str,
+        allow_current: bool,
+    ) -> bool {
+        let current_index = self
+            .selected_id
+            .as_ref()
+            .and_then(|id| timed(rundown).iter().position(|e| e == id));
+        let chosen = next_with_cue(rundown, order, cue, current_index, allow_current);
+        chosen.is_some_and(|id| self.load_event(rundown, &id))
     }
 
     /// Moves the selection by `offset` positions through the playable events.
@@ -949,193 +952,12 @@ fn align_to_second(epoch_ms: i64) -> i64 {
     (epoch_ms + 500).div_euclid(1000) * 1000
 }
 
-/// Which event the wall clock says should be on air, and how far into it we are.
-pub struct RollTarget {
-    pub id: String,
-    pub time_start: i64,
-    /// Milliseconds already elapsed into the event; zero when pending.
-    pub elapsed: i64,
-    /// True when the event has not started yet and we are counting down to it.
-    pub is_pending: bool,
-}
-
-/// An event whose end reads earlier than its start runs through midnight.
-fn normalise_end(start: i64, end: i64) -> i64 {
-    if end < start {
-        end + MS_PER_DAY
-    } else {
-        end
-    }
-}
-
-/// Whether the clock is inside an event, its end included (upstream checkIsNow).
-fn is_now(start: i64, end: i64, clock: i64) -> bool {
-    match end < start {
-        true => clock >= start || clock <= end,
-        false => start <= clock && clock <= end,
-    }
-}
-
-/// The event roll moves to after `from`, wrapping to the top after the last.
-/// Zero-length events are passed over, or roll would stick on them
-/// (upstream findNextRollEvent).
-fn next_roll_event(rundown: &Rundown, from: Option<&str>) -> Option<String> {
-    let events = playable(rundown);
-    let first = from
-        .and_then(|id| events.iter().position(|e| e == id))
-        .map_or(0, |index| index + 1);
-    (0..events.len())
-        .map(|step| &events[(first + step) % events.len()])
-        .find(|id| {
-            rundown
-                .get(id)
-                .is_some_and(|e| field(e, "duration").unwrap_or(0) != 0)
-        })
-        .cloned()
-}
-
-/// An event due earlier today than the current clock is due tomorrow.
-fn normalise_roll_start(start: i64, clock: i64) -> i64 {
-    if start < clock {
-        start + MS_PER_DAY
-    } else {
-        start
-    }
-}
-
-/// Finds the event a rolling rundown should be playing at `clock`.
-///
-/// Walks the playable events in order, keeping count of how many times the
-/// rundown has gone past midnight, and returns the first one that has not
-/// already finished. Zero-duration events are skipped: rolling into one would
-/// leave playback stuck on it forever.
-pub fn load_roll(rundown: &Rundown, clock: i64) -> Option<RollTarget> {
-    let playable = playable(rundown);
-    let first = playable.first()?;
-
-    let mut day_span = 0;
-
-    for id in &playable {
-        let Some(event) = rundown.get(id) else {
-            continue;
-        };
-        let duration = field(event, "duration").unwrap_or(0);
-        if duration == 0 {
-            continue;
-        }
-
-        let time_start = field(event, "timeStart").unwrap_or(0);
-        let time_end = field(event, "timeEnd").unwrap_or(0);
-
-        let corrected_start = time_start + MS_PER_DAY * day_span;
-        let corrected_end = time_end + MS_PER_DAY * day_span;
-        let normal_end = normalise_end(corrected_start, corrected_end);
-
-        // already over
-        if normal_end <= clock {
-            if time_start > time_end {
-                day_span += 1;
-            }
-            continue;
-        }
-
-        // under way — either normally, or carried over from the day before
-        let is_from_day_before = normal_end > MS_PER_DAY && clock < time_end;
-        if is_from_day_before || clock >= time_start {
-            let elapsed = if is_from_day_before {
-                clock + MS_PER_DAY - time_start
-            } else {
-                clock - time_start
-            };
-            return Some(RollTarget {
-                id: id.clone(),
-                time_start,
-                elapsed,
-                is_pending: false,
-            });
-        }
-
-        // an overnight event later in the rundown may be on air right now
-        for later_id in playable.iter().skip_while(|x| *x != id).skip(1) {
-            let Some(later) = rundown.get(later_id) else {
-                continue;
-            };
-            if field(later, "duration").unwrap_or(0) == 0 {
-                continue;
-            }
-            let later_start = field(later, "timeStart").unwrap_or(0);
-            let later_end = field(later, "timeEnd").unwrap_or(0);
-            if later_start <= later_end {
-                continue;
-            }
-            // it wraps midnight, so it is running if we are past its start or
-            // before its end
-            if clock >= later_start || clock < later_end {
-                let elapsed = if clock >= later_start {
-                    clock - later_start
-                } else {
-                    clock + MS_PER_DAY - later_start
-                };
-                return Some(RollTarget {
-                    id: later_id.clone(),
-                    time_start: later_start,
-                    elapsed,
-                    is_pending: false,
-                });
-            }
-        }
-
-        // still to come
-        return Some(RollTarget {
-            id: id.clone(),
-            time_start,
-            elapsed: 0,
-            is_pending: true,
-        });
-    }
-
-    // everything is behind us: arm the top of the rundown for the next day
-    let event = rundown.get(first)?;
-    Some(RollTarget {
-        id: first.clone(),
-        time_start: field(event, "timeStart").unwrap_or(0),
-        elapsed: 0,
-        is_pending: true,
-    })
-}
-
-/// Ids of the events that playback can select: real events, in order, not skipped.
-pub(crate) fn playable(rundown: &Rundown) -> Vec<String> {
-    events_where(rundown, |entry| {
-        entry.get("skip").and_then(Value::as_bool) != Some(true)
-    })
-}
-
-/// Ids of every event in order, skipped ones included (upstream's
-/// `timedEventOrder`), which is what the client numbers events by.
-fn timed(rundown: &Rundown) -> Vec<String> {
-    events_where(rundown, |_| true)
-}
-
-fn events_where(rundown: &Rundown, keep: impl Fn(&Value) -> bool) -> Vec<String> {
-    rundown
-        .flat_order
-        .iter()
-        .filter(|id| {
-            rundown.get(id).is_some_and(|entry| {
-                entry.get("type").and_then(Value::as_str) == Some("event") && keep(entry)
-            })
-        })
-        .cloned()
-        .collect()
-}
-
 /// How many local midnights lie between two instants (upstream daysSinceStart).
 fn days_between(from: i64, to: i64, tz_offset: i64) -> i64 {
     (to + tz_offset).div_euclid(MS_PER_DAY) - (from + tz_offset).div_euclid(MS_PER_DAY)
 }
 
-fn field(entry: &Value, key: &str) -> Option<i64> {
+pub(crate) fn field(entry: &Value, key: &str) -> Option<i64> {
     entry.get(key).and_then(Value::as_i64)
 }
 

@@ -170,8 +170,14 @@ pub async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             admin::handle(req, &env, &path).await
         }
         _ if path.starts_with("/auth/") => auth::handle(req, &env, &path).await,
-        // everything the client talks to is project state, so it all goes to the DO
-        p if p == "/ws" || p.starts_with("/data/") || p.starts_with("/user/") => {
+        // everything the client talks to is project state, so it all goes to
+        // the DO, and so does the integration API (Companion, scripts, curl)
+        p if p == "/ws"
+            || p.starts_with("/data/")
+            || p.starts_with("/user/")
+            || p == "/api"
+            || p.starts_with("/api/") =>
+        {
             forward(req, &env, &routed).await
         }
         _ => Response::error("Not found", 404),

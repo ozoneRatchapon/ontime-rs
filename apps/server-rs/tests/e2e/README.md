@@ -33,6 +33,11 @@ to be built first — `run.sh` builds it if it is missing.
 | `rooms.mjs`  | two rooms are fully isolated — data, settings and playback                                                                                                 |
 | `auth.mjs`   | per-room password over REST and websocket                                                                                                                  |
 
+`integration.mjs` covers the integration API (plan 009): `GET /r/<room>/api/...`
+and the same actions over the websocket. It checks that the room changes and the
+screens hear about it, that screens can be renamed and redirected, and that a
+protected room accepts a token but not a cookie.
+
 `coverage.sh` is a diagnostic sweep, not a test — it prints the status code of every
 endpoint the client can call. Useful when adding endpoints; it is deliberately not
 in `run.sh` because it asserts nothing.

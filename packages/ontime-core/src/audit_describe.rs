@@ -8,9 +8,9 @@ use serde_json::Value;
 
 use crate::api::{self, route_segments, ApiRequest, HttpMethod};
 use crate::audit::{Action, Actor, Note, Subject};
+use crate::command::Command;
 use crate::project::{token_matches, Project};
 use crate::registry::Member;
-use crate::runtime::Command;
 
 /// Who a request counts as. A person's session comes first: when it is
 /// present, it is what let them in.
@@ -174,13 +174,24 @@ pub fn socket_note(
     if tag == "teleprompter" {
         return prompter_note(project, payload?);
     }
-    let command = Command::parse(tag, payload)?;
+    let crate::integration::Action::Playback { command, .. } =
+        crate::integration::parse(tag, payload).ok()?
+    else {
+        return None;
+    };
     let loaded = project.runtime.selected_id.as_deref();
     let (action, about, amount) = match command {
-        Command::Start | Command::StartNext | Command::StartId(_) => (Action::Start, loaded, None),
-        Command::LoadNext | Command::LoadPrevious | Command::LoadId(_) => {
-            (Action::Load, loaded, None)
-        }
+        Command::Start
+        | Command::StartNext
+        | Command::StartPrevious
+        | Command::StartId(_)
+        | Command::StartIndex(_)
+        | Command::StartCue(_) => (Action::Start, loaded, None),
+        Command::LoadNext
+        | Command::LoadPrevious
+        | Command::LoadId(_)
+        | Command::LoadIndex(_)
+        | Command::LoadCue(_) => (Action::Load, loaded, None),
         Command::Roll => (Action::Roll, loaded, None),
         Command::Pause => (Action::Pause, before, None),
         Command::Stop => (Action::Stop, before, None),

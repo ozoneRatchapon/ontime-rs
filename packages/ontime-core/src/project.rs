@@ -369,7 +369,7 @@ impl Project {
         };
         let still_playable = self
             .current()
-            .is_some_and(|rundown| crate::runtime::playable(rundown).contains(selected));
+            .is_some_and(|rundown| crate::selection::playable(rundown).contains(selected));
         if still_playable {
             return false;
         }

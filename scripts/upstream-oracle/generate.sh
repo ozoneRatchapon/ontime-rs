@@ -5,6 +5,9 @@
 # - rundown_process.json: times, gaps, delays and days of a rundown (RIIR 1)
 # - runtime_offset.json: the offset and the expected flag, group and rundown
 #   end, after a script of operator actions (RIIR 3)
+# - integration.json: what upstream's integration router and dispatcher make
+#   of each request, with its services replaced by recorders (RIIR 5)
+# - selection.json: which event next, previous, an index and a cue pick (RIIR 5)
 #
 #   scripts/upstream-oracle/generate.sh [upstream-ref]   # default upstream/master
 #
@@ -29,10 +32,22 @@ echo "export const ONTIME_VERSION = '0.0.0-oracle';" > "$work/upstream/apps/serv
 # npm packages the bundles need are taken from this repository's install
 export NODE_PATH="$root/node_modules/.pnpm/node_modules"
 commit="$(git -C "$root" rev-parse --short "$ref")"
+# the integration contract runs upstream's router over recorders instead of
+# its services, laid over a copy so the other contracts keep the real ones
+cp -R "$work/upstream" "$work/stubbed"
+cp -R "$here/integration-stubs/apps" "$work/stubbed/"
+# express stays outside the bundle (node finds it next to the bundles), since
+# its CommonJS tree does not bundle cleanly
+mkdir -p "$work/out/node_modules"
+ln -s "$root/node_modules/.pnpm/node_modules/express" "$work/out/node_modules/express"
 
-for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset; do
+for name in teleprompter_wrap teleprompter_script teleprompter_position teleprompter_transport rundown_process runtime_offset integration selection; do
+  tree="$work/upstream"
+  if [ "$name" = integration ]; then tree="$work/stubbed"; fi
   "$esbuild" "$here/gen-$name.ts" --bundle --platform=node --format=esm --log-level=error \
-    --alias:@upstream="$work/upstream" \
+    --alias:@upstream="$tree" \
+    --alias:@record="$here/integration-stubs/record.ts" \
+    --external:express \
     --alias:ontime-types="$work/upstream/packages/types/src/index.ts" \
     --alias:ontime-utils="$work/upstream/packages/utils/index.ts" \
     --outfile="$work/out/gen-$name.mjs"
@@ -41,7 +56,7 @@ for name in teleprompter_wrap teleprompter_script teleprompter_position teleprom
   COMMIT="$commit" NAME="$name" node -e '
     const fs = require("fs");
     const cases = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-    const count = Array.isArray(cases) ? cases.length : Object.values(cases).reduce((n, list) => n + list.length, 0);
+    const count = Array.isArray(cases) ? cases.length : Object.values(cases).reduce((n, list) => n + (Array.isArray(list) ? list.length : 0), 0);
     const comment = `Generated from upstream ontime ${process.env.COMMIT} by scripts/upstream-oracle/generate.sh; do not edit by hand.`;
     fs.writeFileSync(process.argv[2], JSON.stringify({ _comment: comment, cases }, null, 1) + "\n");
   ' "$work/out/$name.json" "$fixtures/$name.json"

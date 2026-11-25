@@ -230,7 +230,11 @@ pub fn command(
     payload: &Value,
     epoch_ms: i64,
 ) -> Result<State, CommandError> {
-    let request = parse_command(payload)?;
+    run(project, parse_command(payload)?, epoch_ms)
+}
+
+/// Carries out a command already parsed, as the integration dispatcher has it.
+pub fn run(project: &mut Project, request: Command, epoch_ms: i64) -> Result<State, CommandError> {
     let script = script(project);
     mark_built(project, &script, epoch_ms);
     let command = match request {

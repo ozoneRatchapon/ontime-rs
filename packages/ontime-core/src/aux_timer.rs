@@ -199,6 +199,17 @@ impl AuxTimer {
     }
 }
 
+/// What an `auxtimer` action asks of one timer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AuxCommand {
+    Start,
+    Pause,
+    Stop,
+    SetTime(i64),
+    AddTime(i64),
+    Direction(SimpleDirection),
+}
+
 /// The three timers the client exposes, addressed by the indices 1, 2 and 3.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AuxTimers {
@@ -216,58 +227,25 @@ impl AuxTimers {
         self.timers.iter().any(AuxTimer::is_running)
     }
 
-    /// Applies an `auxtimer` websocket payload: `{ "1": "start" }`,
-    /// `{ "2": { "direction": "count-up" } }`, `{ "3": { "duration": 60000 } }`.
-    ///
-    /// Returns true when something changed and clients should be told.
-    pub fn apply(&mut self, payload: &Value, now: i64) -> bool {
-        let Some(commands) = payload.as_object() else {
-            return false;
-        };
-
-        let mut changed = false;
-        for (key, command) in commands {
-            let Ok(index) = key.parse::<usize>() else {
-                continue;
-            };
-            let Some(timer) = self.get_mut(index) else {
-                continue;
-            };
-
-            if let Some(action) = command.as_str() {
-                match action {
-                    "start" => timer.start(now),
-                    "pause" => timer.pause(now),
-                    "stop" => timer.stop(),
-                    _ => continue,
-                }
-                changed = true;
-                continue;
-            }
-
-            let Some(patch) = command.as_object() else {
-                continue;
-            };
-            if let Some(direction) = patch.get("direction").and_then(Value::as_str) {
-                let direction = match direction {
-                    "count-up" => SimpleDirection::CountUp,
-                    "count-down" => SimpleDirection::CountDown,
-                    _ => continue,
-                };
-                timer.set_direction(direction, now);
-                changed = true;
-            }
-            if let Some(duration) = patch.get("duration").and_then(Value::as_i64) {
-                timer.set_time(duration);
-                changed = true;
-            }
-            if let Some(added) = patch.get("addtime").and_then(Value::as_i64) {
-                timer.add_time(added);
-                changed = true;
-            }
+    /// Carries out one command on timer `index` (1, 2 or 3) and returns its
+    /// state afterwards, which is what upstream replies with.
+    pub fn run(
+        &mut self,
+        index: usize,
+        command: AuxCommand,
+        now: i64,
+        name: &str,
+    ) -> Option<Value> {
+        let timer = self.get_mut(index)?;
+        match command {
+            AuxCommand::Start => timer.start(now),
+            AuxCommand::Pause => timer.pause(now),
+            AuxCommand::Stop => timer.stop(),
+            AuxCommand::SetTime(millis) => timer.set_time(millis),
+            AuxCommand::AddTime(millis) => timer.add_time(millis),
+            AuxCommand::Direction(direction) => timer.set_direction(direction, now),
         }
-
-        changed
+        Some(timer.state(now, name))
     }
 
     /// The `auxtimer1`/`auxtimer2`/`auxtimer3` slice of the runtime store.

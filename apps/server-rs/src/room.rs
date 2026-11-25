@@ -16,6 +16,9 @@ use serde::{Deserialize, Serialize};
 use crate::audit_store::{self, Batch};
 use crate::{presence, registry_host};
 
+#[path = "room_integration.rs"]
+mod integration;
+
 /// Per-connection metadata, stored on the socket itself.
 ///
 /// Hibernation evicts the Durable Object between messages, so this cannot live in
@@ -210,23 +213,8 @@ impl DurableObject for OntimeProject {
             }
         }
 
-        let now = now_ms();
-        let before = self.project.runtime.selected_id.clone();
-        if api::apply_socket_command(&mut self.project, tag, payload, now) {
-            let writes =
-                match audit_describe::socket_note(&self.project, tag, payload, before.as_deref()) {
-                    Some(note) => {
-                        let actor = info.map_or(Actor::Anyone, |info| info.actor);
-                        Some(self.audit(actor, note, now).await)
-                    }
-                    None => None,
-                };
-            self.persist(writes).await?;
-            self.broadcast_runtime(now);
-            self.sync_alarm().await?;
-        }
-
-        Ok(())
+        // every other tag is an action, shared with the HTTP integration API
+        self.integration_socket(&ws, info, tag, payload).await
     }
 
     /// Fires at the end of the loaded event, or on the heartbeat — see `sync_alarm`.
@@ -557,6 +545,11 @@ impl OntimeProject {
         };
         let is_upgrade = path.contains("/ws") && !path.contains("/data/");
         let room_name = presence::room_name(req);
+        // the integration API takes a token only, so it is decided before any
+        // session is looked up
+        if integration::is_integration_path(&path) {
+            return self.integration_http(req, &room_name).await;
+        }
         let member = self.member(Self::presented_session(req), &room_name).await;
 
         let api_request = ApiRequest {
