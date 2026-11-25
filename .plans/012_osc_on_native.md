@@ -24,3 +24,31 @@ dispatcher is free of any transport.
 ## Size
 
 About a day, including the oracle.
+
+## Update (2026-11-25): OSC with the cloud backend as it is
+
+The user asked how OSC could work with the current Cloudflare deployment. A
+Worker cannot receive UDP (or raw TCP), so something on the venue's network
+has to receive OSC and pass it on over HTTPS. The user may try option 2.
+
+1. **Companion as the bridge (no code).** QLab or a console sends OSC to
+   Companion's own OSC remote control. That presses a button whose action is
+   a Generic HTTP GET to `/r/<room>/api/...?token=...`. One button per
+   command, and nothing goes back to the devices. Check the press address
+   format in the docs for the Companion version in use.
+2. **`ontime-bridge`, a small Rust program (preferred if OSC is used for
+   real).** It runs on a machine at the venue:
+   - in: it listens for OSC (`/ontime/start/cue/1`…), turns each message
+     into `(tag, payload)` with a core parser pinned against upstream's
+     `OscAdapter.ts`, and calls the integration API with the room token;
+   - out: it keeps a websocket open and sends OSC to devices on changes,
+     where upstream's OSC output does;
+   - it reuses everything the integration API already does: access, rate
+     limit, audit and broadcast.
+
+Both need the venue's internet: if it drops, OSC commands do not arrive. A
+native server on the LAN (the original plan above) does not have that
+weakness. Latency has not been measured from a venue; expect tens of
+milliseconds or more, which is fine for cues but not for frame accuracy.
+
+About a day for option 2. Not started.
