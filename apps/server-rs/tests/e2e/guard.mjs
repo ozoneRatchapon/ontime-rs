@@ -104,6 +104,12 @@ const { token } = await claim.json();
   for (let n = 0; n < 3 * FREE; n++) await call(`/r/${room}/data/settings`, { ip, token });
   check('right answers are never counted', (await call(`/r/${room}/data/settings`, { ip, token })).status, 200);
 }
+{
+  // screens left open after the password changed, behind one venue address
+  const ip = fresh();
+  for (let n = 0; n < 3 * FREE; n++) await call(`/r/${room}/data/settings`, { ip, token: 'last-weeks-token' });
+  check('a stale token retried is counted once', (await call(`/r/${room}/data/settings`, { ip, token })).status, 200);
+}
 
 console.log('== an open room ==');
 const open = 'guard-open-' + Math.random().toString(36).slice(2, 10);

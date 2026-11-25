@@ -58,7 +58,7 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
             .and_then(Value::as_str)
             .unwrap_or_default();
         let ok = token_matches(&master, &hash_password(password));
-        if let Err(seconds) = guard_host::ask(env, &guard_host::client(&req), ok).await? {
+        if let Err(seconds) = guard_host::ask(env, &guard_host::client(&req), password, ok).await? {
             return guard_host::too_many(seconds);
         }
         return match ok {
@@ -73,7 +73,9 @@ pub async fn handle(mut req: Request, env: &Env, path: &str) -> Result<Response>
         return Response::error("Unauthorized", 401);
     };
     let authorised = token_matches(&master, &token);
-    if let Err(seconds) = guard_host::ask(env, &guard_host::client(&req), authorised).await? {
+    if let Err(seconds) =
+        guard_host::ask(env, &guard_host::client(&req), &token, authorised).await?
+    {
         return guard_host::too_many(seconds);
     }
     if !authorised {

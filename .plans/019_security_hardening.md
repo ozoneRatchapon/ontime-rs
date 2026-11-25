@@ -10,31 +10,42 @@ offline and tried online at three doors: `/admin/login`, a Bearer token at
 `/admin/*`, and a token at any room (REST, websocket, integration API). Before
 this, none of them limited anything.
 
-- Policy: `ontime_core::guard` (11 tests in `tests/guard_tests.rs`). Per client
-  (`CF-Connecting-IP`; IPv6 keyed by its /64): 10 free failures, then a wait
-  of 1 s that doubles per failure up to 15 min (about 100 guesses a day).
-  Forgotten after an hour without failures. A success does not reset the
-  count, so a person on the same network cannot hand a guesser a fresh
-  allowance. While locked, **every** request carrying a token is refused with
-  `429` + `Retry-After`, the right one too, or the lock would hide nothing.
-  At most 4,096 clients tracked; the quietest go first.
+- Policy: `ontime_core::guard` (26 tests in `tests/guard_tests.rs`). A client
+  is counted under its keys (`CF-Connecting-IP`): an IPv4 address, or an IPv6
+  /64 **and** its /48, which may fail 16 times as often, so one site cycling
+  through its 65,536 /64s shares one count. Per key: 10 free failures, then
+  a wait of 1 s that doubles per failure up to 15 min (about 100 guesses a
+  day). Forgotten after an hour without failures. A success does not reset
+  the count, so a person on the same network cannot hand a guesser a fresh
+  allowance. While any key is locked, **every** request carrying a token is
+  refused with `429` + `Retry-After`, the right one too, or the lock would
+  hide nothing.
+- **The same wrong token again counts once** (the last 8 distinct guesses are
+  kept per key, as 64-bit fingerprints). Without this, screens left open
+  behind one venue's address after a password change, all retrying the old
+  token, would lock the whole venue out during a show.
+- At most 4,096 keys. Forgotten ones are swept only when the table is full,
+  then the quietest **unlocked** key goes, so a flood of fresh addresses
+  cannot push a lock out (found by mutation testing, item 7).
 - A room (`room.rs::fetch`) checks before handling and counts after: a `401`
   or `403` whose token is neither the room's nor the master's
   (`api::is_known_token`). A stale token in an open room is let in, so it is
   never counted; guessing the master token at an open room's admin-only
   routes is refused, so it is.
 - The admin routes run in the stateless Worker, so they ask the registry
-  instance (`POST /registry/guard`, `guard_host.rs`). One extra registry call
-  per admin request; admin traffic is small.
+  instance (`POST /registry/guard`, `guard_host.rs`). Only the attempt's
+  fingerprint is sent, never the password. One extra registry call per admin
+  request; admin traffic is small.
 - `tests/e2e/guard.mjs` (needs ADMIN_PASSWORD, local only, as it fakes client
   addresses): all three doors, the right answer refused while locked,
   recovery after the wait, clients counted apart, right answers never
-  counted, an open room's stale token not counted. The full `run.sh` still
+  counted, a stale token retried counted once, an open room's stale token not
+  counted. The full `run.sh` still
   passes, as do the five admin suites.
 
 Not covered, by choice:
 
-- **Many addresses** (a botnet) each get their own allowance. A count per
+- **Many IPv4 addresses or many /48s** (a botnet) each get their own allowance. A count per
   room across all clients would let anyone lock a room's real users out
   with junk tokens, which is worse.
 - **The native server** (`apps/server-native`) is a LAN install and does not

@@ -7,7 +7,7 @@ use std::time::Duration;
 use ontime_core::api::{self, ApiRequest, Effect, HttpMethod};
 use ontime_core::audit::{Actor, Chunk, Note, Retention, Writes};
 use ontime_core::audit_describe;
-use ontime_core::guard::Guard;
+use ontime_core::guard::{fingerprint, Guard};
 use ontime_core::project::Project;
 use ontime_core::registry::{should_report, Member, RoomReport};
 use ontime_core::socket;
@@ -173,7 +173,7 @@ impl DurableObject for OntimeProject {
             let refused = matches!(response.status_code(), 401 | 403);
             let master = master_token(&self._env);
             if refused && !api::is_known_token(&self.project, master.as_deref(), &token) {
-                self.guard.fail(&client, now);
+                self.guard.fail(&client, fingerprint(&token), now);
             }
         }
         Ok(response)
