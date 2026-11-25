@@ -86,3 +86,7 @@
   - End actions pinned against upstream. At the last event ours holds instead of wrapping to the top, as the user chose.
   - Rundown edits pinned against upstream's rundown service (54 cases). Fixed: new events get the next cue, an edited end or duration is kept, swap keeps each place's schedule, and a cloned group copies its entries instead of sharing them.
   - Production: all five smoke suites pass, and the four fixes were checked one by one in a throwaway room (cue `7` gives `8`; an end edit gives `lock-end` with the duration worked out; the cloned group is `Block (copy)` with its own entries; a swap keeps the place's time).
+- **2026-11-25:** replacing a whole rundown now matches upstream's `parseRundown`. Worker `14e1612c`.
+  - Cueless events are numbered by position, and given cues are kept.
+  - Nested entries are no longer linked into their group twice. A read-back-and-resend round trip on production kept `a, g, x, y`, with cues `1`, `2` and the given `Y`.
+  - Smoke: all five suites pass. The first integration run died on the client side (`EADDRNOTAVAIL` after the 60-call flood) before its cleanup. Its throwaway room `integration-vjtqe4tp` was deleted by hand, and the rerun passed 54/54.
