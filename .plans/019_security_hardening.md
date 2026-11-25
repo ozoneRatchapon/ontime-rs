@@ -200,6 +200,19 @@ GitHub listed 8 on 2026-11-25, all npm, none in what is deployed:
   `pnpm-lock.yaml`. `esbuild`'s advisory is about its dev server, which we do
   not use (the upstream oracle only bundles with it).
 
-To do when convenient: `pnpm update` the four tooling packages and re-run
-the client build and tests; drop or replace `xlsx` in `apps/server` when
-the next upstream pull touches it.
+2026-11-25, `pnpm audit` filtered to what we build (not `apps/server`, not
+`apps/electron`, both upstream and never deployed by us) left only `glob`
+and `minimatch`:
+
+- via `rimraf` (root dev script): fixed by the catalog bump 6.0.1 → 6.1.4
+  (glob ^14). Client build and 520 tests pass.
+- via `@sentry/vite-plugin` 5.4.0 → `@sentry/bundler-plugins` 10.x (glob 13,
+  every 10.x release): left. The plugin only runs when `SENTRY_AUTH_TOKEN`
+  is set, which our builds never do; the advisories (AbortSignal timeout,
+  pattern ReDoS) need hostile patterns or a timeout the plugin does not use;
+  the fix is a 5 → 11 major bump of an upstream client dependency, better
+  taken with an upstream pull.
+
+`xlsx`, `multer`, `proxy-addr` (`apps/server`) and `electron` and its
+builder (`apps/electron`) are upstream's; drop or bump them when an
+upstream pull touches those apps.

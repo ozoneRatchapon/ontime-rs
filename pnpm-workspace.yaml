@@ -4,7 +4,7 @@ packages:
 
 catalog:
   '@types/node': 22.19.11
-  rimraf: 6.0.1
+  rimraf: 6.1.4
   ts-essentials: 10.1.1
   typescript: 7.0.2
   vitest: 5.0.5
