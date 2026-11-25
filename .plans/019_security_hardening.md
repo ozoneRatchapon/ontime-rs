@@ -1,6 +1,6 @@
 # 019 — Security hardening (review of 2026-11-25)
 
-Status: **items 1 and 3 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
+Status: **items 1, 3 and 5 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
 Item 2 waits for the owner's go-ahead, because existing rooms need a migration.
 
 ## 1. Wrong guesses wait — done
@@ -69,8 +69,31 @@ their passwords and share links working through a migration.
   Browsers partition a framed page's storage, so it holds no room token or
   session there, and an open room can be edited without framing at all.
 
-## 5. `cargo audit` / `cargo deny` in CI
+## 5. `cargo deny` in CI — done
+
+- `deny.toml` at the root, `.github/workflows/audit_rust.yml` runs it for each
+  of the four crates (they are not one workspace): on push and pull request
+  when a manifest or lockfile changes, and every Monday, because a new
+  advisory arrives without any change here.
+- Checks: vulnerabilities and yanked crates fail; licences must be on the
+  allow-list (all GPL-3.0-compatible); crates only from crates.io; no
+  wildcard versions. Our four crates now say `license = "GPL-3.0-or-later"`
+  (as `LICENSE.md`) and `publish = false`.
+- What the first run found, and what was done:
+  - **`url` 2.5.8 in the Worker** (RUSTSEC-2026-0592, a stack overflow in
+    `Url::origin()` on nested `blob:` URLs): updated to 2.5.9.
+  - **`tokio` 1.53.1** (RUSTSEC-2026-0386, unsound `AsyncFd` constructors,
+    not used by us): updated to 1.54.1 in all three lockfiles.
+  - **`chrono` is unmaintained** (RUSTSEC-2026-0543, no fix exists):
+    ignored with a reason. See item 9.
 
 ## 4. Weekly upstream check (GitHub Action on the public repo)
 
 ## 7. Mutation testing (`cargo-mutants`)
+
+## 9. Replace chrono — deferred
+
+chrono is unmaintained. ontime-core, server-native and server-rs use it in
+four files, but `worker` 0.4 depends on it too, so dropping it means moving
+to `jiff` and to a newer `worker` together. Nothing is broken today; remove
+the ignore in `deny.toml` when this is done.

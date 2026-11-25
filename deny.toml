@@ -1,0 +1,53 @@
+# cargo-deny policy for every Rust crate here (plan 019, item 5).
+#
+#   cargo deny --manifest-path packages/ontime-core/Cargo.toml check --config deny.toml
+#
+# The crates are not one workspace, so CI runs it once per manifest.
+
+[graph]
+all-features = true
+
+[advisories]
+# a vulnerability fails the build; an unmaintained crate is reported
+unmaintained = "workspace"
+yanked = "deny"
+ignore = [
+  # chrono is unmaintained (2026-09). No fix exists, and worker 0.4 depends on
+  # it too, so it goes only with a move to jiff and a newer worker: plan 019.
+  { id = "RUSTSEC-2026-0543", reason = "no patched chrono; replacing it is tracked in plan 019" },
+]
+
+[licenses]
+# the project is GPL-3.0; everything here is compatible with it
+allow = [
+  "GPL-3.0-or-later",
+  "GPL-3.0-only",
+  "MIT",
+  "MIT-0",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "Unicode-3.0",
+  "Unlicense",
+  "CC0-1.0",
+  "BSL-1.0",
+  "MPL-2.0",
+]
+confidence-threshold = 0.9
+
+[licenses.private]
+# our own crates are never published
+ignore = true
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
