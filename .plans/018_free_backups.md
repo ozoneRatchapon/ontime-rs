@@ -1,6 +1,6 @@
 # 018 — Free backups (free-tier work, item 3)
 
-Status: **done locally (2026-11-25).** Two layers, neither costs anything.
+Status: **done and deployed (2026-11-25), Worker `7a212dc3`.** Two layers, neither costs anything.
 
 ## 1. A copy of every room on the user's Mac, nightly
 
@@ -43,3 +43,5 @@ Status: **done locally (2026-11-25).** Two layers, neither costs anything.
 
 There is no button for it in the editor yet. An undo is an API call, or a
 small page later if it gets used.
+
+On production `snapshots.mjs` passed 11/11 in a throwaway room, and the five smoke suites passed. Afterwards only the four real rooms were on the list.

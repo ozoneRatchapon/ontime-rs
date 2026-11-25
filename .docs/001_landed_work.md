@@ -95,3 +95,6 @@
 - **2026-11-25:** free-tier budget (plan 017). Pages `264d9e7e` (master) and `401a4f71` (main).
   - Fixed: an idle screen reconnected every ~10 s. The watchdog expected upstream's per-second publishing, and the Worker sends nothing while idle. On the Worker the settled ping is now 7 s.
   - Measured: a room running 8 hours with 20 screens costs about a third of the 100,000 daily Durable Object requests.
+- **2026-11-25:** free backups (plan 018). Worker `7a212dc3`.
+  - A launchd agent saves every room to `~/OntimeBackups` at 03:00 each night. A restore was checked entry for entry.
+  - Each room keeps its own undo history: a copy before every destructive change and every ten minutes of edits, restorable by an owner or the admin. `snapshots.mjs` passed on production.
