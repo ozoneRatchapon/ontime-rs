@@ -59,7 +59,7 @@ if [ "${1:-}" = "--start" ]; then
 fi
 
 failures=()
-for check in people members activity teleprompter; do
+for check in people members activity teleprompter offline; do
   printf '\033[1m── %s\033[0m\n' "$check"
   if node "$here/$check.mjs"; then :; else failures+=("$check"); fi
   echo
