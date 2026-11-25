@@ -12,8 +12,9 @@ something to learn from. How to use it and how it fits together:
   eight rundowns through its selection functions. All agree, except two
   deliberate differences: `?token=` is the host's, and `addtime` counts
   whole milliseconds.
-- e2e: `integration.mjs` 50/50, and every other suite still passes against
-  a fresh `wrangler dev`.
+- e2e: `integration.mjs` passes all 48 checks, and every other suite still
+  passes, on both hosts: a fresh `wrangler dev` and the native server (as CI
+  runs them). The first push missed the native host; CI caught it.
 
 ## Follow-ups (not done, found on the way)
 

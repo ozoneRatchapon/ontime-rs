@@ -33,6 +33,7 @@ use serde_json::{json, Value};
 use tokio::sync::{broadcast, Mutex};
 use tower_http::cors::{Any, CorsLayer};
 
+mod integration_host;
 mod store;
 
 /// One isolated project, matching a Durable Object instance on the Worker.
@@ -315,6 +316,20 @@ async fn rest_handler(
 ) -> Response {
     let full_path = format!("/{path}");
     let (room_name, api_path) = room_from_path(&full_path);
+
+    // a token only, so it is decided apart from the rest of the routing
+    if integration_host::is_integration_path(&api_path) {
+        return integration_host::http(
+            &state,
+            &room_name,
+            &method,
+            &api_path,
+            raw_query.as_deref(),
+            &query,
+            &headers,
+        )
+        .await;
+    }
 
     let room_is_new = !store::exists(&state.data_dir, &room_name).await
         && !state.rooms.lock().await.contains_key(&room_name);
@@ -642,8 +657,6 @@ async fn handle_socket_message(
         return Some(socket::pong(echo, now_ms(), tz).to_string());
     }
 
-    let now = now_ms();
-
     // client bookkeeping is the one thing a host has to own itself, because the
     // connections are its own
     if tag == "client-set" || tag == "client-set-path" {
@@ -677,36 +690,13 @@ async fn handle_socket_message(
         return None;
     }
 
-    // everything else — playback, the overlay, the aux timers and the report —
-    // goes through the shared path, so this host cannot implement three of them
-    // and quietly lose the fourth
+    // everything else is an action, shared with the HTTP integration API, so
+    // this host cannot implement some of them and quietly lose the rest
     let actor = state
         .clients
         .lock()
         .await
         .get(client_id)
         .map_or(Actor::Anyone, |client| client.actor.clone());
-    let ((changed, project, writes), _) = with_room(state, room_name, |room| {
-        let before = room.project.runtime.selected_id.clone();
-        let changed = api::apply_socket_command(&mut room.project, tag, payload, now);
-        if changed {
-            room.broadcast_runtime(now);
-        }
-        let note = match changed {
-            true => audit_describe::socket_note(&room.project, tag, payload, before.as_deref()),
-            false => None,
-        };
-        let writes = note.map(|note| room.audit(actor, note, now));
-        (changed, room.project.clone(), writes)
-    })
-    .await;
-
-    if let Some(writes) = writes {
-        let _ = store::save_audit(&state.data_dir, room_name, &writes).await;
-    }
-    if changed {
-        let _ = store::save(&state.data_dir, room_name, &project).await;
-    }
-
-    None
+    integration_host::socket(state, room_name, actor, tag, payload).await
 }
