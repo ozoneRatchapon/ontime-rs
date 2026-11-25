@@ -1,0 +1,39 @@
+# Cloudflare Pages response headers (plan 019, item 3).
+#
+# Nothing may frame a page by default, so a page that drives a show cannot be
+# laid under another site's buttons (clickjacking). The read-only views below
+# are opened up again, because they are embedded on purpose: a timer in a
+# dashboard or a stream overlay.
+#
+# No script-src: index.html carries an inline script for old browsers, and
+# the editor injects the operator's custom CSS, so a strict policy would
+# break them. Nothing in the client renders a person's HTML.
+
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'; object-src 'none'; base-uri 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+/timer
+  ! X-Frame-Options
+  ! Content-Security-Policy
+/countdown
+  ! X-Frame-Options
+  ! Content-Security-Policy
+/backstage
+  ! X-Frame-Options
+  ! Content-Security-Policy
+/studio
+  ! X-Frame-Options
+  ! Content-Security-Policy
+/timeline
+  ! X-Frame-Options
+  ! Content-Security-Policy
+/info
+  ! X-Frame-Options
+  ! Content-Security-Policy
+/teleprompter
+  ! X-Frame-Options
+  ! Content-Security-Policy

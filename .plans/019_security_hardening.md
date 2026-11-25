@@ -1,6 +1,6 @@
 # 019 — Security hardening (review of 2026-11-25)
 
-Status: **item 1 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
+Status: **items 1 and 3 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
 Item 2 waits for the owner's go-ahead, because existing rooms need a migration.
 
 ## 1. Wrong guesses wait — done
@@ -48,7 +48,26 @@ Not covered, by choice:
 Needs the owner's go-ahead: existing rooms (raknong among them) must keep
 their passwords and share links working through a migration.
 
-## 3. Security headers on Pages — next
+## 3. Security headers on Pages — done
+
+`apps/client/public/_headers`, copied into the build by Vite:
+
+- Every page: `X-Content-Type-Options: nosniff`, `Referrer-Policy:
+  no-referrer` (share links carry `?token=`), a `Permissions-Policy` turning
+  off camera, microphone, location, payment and USB.
+- Nothing may frame a page (`X-Frame-Options: DENY`, CSP `frame-ancestors
+  'none'`, plus `object-src 'none'; base-uri 'self'`), except the read-only
+  views people embed on purpose: `/timer`, `/countdown`, `/backstage`,
+  `/studio`, `/timeline`, `/info`, `/teleprompter`. An allow-list, because an
+  unknown path redirects inside the app and could otherwise frame the editor.
+- No `script-src`: `index.html` has an inline script for old browsers and the
+  editor injects the operator's custom CSS. Nothing renders a person's HTML.
+- Checked on a local `wrangler pages dev build`: each path gets the expected
+  headers, and the wasm, scripts, service worker and manifest are served with
+  the right types, so `nosniff` blocks none of them.
+- Known gap: a framed viewer can navigate inside the app to a control page.
+  Browsers partition a framed page's storage, so it holds no room token or
+  session there, and an open room can be edited without framing at all.
 
 ## 5. `cargo audit` / `cargo deny` in CI
 
