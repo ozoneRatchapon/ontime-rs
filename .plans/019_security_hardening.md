@@ -1,6 +1,6 @@
 # 019 — Security hardening (review of 2026-11-25)
 
-Status: **items 1, 3, 5 and 4 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
+Status: **items 1, 3, 5, 4 and 7 done (not yet deployed).** Order agreed: 1 → 3 → 5 → 4 → 7.
 Item 2 waits for the owner's go-ahead, because existing rooms need a migration.
 
 ## 1. Wrong guesses wait — done
@@ -114,7 +114,36 @@ run summary names both upstream commits, with a compare link. Nothing is
 committed back. The fixtures are made-up cases, so this is safe on the
 public repository.
 
-## 7. Mutation testing (`cargo-mutants`)
+## 7. Mutation testing — done for the code that decides who gets in
+
+`scripts/mutants.sh` runs `cargo-mutants` over `guard.rs`, `api/access.rs`,
+`identity.rs`, `directory.rs` and the token helpers in `project.rs`, into
+numbered reports under `target/mutants/`. It runs **in place** (some core
+tests read files from outside the crate), so nothing that uses ontime-core
+may be built, tested or deployed while it runs.
+
+What it found, all fixed with tests:
+
+- `api/access.rs`: 24 of 24 caught. No gap.
+- `guard.rs`, first version: 18 of 46 missed. The memory-bound test held
+  even with `len()` returning 0, and nothing tested eviction. Writing those
+  tests showed a **real hole**: a flood of fresh addresses evicted the
+  quietest key, which could be a guesser's own lock. Eviction now drops
+  unlocked keys first. A dead clause (a locked key is never quiet) was
+  removed, and the compiler now enforces why it is dead. 0 missed now, apart
+  from 4 mutants that time out (an endless loop is caught too).
+- `project.rs::token_matches`: `acc | (a ^ b)` → `acc ^ (a ^ b)` survived,
+  which accepts a token whose differences cancel out. Now tested.
+- `identity.rs` / `directory.rs`: 21 missed. The ones that mattered: nothing
+  checked that "sign out everywhere" reports a change (the registry would
+  then not store it), that revoking keeps other people's invites, that
+  pruning runs on a write, or the invite and session lifetimes.
+  `tests/identity_policy_tests.rs` (12 tests) covers them. Rerun: 162
+  mutants, 142 caught, 9 missed. Left alone: 8 in `device_label` (how a
+  device is named on the admin page, cosmetic) and 1 equivalent mutant
+  (`directory.rs` team guard: with neither owners nor operators the branch
+  loops over nothing and hands on to the same `registry::handle`).
+- Token helpers: 10 of 10 caught after the new test.
 
 ## 9. Replace chrono — deferred
 
