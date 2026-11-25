@@ -56,6 +56,22 @@ pub(crate) fn route_segments(raw: &str) -> Vec<&str> {
     path.trim_start_matches('/').split('/').collect()
 }
 
+/// Puts a stored project back in place of the room's, from a backup file or the
+/// room's own undo history. The room keeps its password, its activity log and
+/// its shared teleprompter playback; playback starts stopped rather than
+/// resuming from whenever the copy was taken.
+pub fn restore_into(project: &mut Project, mut restored: Project, now: i64) {
+    restored.password_hash = project.password_hash.clone();
+    // the log belongs to this room, not to whatever the backup came from
+    restored.audit = project.audit.clone();
+    // shared playback never carries into another project
+    restored.prompter = project.prompter.clone();
+    restored.runtime = Default::default();
+    *project = restored;
+    project.ensure_consistent();
+    prompter::pause_for_new_project(project, now);
+}
+
 pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse {
     let mut effects: Vec<Effect> = Vec::new();
     let segments = route_segments(&req.path);
@@ -251,16 +267,8 @@ pub fn handle(project: &mut Project, req: &ApiRequest, now: i64) -> ApiResponse 
         // rather than resuming from whenever the snapshot was taken.
         ["data", "db", "restore"] if req.method == HttpMethod::Post => {
             match serde_json::from_value::<Project>(req.body.clone()) {
-                Ok(mut restored) => {
-                    restored.password_hash = project.password_hash.clone();
-                    // the log belongs to this room, not to whatever the backup came from
-                    restored.audit = project.audit.clone();
-                    // shared playback never carries into another project
-                    restored.prompter = project.prompter.clone();
-                    restored.runtime = Default::default();
-                    *project = restored;
-                    project.ensure_consistent();
-                    prompter::pause_for_new_project(project, now);
+                Ok(restored) => {
+                    restore_into(project, restored, now);
                     effects.push(Effect::Persist);
                     effects.push(Effect::refetch("all", None));
                     effects.push(Effect::Reschedule);

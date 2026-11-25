@@ -18,6 +18,8 @@ use crate::{presence, registry_host};
 
 #[path = "room_integration.rs"]
 mod integration;
+#[path = "room_snapshots.rs"]
+mod snapshots;
 
 /// Per-connection metadata, stored on the socket itself.
 ///
@@ -104,6 +106,12 @@ pub struct OntimeProject {
     /// How often this room takes integration calls. In memory: an eviction
     /// only hands out a fresh burst.
     rate_limit: ontime_core::integration::RateLimit,
+    /// The undo history's list of copies, once read. Lost on eviction, which
+    /// only costs one read.
+    snapshot_index: Option<Vec<i64>>,
+    /// Whether anything was written since the newest copy. Assumed so after an
+    /// eviction, which at worst costs one copy too many.
+    changed_since_copy: bool,
 }
 
 #[durable_object]
@@ -120,6 +128,8 @@ impl DurableObject for OntimeProject {
             members: HashMap::new(),
             audit_head: None,
             rate_limit: Default::default(),
+            snapshot_index: None,
+            changed_since_copy: true,
         }
     }
 
@@ -300,16 +310,24 @@ impl OntimeProject {
         // longer applies to it
         self.is_new = false;
 
+        // the room's undo history: what is stored now, before this write
+        self.snapshot_before_write(ontime_core::snapshots::Reason::Edit)
+            .await;
+
         let raw = serde_json::to_string(&self.project)
             .map_err(|e| Error::RustError(format!("Could not serialise project: {e}")))?;
         let mut storage = self.state.storage();
-        let Some(writes) = audit_writes else {
-            return storage.put(STORAGE_KEY, raw).await;
-        };
-        let mut batch = Batch::new();
-        batch.put_raw(STORAGE_KEY, raw)?;
-        batch.audit(&writes)?;
-        batch.commit(&mut storage).await
+        match audit_writes {
+            None => storage.put(STORAGE_KEY, raw).await?,
+            Some(writes) => {
+                let mut batch = Batch::new();
+                batch.put_raw(STORAGE_KEY, raw)?;
+                batch.audit(&writes)?;
+                batch.commit(&mut storage).await?;
+            }
+        }
+        self.changed_since_copy = true;
+        Ok(())
     }
 
     /// Adds a line to the log in memory. The returned writes go to [`persist`].
@@ -601,6 +619,19 @@ impl OntimeProject {
                 return Response::error("This room does not exist", 404);
             }
             return Response::from_json(&json!({ "clients": self.client_list(None) }));
+        }
+
+        // the undo history, for an owner or the admin. Host-side because the
+        // copies are stored apart from the project.
+        if snapshots::is_snapshot_path(&path) {
+            return self.snapshots_http(req, &api_request, actor).await;
+        }
+        // a change that removes things is copied first, so it can be undone
+        if snapshots::is_destructive(&req.method(), &path)
+            && api::is_authorised(&self.project, &api_request)
+        {
+            self.snapshot_before_write(ontime_core::snapshots::Reason::Destructive)
+                .await;
         }
 
         // who changed what, for an owner or the admin. Host-side because the

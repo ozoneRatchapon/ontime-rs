@@ -23,6 +23,7 @@ pub mod rundown_routes;
 mod rundown_times;
 pub mod runtime;
 pub mod selection;
+pub mod snapshots;
 pub mod socket;
 pub mod teleprompter;
 pub mod types;

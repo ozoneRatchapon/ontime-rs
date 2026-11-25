@@ -87,6 +87,7 @@ suites=(
   "activity.mjs:node" # the audit log, who may read it (needs ADMIN_PASSWORD)
   "teleprompter.mjs:node" # the shared teleprompter transport (plan 008)
   "integration.mjs:node" # the integration API, HTTP and websocket (plan 009)
+  "snapshots.mjs:node" # the room's undo history (plan 018, needs ADMIN_PASSWORD)
 )
 
 echo
