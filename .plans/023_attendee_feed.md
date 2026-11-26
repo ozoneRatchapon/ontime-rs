@@ -1,6 +1,6 @@
 # 023 — What a room shows its audience, without a token
 
-Status: **done, not deployed (2026-11-26).** Step 1 of linking ontime-rs with
+Status: **done, deployed 2026-11-26 (Worker c93cdf3e, Pages ed0f4ec3 / dfb1fb62); production smoke passing.** Step 1 of linking ontime-rs with
 BeThere (`~/event-checkin`), as the user chose.
 
 ## Why
