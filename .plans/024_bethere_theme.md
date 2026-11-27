@@ -1,6 +1,6 @@
 # 024 — BeThere's look for the screens and the stream
 
-Status: **done locally, not committed, not deployed.** Item 3 of linking
+Status: **done, deployed 2026-11-27 (Worker 85966f9c, Pages 23226e0a master / aa34fbcd main, hash-checked); production smoke passing.** Item 3 of linking
 ontime-rs with BeThere (after plan 023's attendee feed and BeThere's plan 050
 card), chosen by the user on 2026-11-27.
 
