@@ -85,6 +85,25 @@ try {
   check('see-through by default', see_through === 'rgba(0, 0, 0, 0)', see_through);
   check('the first event is named', (await countdown.locator('#next').textContent()) === 'Keynote');
 
+  console.log('== BeThere theme (plan 024) ==');
+  const themed = await open(`obs-countdown/?to=${to}&theme=bethere&accent=ff0000`);
+  await themed.waitForFunction(() => document.getElementById('title').textContent === 'Gala 2026', null, { timeout: 15000 });
+  const navy = await themed.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  check('the theme paints the background navy', navy === 'rgb(18, 21, 42)', navy);
+  const cream = await themed.locator('#title').evaluate((el) => getComputedStyle(el).color);
+  check('with cream text', cream === 'rgb(233, 228, 211)', cream);
+  const kept = await themed.locator('#count').evaluate((el) => getComputedStyle(el).color);
+  check('an option in the address still wins over the theme', kept === 'rgb(255, 0, 0)', kept);
+  const family = await themed.evaluate(() => getComputedStyle(document.body).fontFamily);
+  check('Inter, with Anuphan for Thai', /^"?Inter"?, "?Anuphan"?,/.test(family), family);
+  const loaded = await themed.evaluate(async () => {
+    await Promise.all([document.fonts.load('800 40px Inter'), document.fonts.load('700 40px Anuphan', 'ไทย')]);
+    return document.fonts.check('800 40px Inter') && document.fonts.check('700 40px Anuphan', 'ไทย');
+  });
+  check('both fonts load from Google', loaded);
+  const box = await (await open('obs-timer/?theme=bethere')).locator('#box').evaluate((el) => getComputedStyle(el).backgroundColor);
+  check('the timer box is BeThere navy, see-through', box === 'rgba(18, 21, 42, 0.8)', box);
+
   console.log('== the timer ==');
   const timer = await open('obs-timer/?pos=tl');
   await wait(1500);

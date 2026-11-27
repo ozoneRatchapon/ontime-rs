@@ -18,6 +18,9 @@
         warning=ffa528  colour once the event's warning time is reached
         danger=ff4d4f   colour once the event's danger time is reached, and over time
         font=Prompt     a Google Font by name
+        theme=bethere   BeThere's look: a navy box, cream numbers, BeThere's
+                        warning and danger colours, Inter with Anuphan for
+                        Thai (plan 024); any option above still wins over it
 
       Over time it counts up with a minus sign, in the danger colour. The
       numbers are counted here from the room's last message, so they run
@@ -77,23 +80,35 @@
     <script>
       const params = new URLSearchParams(location.search);
       const colour = (value) => (/^[0-9a-f]{3,8}$/i.test(value) ? `#${value}` : value);
+      const themes = {
+        bethere: { bg: '12152acc', color: 'e9e4d3', warning: 'f5b544', danger: 'f0666b', font: 'Inter', thai: 'Anuphan' },
+      };
+      const theme = themes[params.get('theme')] || {};
+      const option = (key) => params.get(key) || theme[key];
       const root = document.documentElement.style;
       for (const [key, variable] of [
         ['color', '--color'],
         ['warning', '--warning'],
         ['danger', '--danger'],
       ]) {
-        if (params.get(key)) root.setProperty(variable, colour(params.get(key)));
+        if (option(key)) root.setProperty(variable, colour(option(key)));
       }
-      if (params.get('bg')) root.setProperty('--box', params.get('bg') === 'none' ? 'transparent' : colour(params.get('bg')));
+      if (option('bg')) root.setProperty('--box', option('bg') === 'none' ? 'transparent' : colour(option('bg')));
       const size = Number(params.get('size'));
       if (size > 0 && size <= 100) root.setProperty('--size', `${size}vh`);
-      const font = params.get('font');
-      if (font) {
+      // a theme's Thai font backs up its own font, not one from the address.
+      // Anuphan stops at 700, and Google refuses a weight a family lacks.
+      const fonts = [
+        option('font') && [option('font'), '400;800'],
+        !params.get('font') && theme.thai && [theme.thai, '400;700'],
+      ].filter(Boolean);
+      if (fonts.length) {
+        const families = fonts.map(([font, weights]) => `family=${encodeURIComponent(font)}:wght@${weights}`).join('&');
         const style = document.createElement('style');
-        style.textContent = `@import url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;800&display=swap');`;
+        style.textContent = `@import url('https://fonts.googleapis.com/css2?${families}&display=swap');`;
         document.head.appendChild(style);
-        root.setProperty('--font', `'${font.replace(/'/g, '')}', system-ui, sans-serif`);
+        const names = fonts.map(([font]) => `'${font.replace(/'/g, '')}'`).join(', ');
+        root.setProperty('--font', `${names}, system-ui, sans-serif`);
       }
       const box = document.getElementById('box');
       const pos = params.get('pos');

@@ -8,6 +8,7 @@ import Info from '../../../../../common/components/info/Info';
 import Modal from '../../../../../common/components/modal/Modal';
 import useViewSettings from '../../../../../common/hooks-query/useViewSettings';
 import * as Panel from '../../../panel-utils/PanelUtils';
+import { bethereThemeCss } from './bethereTheme';
 
 import style from './StyleEditorModal.module.scss';
 
@@ -51,6 +52,14 @@ export default function CodeEditorModal({ isOpen, onClose }: CodeEditorModalProp
         setExampleLoading(false);
       }
     }
+  };
+
+  // the theme ships with the client, so it needs no request
+  const handleLoadBethere = () => {
+    exampleRequestId.current++;
+    setExampleLoading(false);
+    setError(null);
+    setDraftCss(bethereThemeCss);
   };
 
   const handleDraftChange = (css: string) => {
@@ -165,14 +174,23 @@ export default function CodeEditorModal({ isOpen, onClose }: CodeEditorModalProp
             )}
             {error && <Panel.Error className={style.right}>{`Error: ${error}`}</Panel.Error>}
             <Panel.InlineElements align='apart' className={style.editorActions}>
-              <Button
-                variant='ghosted'
-                onClick={handleLoadExample}
-                disabled={saveLoading || exampleLoading || cssLoadStatus === 'loading'}
-                loading={exampleLoading}
-              >
-                Load example CSS
-              </Button>
+              <Panel.InlineElements>
+                <Button
+                  variant='ghosted'
+                  onClick={handleLoadExample}
+                  disabled={saveLoading || exampleLoading || cssLoadStatus === 'loading'}
+                  loading={exampleLoading}
+                >
+                  Load example CSS
+                </Button>
+                <Button
+                  variant='ghosted'
+                  onClick={handleLoadBethere}
+                  disabled={saveLoading || cssLoadStatus === 'loading'}
+                >
+                  Load BeThere theme
+                </Button>
+              </Panel.InlineElements>
               <Panel.InlineElements>
                 <Button onClick={handleClose} disabled={saveLoading}>
                   Cancel

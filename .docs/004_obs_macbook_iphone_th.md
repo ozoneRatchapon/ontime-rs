@@ -52,6 +52,7 @@ iPhone ──(Continuity Camera)──▶ MacBook: OBS ──▶ YouTube / Faceb
 | `bg=0b1020` | สีพื้นหลัง หรือ `transparent` (ค่าเริ่มต้น) |
 | `color=…` `accent=…` | สีตัวหนังสือ / สีตัวเลข |
 | `font=Prompt` | ฟอนต์จาก Google Fonts (ภาษาไทยแนะนำ Prompt, Kanit, Sarabun) |
+| `theme=bethere` | หน้าตาแบบ BeThere: พื้นกรมท่า ตัวหนังสือสีครีม ตัวเลขสีม่วงคราม ฟอนต์ Inter (ภาษาไทยใช้ Anuphan) ถ้าใส่ตัวเลือกอื่นด้วย ตัวเลือกนั้นจะมาแทนค่าในธีม |
 | `next=0` | ซ่อนชื่อ event แรก |
 
 **Scene "ถ่ายทอด"**: ให้ภาพกล้องอยู่ล่างสุด แล้ววางหน้า `obs-timer` ไว้บนสุด
@@ -69,6 +70,7 @@ iPhone ──(Continuity Camera)──▶ MacBook: OBS ──▶ YouTube / Faceb
 | `bg=none` | ไม่มีกล่องพื้นหลัง |
 | `color=` `warning=` `danger=` | สีปกติ / สีตอนใกล้หมดเวลา / สีตอนเลยเวลา |
 | `font=` | ฟอนต์จาก Google Fonts |
+| `theme=bethere` | กล่องสีกรมท่าโปร่งแสง ตัวเลขสีครีม สีเตือนและสีเลยเวลาแบบ BeThere ฟอนต์ Inter กับ Anuphan |
 
 หน้า `obs-timer` จะซ่อนตัวเองเมื่อหยุด จางลงเมื่อ pause และเมื่อเลยเวลาจะนับต่อแบบมีเครื่องหมายลบด้วยสีแดง สีจะเปลี่ยนตามเวลา warning และ danger ที่ตั้งไว้ใน event
 
@@ -109,3 +111,9 @@ iPhone ──(Continuity Camera)──▶ MacBook: OBS ──▶ YouTube / Faceb
 ## ค่าใช้จ่าย
 
 ใช้โควตาฟรีของ Cloudflare ทั้งหมด OBS เปิดแต่ละหน้าค้างไว้ จึงนับเป็นจอหนึ่งจอ รันห้องเดียวเต็มวันพร้อม 20 จอใช้โควตาไปประมาณหนึ่งในสาม (ดูแผน 017)
+
+## ให้จอในงานใช้หน้าตาแบบ BeThere (แผน 024)
+
+- หน้า OBS ทั้งสองหน้า: เติม `&theme=bethere` ต่อท้ายที่อยู่
+- หน้า timer, timeline, backstage และหน้าอื่นของ Ontime: ไปที่ **Settings → View settings → Edit CSS override** กด **Load BeThere theme** แล้วกด **Save and enable** ทุกหน้าที่เปิดอยู่จะเปลี่ยนทันที ค่าตั้งต้นเป็นพื้นกรมท่าสำหรับห้องมืด ถ้าห้องสว่าง ให้ใช้ค่าสีกระดาษที่เขียนไว้ท้ายไฟล์ CSS แทน
+- ห้องที่กด Add OBS views ไว้ก่อนแผน 024 ต้องกด **Add OBS views** อีกครั้ง หน้า OBS ถึงจะรู้จัก `theme=bethere`
